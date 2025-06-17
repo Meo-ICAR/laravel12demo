@@ -40,6 +40,11 @@ class Company extends Model
         });
     }
 
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
     public function updatedByUser()
     {
         return $this->belongsTo(User::class, 'updated_by');

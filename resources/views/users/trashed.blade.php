@@ -1,21 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Users')
+@section('title', 'Trashed Users')
 
 @section('content_header')
-    <h1>Users</h1>
+    <h1>Trashed Users</h1>
 @stop
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">User List</h3>
+        <h3 class="card-title">Deleted Users</h3>
         <div class="card-tools">
-            <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add New User
-            </a>
-            <a href="{{ route('users.trashed') }}" class="btn btn-default btn-sm">
-                <i class="fas fa-trash mr-1"></i> Trashed Users
+            <a href="{{ route('users.index') }}" class="btn btn-default btn-sm">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Users
             </a>
         </div>
     </div>
@@ -44,17 +41,15 @@
                         <th>Email</th>
                         <th>Role</th>
                         <th>Company</th>
-                        <th>Created By</th>
-                        <th>Created At</th>
+                        <th>Deleted By</th>
+                        <th>Deleted At</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($users as $user)
                         <tr>
-                            <td>
-                                <a href="{{ route('users.show', $user) }}">{{ $user->name }}</a>
-                            </td>
+                            <td>{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
                             <td>
                                 @foreach($user->roles as $role)
@@ -63,33 +58,31 @@
                             </td>
                             <td>
                                 @if($user->company)
-                                    <a href="{{ route('companies.show', $user->company) }}">
-                                        {{ $user->company->name }}
-                                    </a>
+                                    {{ $user->company->name }}
                                 @else
                                     <span class="text-muted">Not assigned</span>
                                 @endif
                             </td>
                             <td>
-                                @if($user->created_by)
-                                    {{ $user->createdBy->name }}
+                                @if($user->deleted_by)
+                                    {{ $user->deletedBy->name }}
                                 @else
                                     <span class="text-muted">System</span>
                                 @endif
                             </td>
-                            <td>{{ $user->created_at->format('M d, Y H:i') }}</td>
+                            <td>{{ $user->deleted_at->format('M d, Y H:i') }}</td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-info" data-toggle="tooltip" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-primary" data-toggle="tooltip" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('users.restore', $user) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-success" data-toggle="tooltip" title="Restore" onclick="return confirm('Are you sure you want to restore this user?')">
+                                            <i class="fas fa-trash-restore"></i>
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('users.force-delete', $user) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" data-toggle="tooltip" title="Delete" onclick="return confirm('Are you sure you want to delete this user?')">
+                                        <button type="submit" class="btn btn-sm btn-danger" data-toggle="tooltip" title="Delete Permanently" onclick="return confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
@@ -98,7 +91,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center">No users found.</td>
+                            <td colspan="7" class="text-center">No trashed users found.</td>
                         </tr>
                     @endforelse
                 </tbody>
