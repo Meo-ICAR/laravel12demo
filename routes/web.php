@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CompanyController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to login if not authenticated
@@ -48,7 +49,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // User Management Routes
     Route::middleware(['permission:user_management'])->group(function () {
         Route::resource('users', UserController::class);
+        Route::get('users/trashed', [UserController::class, 'trashed'])->name('users.trashed');
+        Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
+        Route::delete('users/{id}/force-delete', [UserController::class, 'forceDelete'])->name('users.force-delete');
     });
+
+    // Company routes
+    Route::resource('companies', CompanyController::class);
+    Route::get('companies/trashed', [CompanyController::class, 'trashed'])->name('companies.trashed');
+    Route::post('companies/{id}/restore', [CompanyController::class, 'restore'])->name('companies.restore');
+    Route::delete('companies/{id}/force-delete', [CompanyController::class, 'forceDelete'])->name('companies.force-delete');
 });
 
 require __DIR__.'/auth.php';

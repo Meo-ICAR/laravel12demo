@@ -5,13 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-
-
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -40,23 +38,23 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', Password::defaults()],
             'roles' => ['required', 'array'],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
         ]);
 
-        $user->syncRoles($request->roles);
+        $user->syncRoles($validated['roles']);
 
         return redirect()->route('users.index')
-            ->with('success', 'User created successfully');
+            ->with('success', 'User created successfully.');
     }
 
     public function edit(User $user)
@@ -67,40 +65,68 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
             'roles' => ['required', 'array'],
         ]);
 
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
 
         if ($request->filled('password')) {
-            $user->update([
-                'password' => Hash::make($request->password),
-            ]);
+            $user->password = Hash::make($validated['password']);
         }
 
-        $user->syncRoles($request->roles);
+        $user->syncRoles($validated['roles']);
+
+        $user->save();
 
         return redirect()->route('users.index')
-            ->with('success', 'User updated successfully');
+            ->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)
     {
-        if ($user->id === auth()->id()) {
+        if ($user->hasRole('super_admin')) {
             return redirect()->route('users.index')
-                ->with('error', 'You cannot delete your own account');
+                ->with('error', 'Cannot delete super admin user.');
         }
 
         $user->delete();
 
         return redirect()->route('users.index')
-            ->with('success', 'User deleted successfully');
+            ->with('success', 'User deleted successfully.');
+    }
+
+    public function restore($id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        $user->restore();
+
+        return redirect()->route('users.index')
+            ->with('success', 'User restored successfully.');
+    }
+
+    public function forceDelete($id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+
+        if ($user->hasRole('super_admin')) {
+            return redirect()->route('users.index')
+                ->with('error', 'Cannot permanently delete super admin user.');
+        }
+
+        $user->forceDelete();
+
+        return redirect()->route('users.index')
+            ->with('success', 'User permanently deleted.');
+    }
+
+    public function trashed()
+    {
+        $trashedUsers = User::onlyTrashed()->with('roles')->get();
+        return view('users.trashed', compact('trashedUsers'));
     }
 }

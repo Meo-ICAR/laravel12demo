@@ -18,6 +18,9 @@
                         <a href="{{ route('users.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Create User
                         </a>
+                        <a href="{{ route('users.trashed') }}" class="btn btn-warning">
+                            <i class="fas fa-trash"></i> View Trashed Users
+                        </a>
                     </div>
                 </div>
             </div>
