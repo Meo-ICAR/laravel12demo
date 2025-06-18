@@ -6,11 +6,18 @@ use App\Models\User;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
+use App\Exports\UsersExport;
+use App\Imports\UsersImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
+
+
     public function index()
     {
         $users = User::with(['roles', 'company'])
@@ -32,7 +39,7 @@ class UserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', Password::defaults()],
             'role' => ['required', 'exists:roles,id'],
             'company_id' => ['nullable', 'exists:companies,id'],
         ]);
@@ -68,7 +75,7 @@ class UserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
             'role' => ['required', 'exists:roles,id'],
             'company_id' => ['nullable', 'exists:companies,id'],
         ]);
@@ -126,5 +133,37 @@ class UserController extends Controller
 
         return redirect()->route('users.trashed')
             ->with('success', 'User permanently deleted.');
+    }
+
+    public function export()
+    {
+        return Excel::download(new UsersExport, 'users.xlsx');
+    }
+
+    public function import()
+    {
+        return view('users.import');
+    }
+
+    public function importStore(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // 10MB max
+        ]);
+
+        $import = new UsersImport;
+        Excel::import($import, $request->file('file'));
+
+        $message = "Import completed. {$import->getImportedCount()} users imported successfully.";
+
+        if ($import->getFailedCount() > 0) {
+            $message .= " {$import->getFailedCount()} users failed to import.";
+            if (!empty($import->getErrors())) {
+                $message .= " Errors: " . implode(', ', $import->getErrors());
+            }
+        }
+
+        return redirect()->route('users.index')
+            ->with('success', $message);
     }
 }
