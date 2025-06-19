@@ -26,5 +26,9 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $user->assignRole('super_admin');
+        $this->call(FornitorisTableSeeder::class);
+        $this->call(UsersTableSeeder::class);
+        $this->call(CompaniesTableSeeder::class);
+        $this->call(InvoicesTableSeeder::class);
     }
 }
