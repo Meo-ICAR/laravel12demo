@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
-use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,16 +10,11 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Invoice::with('company');
+        $query = Invoice::query();
 
         // Search by invoice number
         if ($request->filled('search')) {
             $query->where('invoice_number', 'like', '%' . $request->search . '%');
-        }
-
-        // Filter by company
-        if ($request->filled('company_id')) {
-            $query->where('company_id', $request->company_id);
         }
 
         // Filter by date range
@@ -63,12 +57,6 @@ class InvoiceController extends Controller
                 ->orderBy('month', 'desc')
                 ->limit(6)
                 ->get(),
-            'top_companies' => $query->select('company_id', DB::raw('SUM(total_amount) as total'))
-                ->groupBy('company_id')
-                ->with('company:id,name')
-                ->orderBy('total', 'desc')
-                ->limit(5)
-                ->get(),
         ];
 
         // Sorting
@@ -83,16 +71,13 @@ class InvoiceController extends Controller
 
         $query->orderBy($sortField, $sortDirection);
 
-        // Get companies for filter dropdown
-        $companies = Company::orderBy('name')->get();
-
         // Get unique statuses for filter dropdown
         $statuses = Invoice::select('status')
             ->distinct()
             ->pluck('status');
 
-        $invoices = $query->paginate(10)->withQueryString();
+        $invoices = $query->paginate(10);
 
-        return view('invoices.index', compact('invoices', 'companies', 'statuses', 'stats'));
+        return view('invoices.index', compact('invoices', 'statuses', 'stats'));
     }
 }
