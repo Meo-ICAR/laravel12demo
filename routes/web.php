@@ -8,6 +8,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceImportController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\FornitoriController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to login if not authenticated
@@ -77,6 +78,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('invoices/import', [InvoiceImportController::class, 'index'])->name('invoices.import');
         Route::post('invoices/import', [InvoiceImportController::class, 'import'])->name('invoices.import.store');
+    });
+
+    // Fornitori routes
+    Route::middleware(['permission:fornitori_management'])->group(function () {
+        Route::resource('fornitoris', FornitoriController::class);
     });
 });
 
