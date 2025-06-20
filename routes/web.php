@@ -10,6 +10,9 @@ use App\Http\Controllers\InvoiceImportController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\FornitoriController;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 // Redirect root to login if not authenticated
 Route::get('/', function () {
@@ -29,6 +32,22 @@ Route::middleware('guest')->group(function () {
     Route::get('forgot-password', function () {
         return view('auth.forgot-password');
     })->name('password.request');
+
+    Route::get('login/microsoft', function () {
+        return Socialite::driver('microsoft')->redirect();
+    })->name('login.microsoft');
+
+    Route::get('login/microsoft/callback', function () {
+        $microsoftUser = Socialite::driver('microsoft')->user();
+        $user = User::firstOrCreate([
+            'email' => $microsoftUser->getEmail(),
+        ], [
+            'name' => $microsoftUser->getName() ?? $microsoftUser->getNickname() ?? $microsoftUser->getEmail(),
+            'password' => bcrypt(str()->random(16)),
+        ]);
+        Auth::login($user, true);
+        return redirect('/dashboard');
+    });
 });
 
 // Protected Routes
