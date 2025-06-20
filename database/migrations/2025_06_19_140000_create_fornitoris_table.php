@@ -25,9 +25,8 @@ return new class extends Migration
             $table->string('citta')->nullable()->collation('utf8mb4_bin');
             $table->char('company_id', 36);
             $table->timestamp('deleted_at')->nullable();
-                 $table->timestamp('created_at')->nullable();
+           $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
-        });
             $table->timestamps();
 
             $table->primary('id');

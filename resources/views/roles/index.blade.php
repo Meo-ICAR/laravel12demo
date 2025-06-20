@@ -34,6 +34,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Permissions</th>
+                        <th>Company ID</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -46,6 +47,7 @@
                                     <span class="badge badge-info">{{ $permission->name }}</span>
                                 @endforeach
                             </td>
+                            <td>{{ $role->company_id }}</td>
                             <td>
                                 <a href="{{ route('roles.edit', $role) }}" class="btn btn-info btn-sm">
                                     <i class="fas fa-edit"></i> Edit

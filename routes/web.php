@@ -94,6 +94,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Customertypes routes
     Route::resource('customertypes', App\Http\Controllers\CustomertypeController::class);
+
+    // Employroles routes
+    Route::resource('employroles', App\Http\Controllers\EmployroleController::class);
 });
 
 // Home route

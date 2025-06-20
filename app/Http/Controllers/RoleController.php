@@ -25,16 +25,18 @@ class RoleController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|unique:roles,name',
             'permissions' => 'required|array',
+            'company_id' => 'nullable|string|max:36',
         ]);
-
-        $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
-
-        return redirect()->route('roles.index')
-            ->with('success', 'Role created successfully');
+        $role = Role::create([
+            'name' => $data['name'],
+            'guard_name' => 'web',
+            'company_id' => $data['company_id'] ?? null,
+        ]);
+        $role->syncPermissions($data['permissions']);
+        return redirect()->route('roles.index')->with('success', 'Role created successfully');
     }
 
     public function edit(Role $role)
@@ -45,16 +47,22 @@ class RoleController extends Controller
 
     public function update(Request $request, Role $role)
     {
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|unique:roles,name,' . $role->id,
             'permissions' => 'required|array',
+            'company_id' => 'nullable|string|max:36',
         ]);
+        $role->update([
+            'name' => $data['name'],
+            'company_id' => $data['company_id'] ?? null,
+        ]);
+        $role->syncPermissions($data['permissions']);
+        return redirect()->route('roles.index')->with('success', 'Role updated successfully');
+    }
 
-        $role->update(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
-
-        return redirect()->route('roles.index')
-            ->with('success', 'Role updated successfully');
+    public function show(Role $role)
+    {
+        return view('roles.show', compact('role'));
     }
 
     public function destroy(Role $role)
@@ -63,10 +71,7 @@ class RoleController extends Controller
             return redirect()->route('roles.index')
                 ->with('error', 'Cannot delete role that is assigned to users');
         }
-
         $role->delete();
-
-        return redirect()->route('roles.index')
-            ->with('success', 'Role deleted successfully');
+        return redirect()->route('roles.index')->with('success', 'Role deleted successfully');
     }
 }

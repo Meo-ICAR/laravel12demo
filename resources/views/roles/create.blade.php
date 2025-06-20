@@ -23,6 +23,11 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="company_id">Company ID</label>
+                    <input type="text" class="form-control" id="company_id" name="company_id" value="{{ old('company_id') }}">
+                </div>
+
+                <div class="form-group">
                     <label>Permissions</label>
                     <div class="row">
                         @foreach($permissions as $permission)
