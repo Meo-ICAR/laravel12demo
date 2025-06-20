@@ -22,10 +22,12 @@ class RoleAndPermissionSeeder extends Seeder
             'view_profile',
             'edit_profile',
             'delete_profile',
+            'super_admin',
+            'clientis_access',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // Create roles and assign permissions
@@ -36,6 +38,7 @@ class RoleAndPermissionSeeder extends Seeder
                 'view_dashboard',
                 'view_profile',
                 'edit_profile',
+                'clientis_access',
             ],
             'user' => [
                 'view_dashboard',
@@ -45,7 +48,7 @@ class RoleAndPermissionSeeder extends Seeder
         ];
 
         foreach ($roles as $role => $rolePermissions) {
-            $role = Role::create(['name' => $role]);
+            $role = Role::firstOrCreate(['name' => $role]);
             $role->givePermissionTo($rolePermissions);
         }
     }

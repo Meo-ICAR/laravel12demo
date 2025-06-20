@@ -84,6 +84,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['permission:fornitori_management'])->group(function () {
         Route::resource('fornitoris', FornitoriController::class);
     });
+
+    // MFCompensos routes
+    Route::resource('mfcompensos', App\Http\Controllers\MfcompensoController::class);
+    Route::post('mfcompensos/import', [App\Http\Controllers\MfcompensoController::class, 'import'])->name('mfcompensos.import');
+
+    // Clienti routes
+    Route::resource('clientis', App\Http\Controllers\ClientiController::class);
+
+    // Customertypes routes
+    Route::resource('customertypes', App\Http\Controllers\CustomertypeController::class);
 });
 
 // Home route

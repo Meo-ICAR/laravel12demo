@@ -13,7 +13,7 @@ class SuperAdminAllPermissions extends Migration
      */
     public function up()
     {
-        $superAdmin = Role::where('name', 'super-admin')->first();
+        $superAdmin = Role::where('name', 'super_admin')->first();
         if ($superAdmin) {
             $superAdmin->givePermissionTo(Permission::all());
         }
@@ -26,7 +26,7 @@ class SuperAdminAllPermissions extends Migration
      */
     public function down()
     {
-        $superAdmin = Role::where('name', 'super-admin')->first();
+        $superAdmin = Role::where('name', 'super_admin')->first();
         if ($superAdmin) {
             $superAdmin->revokePermissionTo(Permission::all());
         }

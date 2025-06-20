@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Spatie\Permission\Models\Role;
 
 return new class extends Migration
 {
@@ -12,26 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('fornitoris', function (Blueprint $table) {
+        Schema::create('clientis', function (Blueprint $table) {
             $table->char('id', 36);
             $table->string('codice')->nullable()->collation('utf8mb4_bin');
             $table->string('name')->nullable()->collation('utf8mb4_bin');
             $table->string('piva', 16)->nullable()->collation('utf8mb4_bin');
             $table->string('email')->nullable()->collation('utf8mb4_bin');
-            $table->string('operatore')->nullable()->collation('utf8mb4_bin');
+            // $table->string('operatore')->nullable()->collation('utf8mb4_bin'); // OMITTED
             $table->string('iscollaboratore')->nullable()->collation('utf8mb4_bin');
             $table->string('isdipendente')->nullable()->collation('utf8mb4_bin');
             $table->string('regione')->nullable()->collation('utf8mb4_bin');
             $table->string('citta')->nullable()->collation('utf8mb4_bin');
-            $table->char('company_id', 36);
+            $table->char('company_id', 36)->nullable();
+            $table->unsignedBigInteger('customertype_id')->nullable();
+            $table->foreign('customertype_id')->references('id')->on('customertypes')->nullOnDelete();
             $table->timestamp('deleted_at')->nullable();
-                 $table->timestamp('created_at')->nullable();
+            $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
-        });
-            $table->timestamps();
 
             $table->primary('id');
-            $table->index('company_id', 'fornitoris_company_id_index');
+            $table->index('company_id', 'clientis_company_id_index');
         });
     }
 
@@ -40,6 +39,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('fornitoris');
+        Schema::dropIfExists('clientis');
     }
 };

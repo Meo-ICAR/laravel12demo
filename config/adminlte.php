@@ -362,6 +362,56 @@ return [
                 ],
             ],
         ],
+        [
+            'header' => 'SETTING',
+            'can' => 'super_admin',
+        ],
+        [
+            'text' => 'Setting',
+            'icon' => 'fas fa-cogs',
+            'can' => 'super_admin',
+            'submenu' => [
+                [
+                    'text' => 'Companies',
+                    'url' => 'companies',
+                    'icon' => 'fas fa-building',
+                ],
+                [
+                    'text' => 'Roles',
+                    'url' => 'roles',
+                    'icon' => 'fas fa-user-tag',
+                ],
+                [
+                    'text' => 'Permissions',
+                    'url' => 'permissions',
+                    'icon' => 'fas fa-key',
+                ],
+            ],
+        ],
+        [
+            'text' => 'Invoices',
+            'url' => 'invoices',
+            'icon' => 'fas fa-file-invoice',
+            'can' => null,
+        ],
+        [
+            'text' => 'Fornitori',
+            'url' => 'fornitoris',
+            'icon' => 'fas fa-truck',
+            'can' => null,
+        ],
+        [
+            'text' => 'Mfcompensos',
+            'url' => 'mfcompensos',
+            'icon' => 'fas fa-coins',
+            'can' => null,
+        ],
+        [
+            'text' => 'Clientis',
+            'url' => 'clientis',
+            'icon' => 'fas fa-users',
+            'can' => 'clientis_access',
+        ],
     ],
 
     /*

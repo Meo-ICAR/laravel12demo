@@ -10,6 +10,10 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
+             $table->string('fornitore', 255)->nullable()->after('id');
+            $table->char('fornitore_piva', 16)->nullable()->after('fornitore');
+            $table->string('cliente', 255)->nullable()->after('fornitore_piva');
+            $table->char('cliente_piva', 16)->nullable()->after('cliente');
             $table->string('invoice_number');
             $table->date('invoice_date');
             $table->decimal('total_amount', 10, 2);
