@@ -22,7 +22,7 @@ class FornitoriController extends Controller
         $sortDirection = $request->get('sort_direction', 'asc');
 
         // Validate sort parameters
-        $allowedSortBy = ['name', 'codice', 'piva', 'email', 'regione', 'citta', 'created_at'];
+        $allowedSortBy = ['name', 'codice', 'piva', 'email', 'anticipo', 'issubfornitore', 'regione', 'citta', 'created_at'];
         $allowedDirections = ['asc', 'desc'];
 
         if (!in_array($sortBy, $allowedSortBy)) {
@@ -51,6 +51,8 @@ class FornitoriController extends Controller
             'name' => 'nullable|string|max:255',
             'piva' => 'nullable|string|max:16',
             'email' => 'nullable|string|max:255',
+            'anticipo' => 'nullable|numeric|min:0|max:999999999.99',
+            'issubfornitore' => 'nullable|boolean',
             'operatore' => 'nullable|string|max:255',
             'iscollaboratore' => 'nullable|boolean',
             'isdipendente' => 'nullable|boolean',
@@ -81,6 +83,8 @@ class FornitoriController extends Controller
             'name' => 'nullable|string|max:255',
             'piva' => 'nullable|string|max:16',
             'email' => 'nullable|string|max:255',
+            'anticipo' => 'nullable|numeric|min:0|max:999999999.99',
+            'issubfornitore' => 'nullable|boolean',
             'operatore' => 'nullable|string|max:255',
             'iscollaboratore' => 'nullable|boolean',
             'isdipendente' => 'nullable|boolean',

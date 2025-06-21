@@ -71,14 +71,13 @@ class MfcompensoController extends Controller
 
             $request->validate([
                 'stato' => 'required|in:Inserito,Proforma,Fatturato,Pagato,Stornato,Sospeso',
+                'invoice_number' => 'nullable|string|max:255',
             ]);
 
             $mfcompenso = Mfcompenso::findOrFail($id);
             \Log::info('Found mfcompenso', ['mfcompenso' => $mfcompenso->toArray()]);
 
-            $result = $mfcompenso->update([
-                'stato' => $request->stato,
-            ]);
+            $result = $mfcompenso->update($request->only(['stato', 'invoice_number']));
 
             \Log::info('Update result', ['result' => $result]);
 
@@ -201,6 +200,7 @@ class MfcompensoController extends Controller
             'descrizione' => 'required|string|max:255',
             'tipo' => 'required|string|max:255',
             'importo' => 'required|numeric',
+            'invoice_number' => 'nullable|string|max:255',
         ]);
 
         Mfcompenso::create($request->all());

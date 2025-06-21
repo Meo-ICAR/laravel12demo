@@ -118,6 +118,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('mfcompensos/bulk-update-to-proforma', [App\Http\Controllers\MfcompensoController::class, 'bulkUpdateToProforma'])->name('mfcompensos.bulkUpdateToProforma');
     Route::resource('mfcompensos', App\Http\Controllers\MfcompensoController::class);
 
+    // Calls routes
+    Route::post('calls/import', [App\Http\Controllers\CallController::class, 'import'])->name('calls.import');
+    Route::resource('calls', App\Http\Controllers\CallController::class);
+
+    // Leads routes
+    Route::post('leads/import', [App\Http\Controllers\LeadController::class, 'import'])->name('leads.import');
+    Route::resource('leads', App\Http\Controllers\LeadController::class);
+
     // Clienti routes
     Route::resource('clientis', App\Http\Controllers\ClientiController::class);
 

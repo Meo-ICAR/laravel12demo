@@ -27,6 +27,8 @@
                             <option value="codice" {{ $sortBy === 'codice' ? 'selected' : '' }}>Codice</option>
                             <option value="piva" {{ $sortBy === 'piva' ? 'selected' : '' }}>P.IVA</option>
                             <option value="email" {{ $sortBy === 'email' ? 'selected' : '' }}>Email</option>
+                            <option value="anticipo" {{ $sortBy === 'anticipo' ? 'selected' : '' }}>Anticipo</option>
+                            <option value="issubfornitore" {{ $sortBy === 'issubfornitore' ? 'selected' : '' }}>Is Subfornitore</option>
                             <option value="regione" {{ $sortBy === 'regione' ? 'selected' : '' }}>Regione</option>
                             <option value="citta" {{ $sortBy === 'citta' ? 'selected' : '' }}>Città</option>
                             <option value="created_at" {{ $sortBy === 'created_at' ? 'selected' : '' }}>Created Date</option>
@@ -114,6 +116,28 @@
                                     @endif
                                 </a>
                             </th>
+                            <th>
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'anticipo', 'sort_direction' => $sortBy === 'anticipo' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                   class="text-dark text-decoration-none">
+                                    Anticipo
+                                    @if($sortBy === 'anticipo')
+                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="fas fa-sort text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'issubfornitore', 'sort_direction' => $sortBy === 'issubfornitore' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                   class="text-dark text-decoration-none">
+                                    Is Subfornitore
+                                    @if($sortBy === 'issubfornitore')
+                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="fas fa-sort text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
                             <th>Operatore</th>
                             <th>
                                 <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'regione', 'sort_direction' => $sortBy === 'regione' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
@@ -147,6 +171,14 @@
                                 <td>{{ $fornitore->name }}</td>
                                 <td>{{ $fornitore->piva }}</td>
                                 <td>{{ $fornitore->email }}</td>
+                                <td class="text-right">{{ $fornitore->anticipo ? '€ ' . number_format($fornitore->anticipo, 2, ',', '.') : '-' }}</td>
+                                <td class="text-center">
+                                    @if($fornitore->issubfornitore)
+                                        <span class="badge badge-success">Yes</span>
+                                    @else
+                                        <span class="badge badge-secondary">No</span>
+                                    @endif
+                                </td>
                                 <td>{{ $fornitore->operatore }}</td>
                                 <td>{{ $fornitore->regione }}</td>
                                 <td>{{ $fornitore->citta }}</td>
@@ -164,7 +196,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center">No fornitori found.</td>
+                                <td colspan="10" class="text-center">No fornitori found.</td>
                             </tr>
                         @endforelse
                     </tbody>

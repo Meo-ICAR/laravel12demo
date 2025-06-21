@@ -44,6 +44,7 @@ class Mfcompenso extends Model
         'sended_at',
         'received_at',
         'paided_at',
+        'invoice_number',
     ];
 
     protected static function boot()

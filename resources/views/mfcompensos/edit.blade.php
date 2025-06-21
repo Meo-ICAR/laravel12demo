@@ -45,9 +45,18 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="importo">Importo</label>
-                            <input type="text" class="form-control" value="{{ $mfcompenso->importo }}" readonly>
+                            <input type="number" step="0.01" name="importo" id="importo" class="form-control" value="{{ old('importo', $mfcompenso->importo) }}" required>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="invoice_number">Invoice Number</label>
+                            <input type="text" name="invoice_number" id="invoice_number" class="form-control" value="{{ old('invoice_number', $mfcompenso->invoice_number) }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="stato">Stato *</label>

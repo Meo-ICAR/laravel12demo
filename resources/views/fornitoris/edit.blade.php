@@ -41,6 +41,13 @@
                             @enderror
                         </div>
                         <div class="form-group">
+                            <label for="anticipo">Anticipo</label>
+                            <input type="number" name="anticipo" class="form-control" value="{{ old('anticipo', $fornitori->anticipo) }}" step="0.01" min="0" max="999999999.99">
+                            @error('anticipo')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label for="operatore">Operatore</label>
                             <input type="text" name="operatore" class="form-control" value="{{ old('operatore', $fornitori->operatore) }}">
                             @error('operatore')
@@ -66,6 +73,16 @@
                                 <option value="1" {{ old('isdipendente', $fornitori->isdipendente) == 1 ? 'selected' : '' }}>Yes</option>
                             </select>
                             @error('isdipendente')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="issubfornitore">Is Subfornitore</label>
+                            <select name="issubfornitore" class="form-control">
+                                <option value="0" {{ old('issubfornitore', $fornitori->issubfornitore) == 0 ? 'selected' : '' }}>No</option>
+                                <option value="1" {{ old('issubfornitore', $fornitori->issubfornitore) == 1 ? 'selected' : '' }}>Yes</option>
+                            </select>
+                            @error('issubfornitore')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>

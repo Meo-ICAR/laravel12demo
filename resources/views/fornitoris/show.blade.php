@@ -16,12 +16,16 @@
                 <dd class="col-sm-9">{{ $fornitori->piva }}</dd>
                 <dt class="col-sm-3">Email</dt>
                 <dd class="col-sm-9">{{ $fornitori->email }}</dd>
+                <dt class="col-sm-3">Anticipo</dt>
+                <dd class="col-sm-9">{{ $fornitori->anticipo ? '€ ' . number_format($fornitori->anticipo, 2, ',', '.') : '-' }}</dd>
                 <dt class="col-sm-3">Operatore</dt>
                 <dd class="col-sm-9">{{ $fornitori->operatore }}</dd>
                 <dt class="col-sm-3">Is Collaboratore</dt>
                 <dd class="col-sm-9">{{ $fornitori->iscollaboratore }}</dd>
                 <dt class="col-sm-3">Is Dipendente</dt>
                 <dd class="col-sm-9">{{ $fornitori->isdipendente }}</dd>
+                <dt class="col-sm-3">Is Subfornitore</dt>
+                <dd class="col-sm-9">{{ $fornitori->issubfornitore ? 'Yes' : 'No' }}</dd>
                 <dt class="col-sm-3">Regione</dt>
                 <dd class="col-sm-9">{{ $fornitori->regione }}</dd>
                 <dt class="col-sm-3">Città</dt>

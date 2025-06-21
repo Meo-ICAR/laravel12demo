@@ -51,7 +51,7 @@
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <button type="submit" class="btn btn-info mr-2">Filter</button>
-                    <a href="{{ route('mfcompensos.index') }}" class="btn btn-secondary ml-2">Clear</a>
+                    <button type="button" class="btn btn-secondary ml-2" onclick="clearFilters()">Clear</button>
                     <button type="button" class="btn btn-warning ml-2" id="bulkUpdateBtn">
                         Massive: Inserito → Proforma
                     </button>
@@ -88,6 +88,7 @@
                             <th>Descrizione</th>
                             <th>Tipo</th>
                             <th>Importo</th>
+                            <th>Invoice Number</th>
                             <th>Importo Effettivo</th>
                             <th>Quota</th>
                             <th>Stato</th>
@@ -119,7 +120,8 @@
                                 <td>{{ $item->data_inserimento_compenso }}</td>
                                 <td>{{ $item->descrizione }}</td>
                                 <td>{{ $item->tipo }}</td>
-                                <td>{{ $item->importo }}</td>
+                                <td>{{ number_format($item->importo, 2, ',', '.') }}</td>
+                                <td>{{ $item->invoice_number }}</td>
                                 <td>{{ $item->importo_effettivo }}</td>
                                 <td>{{ $item->quota }}</td>
                                 <td>
@@ -171,16 +173,30 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Debug filter form submission
+    // Filter form submission - omit empty values from URL
     const filterForm = document.getElementById('filterForm');
     if (filterForm) {
         filterForm.addEventListener('submit', function(e) {
-            console.log('Filter form submitted');
+            e.preventDefault(); // Prevent default form submission
+
+            // Get form data
             const formData = new FormData(this);
-            console.log('Form data:');
+            const params = new URLSearchParams();
+
+            // Only add non-empty values to URL parameters
             for (let [key, value] of formData.entries()) {
-                console.log(key + ': ' + value);
+                if (value && value.trim() !== '') {
+                    params.append(key, value.trim());
+                }
             }
+
+            // Build the URL with only non-empty parameters
+            const baseUrl = '{{ route("mfcompensos.index") }}';
+            const queryString = params.toString();
+            const finalUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+            // Navigate to the filtered URL
+            window.location.href = finalUrl;
         });
     }
 
@@ -293,5 +309,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Function to clear all filters and navigate to base URL
+function clearFilters() {
+    // Clear all form fields
+    document.getElementById('stato').value = '';
+    document.getElementById('denominazione_riferimento').value = '';
+    document.getElementById('istituto_finanziario').value = '';
+    document.getElementById('cognome').value = '';
+
+    // Navigate to base URL without any parameters
+    window.location.href = '{{ route("mfcompensos.index") }}';
+}
 </script>
 @endsection

@@ -20,6 +20,8 @@ class Fornitori extends Model
         'name',
         'piva',
         'email',
+        'anticipo',
+        'issubfornitore',
         'operatore',
         'iscollaboratore',
         'isdipendente',
