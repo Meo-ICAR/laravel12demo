@@ -8,6 +8,15 @@
     @if(session('error'))
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <!-- Import Form -->
     <div class="card mb-3">
@@ -17,14 +26,44 @@
             </h5>
         </div>
         <div class="card-body">
-            <form action="{{ route('calls.import') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('calls.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                @csrf
+                <div class="form-group mb-3">
+                    <label for="import_file">Select CSV or Excel File:</label>
+                    <input type="file" name="file" id="import_file" class="form-control" required accept=".csv,.xlsx,.xls">
+                    <small class="form-text text-muted">
+                        <strong>Supported formats:</strong> CSV (.csv), Excel (.xlsx, .xls)<br>
+                        <strong>Note:</strong> CSV files should use semicolon (;) as delimiter<br>
+                        <strong>Max size:</strong> 2MB
+                    </small>
+                    <div id="file-info" class="mt-2" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong>Selected file:</strong> <span id="file-name"></span><br>
+                            <strong>Size:</strong> <span id="file-size"></span>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="import-btn">
+                    <i class="fas fa-upload"></i> Import Calls
+                </button>
+                <button type="button" class="btn btn-secondary ml-2" onclick="clearImportForm()">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </form>
+
+            <!-- Test Form for Debugging -->
+            <hr class="my-3">
+            <div class="alert alert-info">
+                <strong>Debug:</strong> If import is not working, try this test form:
+            </div>
+            <form action="{{ route('test.upload') }}" method="POST" enctype="multipart/form-data" id="testForm">
                 @csrf
                 <div class="form-group mb-2">
-                    <input type="file" name="file" class="form-control-file" required accept=".csv,.xlsx">
-                    <small class="form-text text-muted">Supported formats: CSV, Excel (.xlsx)</small>
+                    <label for="test_file">Test File Upload:</label>
+                    <input type="file" name="file" id="test_file" class="form-control" accept=".csv,.xlsx,.xls">
                 </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-upload"></i> Import Calls
+                <button type="submit" class="btn btn-warning btn-sm">
+                    <i class="fas fa-bug"></i> Test Upload
                 </button>
             </form>
         </div>
@@ -43,17 +82,6 @@
                     <label for="numero_chiamato">Numero Chiamato:</label>
                     <input type="text" name="numero_chiamato" id="numero_chiamato" class="form-control"
                            value="{{ request('numero_chiamato') }}" placeholder="Search...">
-                </div>
-                <div class="col-md-2">
-                    <label for="company_id">Company:</label>
-                    <select name="company_id" id="company_id" class="form-control">
-                        <option value="">All Companies</option>
-                        @foreach($companies as $company)
-                            <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
-                                {{ $company->name }}
-                            </option>
-                        @endforeach
-                    </select>
                 </div>
                 <div class="col-md-2">
                     <label for="stato_chiamata">Stato Chiamata:</label>
@@ -146,7 +174,6 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Company</th>
                             <th>Numero Chiamato</th>
                             <th>Data Inizio</th>
                             <th>Durata</th>
@@ -160,7 +187,6 @@
                         @forelse($calls as $call)
                             <tr>
                                 <td>{{ $call->id }}</td>
-                                <td>{{ $call->company->name }}</td>
                                 <td>{{ $call->numero_chiamato }}</td>
                                 <td>{{ $call->data_inizio ? $call->data_inizio->format('d/m/Y H:i:s') : '-' }}</td>
                                 <td class="text-center">{{ $call->getFormattedDuration() }}</td>
@@ -189,7 +215,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center">No calls found.</td>
+                                <td colspan="7" class="text-center">No calls found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -204,6 +230,101 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // File input change handler
+    const fileInput = document.getElementById('import_file');
+    const fileInfo = document.getElementById('file-info');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const importBtn = document.getElementById('import-btn');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Show file info
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.style.display = 'block';
+
+                // Enable import button
+                importBtn.disabled = false;
+
+                // Validate file type
+                const allowedTypes = ['.csv', '.xlsx', '.xls'];
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+                if (!allowedTypes.includes(fileExtension)) {
+                    alert('Please select a valid file type: CSV, XLSX, or XLS');
+                    clearImportForm();
+                    return;
+                }
+            } else {
+                fileInfo.style.display = 'none';
+                importBtn.disabled = true;
+            }
+        });
+    }
+
+    // Import form submission handler
+    const importForm = document.getElementById('importForm');
+    if (importForm) {
+        importForm.addEventListener('submit', function(e) {
+            const file = fileInput.files[0];
+            if (!file) {
+                e.preventDefault();
+                alert('Please select a file to import');
+                return;
+            }
+
+            // Show loading state
+            importBtn.disabled = true;
+            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+        });
+    }
+
+    // Test form submission handler
+    const testForm = document.getElementById('testForm');
+    if (testForm) {
+        testForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const testFile = document.getElementById('test_file').files[0];
+
+            if (!testFile) {
+                alert('Please select a file for testing');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+
+            fetch('{{ route("test.upload") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Test upload result:', data);
+                alert('Test result: ' + JSON.stringify(data, null, 2));
+            })
+            .catch(error => {
+                console.error('Test upload error:', error);
+                alert('Test upload error: ' + error.message);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    }
+
     // Filter form submission - omit empty values from URL
     const filterForm = document.getElementById('filterForm');
     if (filterForm) {
@@ -232,20 +353,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Function to format file size
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 // Function to clear all filters and navigate to base URL
 function clearFilters() {
     // Clear all form fields
-    document.getElementById('numero_chiamato').value = '';
-    document.getElementById('stato_chiamata').value = '';
-    document.getElementById('esito').value = '';
-    document.getElementById('utente').value = '';
-    document.getElementById('data_from').value = '';
-    document.getElementById('data_to').value = '';
+    const fields = [
+        'numero_chiamato', 'stato_chiamata', 'esito', 'utente',
+        'data_from', 'data_to'
+    ];
+
+    fields.forEach(field => {
+        const element = document.getElementById(field);
+        if (element) {
+            if (element.tagName === 'SELECT') {
+                element.value = '';
+            } else {
+                element.value = '';
+            }
+        }
+    });
+
     document.getElementById('sort_by').value = 'data_inizio';
     document.getElementById('sort_direction').value = 'desc';
 
     // Navigate to base URL without any parameters
     window.location.href = '{{ route("calls.index") }}';
+}
+
+// Function to clear import form
+function clearImportForm() {
+    // Reset form fields
+    document.getElementById('import_file').value = '';
+    document.getElementById('file-info').style.display = 'none';
+
+    // Reset button state
+    const importBtn = document.getElementById('import-btn');
+    if (importBtn) {
+        importBtn.disabled = false;
+        importBtn.innerHTML = '<i class="fas fa-upload"></i> Import Calls';
+    }
 }
 </script>
 @endsection

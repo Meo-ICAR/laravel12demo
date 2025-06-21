@@ -37,18 +37,6 @@
                 <dt class="col-sm-3">Utente</dt>
                 <dd class="col-sm-9">{{ $call->utente ?: '-' }}</dd>
 
-                <dt class="col-sm-3">Company</dt>
-                <dd class="col-sm-9">
-                    @if($call->company_id)
-                        @php
-                            $company = \App\Models\Company::find($call->company_id);
-                        @endphp
-                        {{ $company ? $company->name : 'Company not found (ID: ' . $call->company_id . ')' }}
-                    @else
-                        <span class="text-muted">No company assigned</span>
-                    @endif
-                </dd>
-
                 <dt class="col-sm-3">Created At</dt>
                 <dd class="col-sm-9">{{ $call->created_at->format('d/m/Y H:i:s') }}</dd>
 

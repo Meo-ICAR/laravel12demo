@@ -16,6 +16,12 @@ class LeadsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnErr
 
     public function model(array $row)
     {
+        // Debug: Log the raw row data and headers
+        \Log::info('Processing lead row', [
+            'raw_row' => $row,
+            'keys' => array_keys($row)
+        ]);
+
         // Parse dates from various formats
         $dataRichiamo = $this->parseDate($row['data_richiamo'] ?? null);
         $scadenzaAnagrafica = $this->parseDate($row['scadenza_anagrafica'] ?? null);
@@ -30,7 +36,7 @@ class LeadsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnErr
         $chiamateGiornaliere = $this->parseInteger($row['chiamate_giornaliere'] ?? 0);
         $chiamateMensili = $this->parseInteger($row['chiamate_mensili'] ?? 0);
 
-        return new Lead([
+        $leadData = [
             'legacy_id' => $row['id'] ?? null,
             'campagna' => $row['campagna'] ?? null,
             'lista' => $row['lista'] ?? null,
@@ -79,7 +85,12 @@ class LeadsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnErr
             'chiamate_mensili' => $chiamateMensili,
             'data_creazione' => $dataCreazione,
             'company_id' => auth()->user()->company_id ?? null,
-        ]);
+        ];
+
+        // Debug: Log the processed data
+        \Log::info('Creating lead with processed data', $leadData);
+
+        return new Lead($leadData);
     }
 
     private function parseDate($value)

@@ -299,14 +299,78 @@ class LeadController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,csv',
-        ]);
-
         try {
-            Excel::import(new LeadsImport, $request->file('file'));
+            // Debug: Log all request data
+            \Log::info('Leads import request received', [
+                'has_file' => $request->hasFile('file'),
+                'all_files' => $request->allFiles(),
+                'content_type' => $request->header('Content-Type'),
+                'content_length' => $request->header('Content-Length'),
+                'method' => $request->method(),
+                'url' => $request->url(),
+                'all_input' => $request->all()
+            ]);
+
+            // Check if file was uploaded
+            if (!$request->hasFile('file')) {
+                \Log::warning('No file uploaded in leads import request');
+                return redirect()->route('leads.index')->with('error', 'No file was selected. Please choose a file to import.');
+            }
+
+            $file = $request->file('file');
+
+            // Check if file is valid
+            if (!$file->isValid()) {
+                \Log::warning('Uploaded leads file is not valid', [
+                    'error' => $file->getError(),
+                    'error_message' => $file->getErrorMessage()
+                ]);
+                return redirect()->route('leads.index')->with('error', 'The uploaded file is not valid. Please try again.');
+            }
+
+            // Validate file
+            $request->validate([
+                'file' => 'required|file|max:2048', // 2MB max
+            ], [
+                'file.required' => 'Please select a file to import.',
+                'file.file' => 'The uploaded file is not valid.',
+                'file.max' => 'The file size must not exceed 2MB.',
+            ]);
+
+            // Custom validation for file type
+            $file = $request->file('file');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $allowedExtensions = ['csv', 'xlsx', 'xls'];
+
+            if (!in_array($extension, $allowedExtensions)) {
+                return redirect()->route('leads.index')->with('error', 'The file must be a CSV, XLSX, or XLS file. Detected extension: ' . $extension);
+            }
+
+            \Log::info('Starting leads import', [
+                'filename' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'extension' => $file->getClientOriginalExtension()
+            ]);
+
+            Excel::import(new LeadsImport, $file);
+
+            \Log::info('Leads import completed successfully');
             return redirect()->route('leads.index')->with('success', 'Leads imported successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::warning('Validation error during leads import', [
+                'errors' => $e->errors(),
+                'file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : 'No file'
+            ]);
+
+            return redirect()->route('leads.index')->withErrors($e->errors());
         } catch (\Exception $e) {
+            \Log::error('Error importing leads', [
+                'error' => $e->getMessage(),
+                'file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : 'No file',
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return redirect()->route('leads.index')->with('error', 'Error importing leads: ' . $e->getMessage());
         }
     }

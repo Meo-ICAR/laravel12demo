@@ -407,10 +407,45 @@ return [
             'can' => null,
         ],
         [
+            'text' => 'Calls',
+            'icon' => 'fas fa-phone',
+            'can' => null,
+            'submenu' => [
+                [
+                    'text' => 'Calls List',
+                    'url' => 'calls',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Calls Dashboard',
+                    'url' => 'calls/dashboard',
+                    'icon' => 'fas fa-chart-line',
+                ],
+            ],
+        ],
+        [
+            'text' => 'Leads',
+            'url' => 'leads',
+            'icon' => 'fas fa-user-plus',
+            'can' => null,
+        ],
+        [
             'text' => 'Clientis',
             'url' => 'clientis',
             'icon' => 'fas fa-users',
             'can' => 'clientis_access',
+        ],
+        [
+            'text' => 'Customer Types',
+            'url' => 'customertypes',
+            'icon' => 'fas fa-tags',
+            'can' => null,
+        ],
+        [
+            'text' => 'Employ Roles',
+            'url' => 'employroles',
+            'icon' => 'fas fa-user-tie',
+            'can' => null,
         ],
     ],
 

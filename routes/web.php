@@ -120,6 +120,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Calls routes
     Route::post('calls/import', [App\Http\Controllers\CallController::class, 'import'])->name('calls.import');
+    Route::get('calls/dashboard', [App\Http\Controllers\CallController::class, 'dashboard'])->name('calls.dashboard');
+    Route::get('calls', [App\Http\Controllers\CallController::class, 'index'])->name('calls.index');
     Route::resource('calls', App\Http\Controllers\CallController::class);
 
     // Leads routes
@@ -158,6 +160,43 @@ Route::get('test-filter', function(Request $request) {
         })
     ]);
 });
+
+// Test route for debugging file upload
+Route::post('test-upload', function(Request $request) {
+    \Log::info('Test upload request', [
+        'has_file' => $request->hasFile('file'),
+        'all_files' => $request->allFiles(),
+        'content_type' => $request->header('Content-Type'),
+        'method' => $request->method(),
+        'all_input' => $request->all()
+    ]);
+
+    if ($request->hasFile('file')) {
+        $file = $request->file('file');
+
+        // Check file extension
+        $extension = strtolower($file->getClientOriginalExtension());
+        $allowedExtensions = ['csv', 'xlsx', 'xls'];
+        $isValidExtension = in_array($extension, $allowedExtensions);
+
+        return response()->json([
+            'success' => true,
+            'filename' => $file->getClientOriginalName(),
+            'extension' => $extension,
+            'is_valid_extension' => $isValidExtension,
+            'size' => $file->getSize(),
+            'mime_type' => $file->getMimeType(),
+            'is_valid' => $file->isValid(),
+            'allowed_extensions' => $allowedExtensions
+        ]);
+    }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'No file uploaded',
+        'request_data' => $request->all()
+    ]);
+})->name('test.upload');
 
 // Home route
 Route::get('/', [HomeController::class, 'index'])->name('home');

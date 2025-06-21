@@ -17,11 +17,6 @@ class CallController extends Controller
     {
         $query = Call::query();
 
-        // Filter by company_id if provided
-        if ($request->has('company_id') && $request->company_id !== '') {
-            $query->where('company_id', $request->company_id);
-        }
-
         // Filter by numero_chiamato if provided
         if ($request->has('numero_chiamato') && $request->numero_chiamato !== '') {
             $query->where('numero_chiamato', 'like', '%' . $request->numero_chiamato . '%');
@@ -81,24 +76,87 @@ class CallController extends Controller
         $calls = $query->paginate(15)->withQueryString();
 
         // Get unique values for filter dropdowns
-        $companies = \App\Models\Company::orderBy('name')->get();
         $statoChiamataOptions = Call::distinct()->pluck('stato_chiamata')->filter()->sort()->values();
         $esitoOptions = Call::distinct()->pluck('esito')->filter()->sort()->values();
         $utenteOptions = Call::distinct()->pluck('utente')->filter()->sort()->values();
 
-        return view('calls.index', compact('calls', 'companies', 'statoChiamataOptions', 'esitoOptions', 'utenteOptions', 'sortBy', 'sortDirection'));
+        return view('calls.index', compact('calls', 'statoChiamataOptions', 'esitoOptions', 'utenteOptions', 'sortBy', 'sortDirection'));
     }
 
     public function import(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,csv',
-        ]);
-
         try {
-            Excel::import(new CallsImport, $request->file('file'));
+            // Debug: Log all request data
+            \Log::info('Import request received', [
+                'has_file' => $request->hasFile('file'),
+                'all_files' => $request->allFiles(),
+                'content_type' => $request->header('Content-Type'),
+                'content_length' => $request->header('Content-Length'),
+                'method' => $request->method(),
+                'url' => $request->url(),
+                'all_input' => $request->all()
+            ]);
+
+            // Check if file was uploaded
+            if (!$request->hasFile('file')) {
+                \Log::warning('No file uploaded in request');
+                return redirect()->route('calls.index')->with('error', 'No file was selected. Please choose a file to import.');
+            }
+
+            $file = $request->file('file');
+
+            // Check if file is valid
+            if (!$file->isValid()) {
+                \Log::warning('Uploaded file is not valid', [
+                    'error' => $file->getError(),
+                    'error_message' => $file->getErrorMessage()
+                ]);
+                return redirect()->route('calls.index')->with('error', 'The uploaded file is not valid. Please try again.');
+            }
+
+            // Validate file
+            $request->validate([
+                'file' => 'required|file|max:2048', // 2MB max to match PHP config
+            ], [
+                'file.required' => 'Please select a file to import.',
+                'file.file' => 'The uploaded file is not valid.',
+                'file.max' => 'The file size must not exceed 2MB.',
+            ]);
+
+            // Custom validation for file type
+            $file = $request->file('file');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $allowedExtensions = ['csv', 'xlsx', 'xls'];
+
+            if (!in_array($extension, $allowedExtensions)) {
+                return redirect()->route('calls.index')->with('error', 'The file must be a CSV, XLSX, or XLS file. Detected extension: ' . $extension);
+            }
+
+            \Log::info('Starting calls import', [
+                'filename' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'extension' => $file->getClientOriginalExtension()
+            ]);
+
+            Excel::import(new CallsImport, $file);
+
+            \Log::info('Calls import completed successfully');
             return redirect()->route('calls.index')->with('success', 'Calls imported successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::warning('Validation error during calls import', [
+                'errors' => $e->errors(),
+                'file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : 'No file'
+            ]);
+
+            return redirect()->route('calls.index')->withErrors($e->errors());
         } catch (\Exception $e) {
+            \Log::error('Error importing calls', [
+                'error' => $e->getMessage(),
+                'file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : 'No file',
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return redirect()->route('calls.index')->with('error', 'Error importing calls: ' . $e->getMessage());
         }
     }
@@ -108,8 +166,7 @@ class CallController extends Controller
      */
     public function create()
     {
-        $companies = \App\Models\Company::orderBy('name')->get();
-        return view('calls.create', compact('companies'));
+        return view('calls.create');
     }
 
     /**
@@ -124,7 +181,6 @@ class CallController extends Controller
             'stato_chiamata' => 'nullable|string|max:50',
             'esito' => 'nullable|string|max:100',
             'utente' => 'nullable|string|max:255',
-            'company_id' => 'nullable|string|max:36|exists:companies,id',
         ]);
 
         Call::create($data);
@@ -144,8 +200,7 @@ class CallController extends Controller
      */
     public function edit(Call $call)
     {
-        $companies = \App\Models\Company::orderBy('name')->get();
-        return view('calls.edit', compact('call', 'companies'));
+        return view('calls.edit', compact('call'));
     }
 
     /**
@@ -160,7 +215,6 @@ class CallController extends Controller
             'stato_chiamata' => 'nullable|string|max:50',
             'esito' => 'nullable|string|max:100',
             'utente' => 'nullable|string|max:255',
-            'company_id' => 'nullable|string|max:36|exists:companies,id',
         ]);
 
         $call->update($data);
@@ -174,5 +228,105 @@ class CallController extends Controller
     {
         $call->delete();
         return redirect()->route('calls.index')->with('success', 'Call deleted successfully.');
+    }
+
+    /**
+     * Display the calls dashboard with statistics and date filtering.
+     */
+    public function dashboard(Request $request)
+    {
+        $query = Call::query();
+
+        // Apply date filters
+        if ($request->has('date_from') && $request->date_from !== '') {
+            try {
+                $dateFrom = Carbon::createFromFormat('Y-m-d', $request->date_from)->startOfDay();
+                $query->where('data_inizio', '>=', $dateFrom);
+            } catch (\Exception $e) {
+                // Invalid date format, ignore filter
+            }
+        }
+
+        if ($request->has('date_to') && $request->date_to !== '') {
+            try {
+                $dateTo = Carbon::createFromFormat('Y-m-d', $request->date_to)->endOfDay();
+                $query->where('data_inizio', '<=', $dateTo);
+            } catch (\Exception $e) {
+                // Invalid date format, ignore filter
+            }
+        }
+
+        // Get filtered calls
+        $filteredCalls = $query->get();
+
+        // Calculate statistics
+        $totalCalls = $filteredCalls->count();
+        $answeredCalls = $filteredCalls->where('stato_chiamata', 'ANSWER')->count();
+        $busyCalls = $filteredCalls->where('stato_chiamata', 'BUSY')->count();
+        $noAnswerCalls = $filteredCalls->where('stato_chiamata', 'Non Risposto')->count();
+        $otherStatusCalls = $totalCalls - $answeredCalls - $busyCalls - $noAnswerCalls;
+
+        // Calculate total duration
+        $totalDuration = $filteredCalls->sum(function($call) {
+            return $call->getDurationInSeconds();
+        });
+
+        // Get top operators
+        $topOperators = $filteredCalls->groupBy('utente')
+            ->map(function($calls) {
+                return [
+                    'count' => $calls->count(),
+                    'total_duration' => $calls->sum(function($call) {
+                        return $call->getDurationInSeconds();
+                    })
+                ];
+            })
+            ->sortByDesc('count')
+            ->take(10);
+
+        // Get calls by hour
+        $callsByHour = $filteredCalls->groupBy(function($call) {
+            return $call->data_inizio ? $call->data_inizio->format('H') : '00';
+        })
+        ->map(function($calls) {
+            return $calls->count();
+        })
+        ->sortKeys();
+
+        // Get calls by day
+        $callsByDay = $filteredCalls->groupBy(function($call) {
+            return $call->data_inizio ? $call->data_inizio->format('Y-m-d') : '0000-00-00';
+        })
+        ->map(function($calls) {
+            return $calls->count();
+        })
+        ->sortKeys();
+
+        // Get top outcomes
+        $topOutcomes = $filteredCalls->groupBy('esito')
+            ->map(function($calls) {
+                return $calls->count();
+            })
+            ->sortByDesc(function($count) {
+                return $count;
+            })
+            ->take(10);
+
+        // Recent calls for the table
+        $recentCalls = $query->orderBy('data_inizio', 'desc')->limit(10)->get();
+
+        return view('calls.dashboard', compact(
+            'totalCalls',
+            'answeredCalls',
+            'busyCalls',
+            'noAnswerCalls',
+            'otherStatusCalls',
+            'totalDuration',
+            'topOperators',
+            'callsByHour',
+            'callsByDay',
+            'topOutcomes',
+            'recentCalls'
+        ));
     }
 }

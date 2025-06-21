@@ -45,17 +45,6 @@
                            value="{{ request('legacy_id') }}" placeholder="Search...">
                 </div>
                 <div class="col-md-2">
-                    <label for="company_id">Company:</label>
-                    <select name="company_id" id="company_id" class="form-control">
-                        <option value="">All Companies</option>
-                        @foreach($companies as $company)
-                            <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
-                                {{ $company->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
                     <label for="campagna">Campagna:</label>
                     <select name="campagna" id="campagna" class="form-control">
                         <option value="">All Campagne</option>
@@ -217,7 +206,6 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Company</th>
                             <th>Campagna</th>
                             <th>Lista</th>
                             <th>Nome Completo</th>
@@ -237,7 +225,6 @@
                         @forelse($leads as $lead)
                             <tr>
                                 <td>{{ $lead->legacy_id }}</td>
-                                <td>{{ $lead->company ? $lead->company->name : '-' }}</td>
                                 <td>{{ $lead->campagna }}</td>
                                 <td>{{ $lead->lista }}</td>
                                 <td>{{ $lead->full_name }}</td>
@@ -278,7 +265,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="14" class="text-center">No leads found.</td>
+                                <td colspan="13" class="text-center">No leads found.</td>
                             </tr>
                         @endforelse
                     </tbody>
