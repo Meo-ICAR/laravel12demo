@@ -13,37 +13,28 @@ class MfcompensoController extends Controller
     {
         $query = Mfcompenso::query();
 
-        // Debug: Log all request parameters
-        \Log::info('Filter request parameters', $request->all());
-
         // Filter by stato if provided
         if ($request->has('stato') && $request->stato !== '') {
             $query->where('stato', $request->stato);
-            \Log::info('Applied stato filter', ['stato' => $request->stato]);
         }
 
         // Filter by denominazione_riferimento if provided
         if ($request->has('denominazione_riferimento') && $request->denominazione_riferimento !== '') {
             $query->where('denominazione_riferimento', 'like', '%' . $request->denominazione_riferimento . '%');
-            \Log::info('Applied denominazione_riferimento filter', ['value' => $request->denominazione_riferimento]);
         }
 
         // Filter by istituto_finanziario if provided
         if ($request->has('istituto_finanziario') && $request->istituto_finanziario !== '') {
             $query->where('istituto_finanziario', 'like', '%' . $request->istituto_finanziario . '%');
-            \Log::info('Applied istituto_finanziario filter', ['value' => $request->istituto_finanziario]);
         }
 
         // Filter by cognome if provided
         if ($request->has('cognome') && $request->cognome !== '') {
             $query->where('cognome', 'like', '%' . $request->cognome . '%');
-            \Log::info('Applied cognome filter', ['value' => $request->cognome]);
         }
 
         $mfcompensos = $query->paginate(15);
         $statoOptions = ['Inserito', 'Proforma', 'Fatturato', 'Pagato', 'Stornato','Sospeso'];
-
-        \Log::info('Query result count', ['count' => $mfcompensos->total()]);
 
         return view('mfcompensos.index', compact('mfcompensos', 'statoOptions'));
     }
@@ -67,19 +58,13 @@ class MfcompensoController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            \Log::info('Updating mfcompenso', ['id' => $id, 'request_data' => $request->all()]);
-
             $request->validate([
                 'stato' => 'required|in:Inserito,Proforma,Fatturato,Pagato,Stornato,Sospeso',
                 'invoice_number' => 'nullable|string|max:255',
             ]);
 
             $mfcompenso = Mfcompenso::findOrFail($id);
-            \Log::info('Found mfcompenso', ['mfcompenso' => $mfcompenso->toArray()]);
-
             $result = $mfcompenso->update($request->only(['stato', 'invoice_number']));
-
-            \Log::info('Update result', ['result' => $result]);
 
             // Return JSON response for AJAX requests
             if ($request->expectsJson()) {
@@ -94,12 +79,6 @@ class MfcompensoController extends Controller
             return redirect()->route('mfcompensos.index')->with('success', 'Stato updated successfully!');
 
         } catch (\Exception $e) {
-            \Log::error('Error updating mfcompenso', [
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -113,7 +92,6 @@ class MfcompensoController extends Controller
 
     public function bulkUpdateToProforma(Request $request)
     {
-        \Log::info('Bulk update called', $request->all());
         $query = Mfcompenso::query();
 
         // Apply the same filters as in index
@@ -132,7 +110,6 @@ class MfcompensoController extends Controller
 
         // Only update records with stato = Inserito
         $updated = $query->where('stato', 'Inserito')->update(['stato' => 'Proforma']);
-        \Log::info('Bulk update result', ['updated' => $updated]);
 
         return redirect()->route('mfcompensos.index', $request->except('_token'))
             ->with('success', "$updated record(s) updated from Inserito to Proforma.");

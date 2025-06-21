@@ -300,20 +300,8 @@ class LeadController extends Controller
     public function import(Request $request)
     {
         try {
-            // Debug: Log all request data
-            \Log::info('Leads import request received', [
-                'has_file' => $request->hasFile('file'),
-                'all_files' => $request->allFiles(),
-                'content_type' => $request->header('Content-Type'),
-                'content_length' => $request->header('Content-Length'),
-                'method' => $request->method(),
-                'url' => $request->url(),
-                'all_input' => $request->all()
-            ]);
-
             // Check if file was uploaded
             if (!$request->hasFile('file')) {
-                \Log::warning('No file uploaded in leads import request');
                 return redirect()->route('leads.index')->with('error', 'No file was selected. Please choose a file to import.');
             }
 
@@ -321,10 +309,6 @@ class LeadController extends Controller
 
             // Check if file is valid
             if (!$file->isValid()) {
-                \Log::warning('Uploaded leads file is not valid', [
-                    'error' => $file->getError(),
-                    'error_message' => $file->getErrorMessage()
-                ]);
                 return redirect()->route('leads.index')->with('error', 'The uploaded file is not valid. Please try again.');
             }
 
@@ -346,32 +330,250 @@ class LeadController extends Controller
                 return redirect()->route('leads.index')->with('error', 'The file must be a CSV, XLSX, or XLS file. Detected extension: ' . $extension);
             }
 
-            \Log::info('Starting leads import', [
-                'filename' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-                'mime_type' => $file->getMimeType(),
-                'extension' => $file->getClientOriginalExtension()
-            ]);
-
             Excel::import(new LeadsImport, $file);
 
-            \Log::info('Leads import completed successfully');
             return redirect()->route('leads.index')->with('success', 'Leads imported successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::warning('Validation error during leads import', [
-                'errors' => $e->errors(),
-                'file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : 'No file'
-            ]);
-
             return redirect()->route('leads.index')->withErrors($e->errors());
         } catch (\Exception $e) {
-            \Log::error('Error importing leads', [
-                'error' => $e->getMessage(),
-                'file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : 'No file',
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return redirect()->route('leads.index')->with('error', 'Error importing leads: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Display the leads dashboard with statistics and analytics.
+     */
+    public function dashboard(Request $request)
+    {
+        $query = Lead::query();
+
+        // Apply company filter if provided
+        if ($request->has('company_id') && $request->company_id !== '') {
+            $query->where('company_id', $request->company_id);
+        }
+
+        // Apply date range filter if provided
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        if ($dateFrom) {
+            $query->where('data_creazione', '>=', Carbon::parse($dateFrom)->startOfDay());
+        }
+        if ($dateTo) {
+            $query->where('data_creazione', '<=', Carbon::parse($dateTo)->endOfDay());
+        }
+
+        // Get base query for statistics
+        $baseQuery = clone $query;
+
+        // Overall statistics
+        $totalLeads = $baseQuery->count();
+        $activeLeads = $baseQuery->where('attivo', true)->count();
+        $inactiveLeads = $baseQuery->where('attivo', false)->count();
+        $leadsWithCalls = $baseQuery->where('chiamate', '>', 0)->count();
+        $leadsWithoutCalls = $baseQuery->where('chiamate', 0)->orWhereNull('chiamate')->count();
+
+        // Campaign statistics
+        $campaignStats = $baseQuery->selectRaw('campagna, COUNT(*) as total, SUM(CASE WHEN attivo = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN attivo = 0 THEN 1 ELSE 0 END) as inactive, AVG(chiamate) as avg_calls')
+            ->whereNotNull('campagna')
+            ->groupBy('campagna')
+            ->orderBy('total', 'desc')
+            ->get();
+
+        // List statistics
+        $listStats = $baseQuery->selectRaw('lista, COUNT(*) as total, SUM(CASE WHEN attivo = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN attivo = 0 THEN 1 ELSE 0 END) as inactive')
+            ->whereNotNull('lista')
+            ->groupBy('lista')
+            ->orderBy('total', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Outcome statistics
+        $outcomeStats = $baseQuery->selectRaw('esito, COUNT(*) as total')
+            ->whereNotNull('esito')
+            ->groupBy('esito')
+            ->orderBy('total', 'desc')
+            ->get();
+
+        // Operator statistics
+        $operatorStats = $baseQuery->selectRaw('ultimo_operatore, COUNT(*) as total, AVG(chiamate) as avg_calls')
+            ->whereNotNull('ultimo_operatore')
+            ->groupBy('ultimo_operatore')
+            ->orderBy('total', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Regional statistics
+        $regionalStats = $baseQuery->selectRaw('regione, COUNT(*) as total, SUM(CASE WHEN attivo = 1 THEN 1 ELSE 0 END) as active')
+            ->whereNotNull('regione')
+            ->groupBy('regione')
+            ->orderBy('total', 'desc')
+            ->get();
+
+        // Recent activity
+        $recentLeads = $baseQuery->orderBy('data_creazione', 'desc')->limit(10)->get();
+        $recentCalls = $baseQuery->whereNotNull('ultima_chiamata')->orderBy('ultima_chiamata', 'desc')->limit(10)->get();
+
+        // Call statistics
+        $totalCalls = $baseQuery->sum('chiamate');
+        $avgCallsPerLead = $totalLeads > 0 ? round($totalCalls / $totalLeads, 2) : 0;
+        $leadsWithMultipleCalls = $baseQuery->where('chiamate', '>', 1)->count();
+
+        // Monthly trends (last 12 months)
+        $monthlyTrends = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $monthStart = $date->copy()->startOfMonth();
+            $monthEnd = $date->copy()->endOfMonth();
+
+            $monthlyQuery = clone $baseQuery;
+            $monthlyLeads = $monthlyQuery->whereBetween('data_creazione', [$monthStart, $monthEnd])->count();
+            $monthlyCalls = $monthlyQuery->whereBetween('ultima_chiamata', [$monthStart, $monthEnd])->count();
+
+            $monthlyTrends[] = [
+                'month' => $date->format('M Y'),
+                'leads' => $monthlyLeads,
+                'calls' => $monthlyCalls
+            ];
+        }
+
+        // Get filter options
+        $companies = \App\Models\Company::orderBy('name')->get();
+        $campagnaOptions = Lead::distinct()->pluck('campagna')->filter()->sort()->values();
+        $listaOptions = Lead::distinct()->pluck('lista')->filter()->sort()->values();
+        $esitoOptions = Lead::distinct()->pluck('esito')->filter()->sort()->values();
+        $operatoreOptions = Lead::distinct()->pluck('ultimo_operatore')->filter()->sort()->values();
+        $regioneOptions = Lead::distinct()->pluck('regione')->filter()->sort()->values();
+
+        return view('leads.dashboard', compact(
+            'totalLeads', 'activeLeads', 'inactiveLeads', 'leadsWithCalls', 'leadsWithoutCalls',
+            'campaignStats', 'listStats', 'outcomeStats', 'operatorStats', 'regionalStats',
+            'recentLeads', 'recentCalls', 'totalCalls', 'avgCallsPerLead', 'leadsWithMultipleCalls',
+            'monthlyTrends', 'companies', 'campagnaOptions', 'listaOptions', 'esitoOptions',
+            'operatoreOptions', 'regioneOptions', 'dateFrom', 'dateTo'
+        ));
+    }
+
+    /**
+     * Export leads data for dashboard analytics.
+     */
+    public function export(Request $request)
+    {
+        $query = Lead::query();
+
+        // Apply filters similar to dashboard
+        if ($request->has('company_id') && $request->company_id !== '') {
+            $query->where('company_id', $request->company_id);
+        }
+
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        if ($dateFrom) {
+            $query->where('data_creazione', '>=', Carbon::parse($dateFrom)->startOfDay());
+        }
+        if ($dateTo) {
+            $query->where('data_creazione', '<=', Carbon::parse($dateTo)->endOfDay());
+        }
+
+        $leads = $query->get();
+
+        $filename = 'leads_export_' . date('Y-m-d_H-i-s') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($leads) {
+            $file = fopen('php://output', 'w');
+
+            // Add headers
+            fputcsv($file, [
+                'ID', 'Campagna', 'Lista', 'Cognome', 'Nome', 'Telefono', 'Email',
+                'Operatore', 'Esito', 'Comune', 'Provincia', 'Regione',
+                'Chiamate', 'Ultima Chiamata', 'Attivo', 'Data Creazione'
+            ]);
+
+            // Add data
+            foreach ($leads as $lead) {
+                fputcsv($file, [
+                    $lead->legacy_id,
+                    $lead->campagna,
+                    $lead->lista,
+                    $lead->cognome,
+                    $lead->nome,
+                    $lead->telefono,
+                    $lead->email,
+                    $lead->ultimo_operatore,
+                    $lead->esito,
+                    $lead->comune,
+                    $lead->provincia,
+                    $lead->regione,
+                    $lead->chiamate,
+                    $lead->ultima_chiamata ? $lead->ultima_chiamata->format('Y-m-d H:i:s') : '',
+                    $lead->attivo ? 'Yes' : 'No',
+                    $lead->data_creazione ? $lead->data_creazione->format('Y-m-d H:i:s') : ''
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Get analytics data for AJAX requests.
+     */
+    public function analytics(Request $request)
+    {
+        $query = Lead::query();
+
+        // Apply filters
+        if ($request->has('company_id') && $request->company_id !== '') {
+            $query->where('company_id', $request->company_id);
+        }
+
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        if ($dateFrom) {
+            $query->where('data_creazione', '>=', Carbon::parse($dateFrom)->startOfDay());
+        }
+        if ($dateTo) {
+            $query->where('data_creazione', '<=', Carbon::parse($dateTo)->endOfDay());
+        }
+
+        $baseQuery = clone $query;
+
+        // Get various analytics
+        $analytics = [
+            'total_leads' => $baseQuery->count(),
+            'active_leads' => $baseQuery->where('attivo', true)->count(),
+            'leads_with_calls' => $baseQuery->where('chiamate', '>', 0)->count(),
+            'total_calls' => $baseQuery->sum('chiamate'),
+            'avg_calls_per_lead' => $baseQuery->count() > 0 ? round($baseQuery->sum('chiamate') / $baseQuery->count(), 2) : 0,
+            'top_campaigns' => $baseQuery->selectRaw('campagna, COUNT(*) as total')
+                ->whereNotNull('campagna')
+                ->groupBy('campagna')
+                ->orderBy('total', 'desc')
+                ->limit(5)
+                ->get(),
+            'top_outcomes' => $baseQuery->selectRaw('esito, COUNT(*) as total')
+                ->whereNotNull('esito')
+                ->groupBy('esito')
+                ->orderBy('total', 'desc')
+                ->limit(5)
+                ->get(),
+            'top_operators' => $baseQuery->selectRaw('ultimo_operatore, COUNT(*) as total, AVG(chiamate) as avg_calls')
+                ->whereNotNull('ultimo_operatore')
+                ->groupBy('ultimo_operatore')
+                ->orderBy('total', 'desc')
+                ->limit(5)
+                ->get(),
+        ];
+
+        return response()->json($analytics);
     }
 }

@@ -425,9 +425,20 @@ return [
         ],
         [
             'text' => 'Leads',
-            'url' => 'leads',
             'icon' => 'fas fa-user-plus',
             'can' => null,
+            'submenu' => [
+                [
+                    'text' => 'Leads List',
+                    'url' => 'leads',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Leads Dashboard',
+                    'url' => 'leads/dashboard',
+                    'icon' => 'fas fa-chart-line',
+                ],
+            ],
         ],
         [
             'text' => 'Clientis',

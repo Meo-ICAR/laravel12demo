@@ -18,6 +18,13 @@ class Fornitori extends Model
         'id',
         'codice',
         'name',
+        'nome',
+        'natoil',
+        'indirizzo',
+        'comune',
+        'cap',
+        'prov',
+        'tel',
         'piva',
         'email',
         'anticipo',
@@ -27,6 +34,7 @@ class Fornitori extends Model
         'isdipendente',
         'regione',
         'citta',
+        'coordinatore',
         'company_id',
     ];
 

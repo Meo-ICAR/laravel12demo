@@ -103,6 +103,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Fornitori routes
     Route::middleware(['permission:fornitori_management'])->group(function () {
+        Route::post('fornitoris/import', [FornitoriController::class, 'import'])->name('fornitoris.import');
         Route::resource('fornitoris', FornitoriController::class);
     });
 
@@ -125,6 +126,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('calls', App\Http\Controllers\CallController::class);
 
     // Leads routes
+    Route::get('leads/dashboard', [App\Http\Controllers\LeadController::class, 'dashboard'])->name('leads.dashboard');
+    Route::get('leads/export', [App\Http\Controllers\LeadController::class, 'export'])->name('leads.export');
+    Route::get('leads/analytics', [App\Http\Controllers\LeadController::class, 'analytics'])->name('leads.analytics');
     Route::post('leads/import', [App\Http\Controllers\LeadController::class, 'import'])->name('leads.import');
     Route::resource('leads', App\Http\Controllers\LeadController::class);
 

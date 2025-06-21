@@ -86,20 +86,8 @@ class CallController extends Controller
     public function import(Request $request)
     {
         try {
-            // Debug: Log all request data
-            \Log::info('Import request received', [
-                'has_file' => $request->hasFile('file'),
-                'all_files' => $request->allFiles(),
-                'content_type' => $request->header('Content-Type'),
-                'content_length' => $request->header('Content-Length'),
-                'method' => $request->method(),
-                'url' => $request->url(),
-                'all_input' => $request->all()
-            ]);
-
             // Check if file was uploaded
             if (!$request->hasFile('file')) {
-                \Log::warning('No file uploaded in request');
                 return redirect()->route('calls.index')->with('error', 'No file was selected. Please choose a file to import.');
             }
 
@@ -107,10 +95,6 @@ class CallController extends Controller
 
             // Check if file is valid
             if (!$file->isValid()) {
-                \Log::warning('Uploaded file is not valid', [
-                    'error' => $file->getError(),
-                    'error_message' => $file->getErrorMessage()
-                ]);
                 return redirect()->route('calls.index')->with('error', 'The uploaded file is not valid. Please try again.');
             }
 
@@ -132,31 +116,12 @@ class CallController extends Controller
                 return redirect()->route('calls.index')->with('error', 'The file must be a CSV, XLSX, or XLS file. Detected extension: ' . $extension);
             }
 
-            \Log::info('Starting calls import', [
-                'filename' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-                'mime_type' => $file->getMimeType(),
-                'extension' => $file->getClientOriginalExtension()
-            ]);
-
             Excel::import(new CallsImport, $file);
 
-            \Log::info('Calls import completed successfully');
             return redirect()->route('calls.index')->with('success', 'Calls imported successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::warning('Validation error during calls import', [
-                'errors' => $e->errors(),
-                'file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : 'No file'
-            ]);
-
             return redirect()->route('calls.index')->withErrors($e->errors());
         } catch (\Exception $e) {
-            \Log::error('Error importing calls', [
-                'error' => $e->getMessage(),
-                'file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : 'No file',
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return redirect()->route('calls.index')->with('error', 'Error importing calls: ' . $e->getMessage());
         }
     }

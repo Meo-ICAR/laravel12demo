@@ -28,13 +28,6 @@ class CallsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnErr
 
     public function model(array $row)
     {
-        \Log::info('Processing call row', [
-            'raw_row' => $row,
-            'keys' => array_keys($row),
-            'numero_chiamato_raw' => $row['Numero chiamato'] ?? 'NOT_FOUND',
-            'data_inizio_raw' => $row['Data inizio'] ?? 'NOT_FOUND',
-        ]);
-
         // Parse the date from Italian format (dd/mm/yyyy HH:mm:ss)
         $dataInizio = null;
         $dateValue = $row['Data inizio'] ?? $row['data_inizio'] ?? null;
@@ -46,7 +39,7 @@ class CallsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnErr
                 try {
                     $dataInizio = Carbon::parse(trim($dateValue));
                 } catch (\Exception $e2) {
-                    \Log::warning('Could not parse date: ' . $dateValue);
+                    // Date parsing failed, keep as null
                 }
             }
         }
@@ -68,8 +61,6 @@ class CallsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnErr
             'utente' => $utente ? (string) trim($utente) : null,
             'company_id' => auth()->user()->company_id ?? null,
         ];
-
-        \Log::info('Creating call with processed data', $callData);
 
         return new Call($callData);
     }

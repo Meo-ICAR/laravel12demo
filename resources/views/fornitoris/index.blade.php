@@ -13,10 +13,10 @@
             <form method="GET" action="{{ route('fornitoris.index') }}" class="row">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label for="name">Name</label>
+                        <label for="name">Search</label>
                         <input type="text" name="name" id="name" class="form-control"
                                value="{{ request('name') }}"
-                               placeholder="Search by name...">
+                               placeholder="Search by name, codice, P.IVA, email, regione, città...">
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -62,6 +62,9 @@
         <div class="card-header">
             <h3 class="card-title">Fornitori List</h3>
             <div class="card-tools">
+                <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#importModal">
+                    <i class="fas fa-upload"></i> Import CSV
+                </button>
                 <a href="{{ route('fornitoris.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Add Fornitore
                 </a>
@@ -205,6 +208,61 @@
         </div>
         <div class="card-footer clearfix">
             {{ $fornitoris->links() }}
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">
+                    <i class="fas fa-upload"></i> Import Fornitori from CSV
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('fornitoris.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="file">Select CSV File</label>
+                        <input type="file" class="form-control-file" id="file" name="file" accept=".csv,.xlsx,.xls" required>
+                        <small class="form-text text-muted">
+                            Supported formats: CSV, XLSX, XLS. Maximum file size: 2MB.
+                        </small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> CSV Format Requirements:</h6>
+                        <p class="mb-1">Your CSV file should have the following columns:</p>
+                        <ul class="mb-0 small">
+                            <li><strong>codice</strong> - Supplier code</li>
+                            <li><strong>denominazione</strong> - Company/Supplier name</li>
+                            <li><strong>nome</strong> - Contact person name</li>
+                            <li><strong>natoil</strong> - Birth date (format: dd/mm/yyyy)</li>
+                            <li><strong>indirizzo</strong> - Address</li>
+                            <li><strong>comune</strong> - City</li>
+                            <li><strong>cap</strong> - Postal code</li>
+                            <li><strong>prov</strong> - Province</li>
+                            <li><strong>tel</strong> - Phone number</li>
+                            <li><strong>email</strong> - Email address</li>
+                            <li><strong>regione</strong> - Region</li>
+                            <li><strong>coordinatore</strong> - Coordinator</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload"></i> Import
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

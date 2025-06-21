@@ -8,18 +8,31 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
+use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use Carbon\Carbon;
 
-class LeadsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnError
+class LeadsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnError, WithCustomCsvSettings
 {
     use SkipsErrors;
 
+    public function getCsvSettings(): array
+    {
+        return [
+            'delimiter' => ',',
+            'enclosure' => '"',
+            'escape_character' => '\\',
+            'contiguous' => false,
+            'input_encoding' => 'UTF-8',
+        ];
+    }
+
     public function model(array $row)
     {
-        // Debug: Log the raw row data and headers
+        // Temporary debug logging to see what's happening
         \Log::info('Processing lead row', [
             'raw_row' => $row,
-            'keys' => array_keys($row)
+            'keys' => array_keys($row),
+            'first_few_values' => array_slice($row, 0, 5, true)
         ]);
 
         // Parse dates from various formats
@@ -87,7 +100,6 @@ class LeadsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnErr
             'company_id' => auth()->user()->company_id ?? null,
         ];
 
-        // Debug: Log the processed data
         \Log::info('Creating lead with processed data', $leadData);
 
         return new Lead($leadData);
