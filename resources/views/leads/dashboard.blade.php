@@ -29,32 +29,19 @@
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('leads.dashboard') }}" class="row">
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="company_id">Company</label>
-                        <select name="company_id" id="company_id" class="form-control">
-                            <option value="">All Companies</option>
-                            @foreach($companies as $company)
-                                <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
-                                    {{ $company->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label for="date_from">Date From</label>
                         <input type="date" name="date_from" id="date_from" class="form-control" value="{{ $dateFrom }}">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label for="date_to">Date To</label>
                         <input type="date" name="date_to" id="date_to" class="form-control" value="{{ $dateTo }}">
                     </div>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
+                <div class="col-md-4 d-flex align-items-end">
                     <div class="form-group mb-0">
                         <button type="submit" class="btn btn-primary mr-2">
                             <i class="fas fa-search"></i> Apply Filters

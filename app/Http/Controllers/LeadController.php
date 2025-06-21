@@ -347,11 +347,6 @@ class LeadController extends Controller
     {
         $query = Lead::query();
 
-        // Apply company filter if provided
-        if ($request->has('company_id') && $request->company_id !== '') {
-            $query->where('company_id', $request->company_id);
-        }
-
         // Apply date range filter if provided
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
@@ -363,25 +358,26 @@ class LeadController extends Controller
             $query->where('data_creazione', '<=', Carbon::parse($dateTo)->endOfDay());
         }
 
-        // Get base query for statistics
-        $baseQuery = clone $query;
-
         // Overall statistics
-        $totalLeads = $baseQuery->count();
-        $activeLeads = $baseQuery->where('attivo', true)->count();
-        $inactiveLeads = $baseQuery->where('attivo', false)->count();
-        $leadsWithCalls = $baseQuery->where('chiamate', '>', 0)->count();
-        $leadsWithoutCalls = $baseQuery->where('chiamate', 0)->orWhereNull('chiamate')->count();
+        $totalLeads = $query->count();
+        $activeLeads = (clone $query)->where('attivo', true)->count();
+        $inactiveLeads = (clone $query)->where('attivo', false)->count();
+        $leadsWithCalls = (clone $query)->where('chiamate', '>', 0)->count();
+        $leadsWithoutCalls = (clone $query)->where(function($q) {
+            $q->where('chiamate', 0)->orWhereNull('chiamate');
+        })->count();
 
         // Campaign statistics
-        $campaignStats = $baseQuery->selectRaw('campagna, COUNT(*) as total, SUM(CASE WHEN attivo = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN attivo = 0 THEN 1 ELSE 0 END) as inactive, AVG(chiamate) as avg_calls')
+        $campaignStats = (clone $query)
+            ->selectRaw('campagna, COUNT(*) as total, SUM(CASE WHEN attivo = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN attivo = 0 THEN 1 ELSE 0 END) as inactive, AVG(chiamate) as avg_calls')
             ->whereNotNull('campagna')
             ->groupBy('campagna')
             ->orderBy('total', 'desc')
             ->get();
 
         // List statistics
-        $listStats = $baseQuery->selectRaw('lista, COUNT(*) as total, SUM(CASE WHEN attivo = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN attivo = 0 THEN 1 ELSE 0 END) as inactive')
+        $listStats = (clone $query)
+            ->selectRaw('lista, COUNT(*) as total, SUM(CASE WHEN attivo = 1 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN attivo = 0 THEN 1 ELSE 0 END) as inactive')
             ->whereNotNull('lista')
             ->groupBy('lista')
             ->orderBy('total', 'desc')
@@ -389,14 +385,16 @@ class LeadController extends Controller
             ->get();
 
         // Outcome statistics
-        $outcomeStats = $baseQuery->selectRaw('esito, COUNT(*) as total')
+        $outcomeStats = (clone $query)
+            ->selectRaw('esito, COUNT(*) as total')
             ->whereNotNull('esito')
             ->groupBy('esito')
             ->orderBy('total', 'desc')
             ->get();
 
         // Operator statistics
-        $operatorStats = $baseQuery->selectRaw('ultimo_operatore, COUNT(*) as total, AVG(chiamate) as avg_calls')
+        $operatorStats = (clone $query)
+            ->selectRaw('ultimo_operatore, COUNT(*) as total, AVG(chiamate) as avg_calls')
             ->whereNotNull('ultimo_operatore')
             ->groupBy('ultimo_operatore')
             ->orderBy('total', 'desc')
@@ -404,20 +402,21 @@ class LeadController extends Controller
             ->get();
 
         // Regional statistics
-        $regionalStats = $baseQuery->selectRaw('regione, COUNT(*) as total, SUM(CASE WHEN attivo = 1 THEN 1 ELSE 0 END) as active')
+        $regionalStats = (clone $query)
+            ->selectRaw('regione, COUNT(*) as total, SUM(CASE WHEN attivo = 1 THEN 1 ELSE 0 END) as active')
             ->whereNotNull('regione')
             ->groupBy('regione')
             ->orderBy('total', 'desc')
             ->get();
 
         // Recent activity
-        $recentLeads = $baseQuery->orderBy('data_creazione', 'desc')->limit(10)->get();
-        $recentCalls = $baseQuery->whereNotNull('ultima_chiamata')->orderBy('ultima_chiamata', 'desc')->limit(10)->get();
+        $recentLeads = (clone $query)->orderBy('data_creazione', 'desc')->limit(10)->get();
+        $recentCalls = (clone $query)->whereNotNull('ultima_chiamata')->orderBy('ultima_chiamata', 'desc')->limit(10)->get();
 
         // Call statistics
-        $totalCalls = $baseQuery->sum('chiamate');
+        $totalCalls = (clone $query)->sum('chiamate');
         $avgCallsPerLead = $totalLeads > 0 ? round($totalCalls / $totalLeads, 2) : 0;
-        $leadsWithMultipleCalls = $baseQuery->where('chiamate', '>', 1)->count();
+        $leadsWithMultipleCalls = (clone $query)->where('chiamate', '>', 1)->count();
 
         // Monthly trends (last 12 months)
         $monthlyTrends = [];
@@ -426,9 +425,8 @@ class LeadController extends Controller
             $monthStart = $date->copy()->startOfMonth();
             $monthEnd = $date->copy()->endOfMonth();
 
-            $monthlyQuery = clone $baseQuery;
-            $monthlyLeads = $monthlyQuery->whereBetween('data_creazione', [$monthStart, $monthEnd])->count();
-            $monthlyCalls = $monthlyQuery->whereBetween('ultima_chiamata', [$monthStart, $monthEnd])->count();
+            $monthlyLeads = (clone $query)->whereBetween('data_creazione', [$monthStart, $monthEnd])->count();
+            $monthlyCalls = (clone $query)->whereBetween('ultima_chiamata', [$monthStart, $monthEnd])->count();
 
             $monthlyTrends[] = [
                 'month' => $date->format('M Y'),
@@ -438,7 +436,6 @@ class LeadController extends Controller
         }
 
         // Get filter options
-        $companies = \App\Models\Company::orderBy('name')->get();
         $campagnaOptions = Lead::distinct()->pluck('campagna')->filter()->sort()->values();
         $listaOptions = Lead::distinct()->pluck('lista')->filter()->sort()->values();
         $esitoOptions = Lead::distinct()->pluck('esito')->filter()->sort()->values();
@@ -449,7 +446,7 @@ class LeadController extends Controller
             'totalLeads', 'activeLeads', 'inactiveLeads', 'leadsWithCalls', 'leadsWithoutCalls',
             'campaignStats', 'listStats', 'outcomeStats', 'operatorStats', 'regionalStats',
             'recentLeads', 'recentCalls', 'totalCalls', 'avgCallsPerLead', 'leadsWithMultipleCalls',
-            'monthlyTrends', 'companies', 'campagnaOptions', 'listaOptions', 'esitoOptions',
+            'monthlyTrends', 'campagnaOptions', 'listaOptions', 'esitoOptions',
             'operatoreOptions', 'regioneOptions', 'dateFrom', 'dateTo'
         ));
     }
@@ -461,11 +458,7 @@ class LeadController extends Controller
     {
         $query = Lead::query();
 
-        // Apply filters similar to dashboard
-        if ($request->has('company_id') && $request->company_id !== '') {
-            $query->where('company_id', $request->company_id);
-        }
-
+        // Apply date range filter if provided
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
@@ -530,11 +523,7 @@ class LeadController extends Controller
     {
         $query = Lead::query();
 
-        // Apply filters
-        if ($request->has('company_id') && $request->company_id !== '') {
-            $query->where('company_id', $request->company_id);
-        }
-
+        // Apply date range filter if provided
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
