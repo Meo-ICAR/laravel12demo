@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use App\Models\Mfcompenso;
 
 // Redirect root to login if not authenticated
 Route::get('/', function () {
@@ -105,8 +107,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // MFCompensos routes
-    Route::resource('mfcompensos', App\Http\Controllers\MfcompensoController::class);
+    Route::get('mfcompensos/proforma-summary', [App\Http\Controllers\MfcompensoController::class, 'proformaSummary'])->name('mfcompensos.proformaSummary');
+    Route::post('mfcompensos/send-proforma-email', [App\Http\Controllers\MfcompensoController::class, 'sendProformaEmail'])->name('mfcompensos.sendProformaEmail');
+    Route::post('mfcompensos/send-all-proforma-emails', [App\Http\Controllers\MfcompensoController::class, 'sendAllProformaEmails'])->name('mfcompensos.sendAllProformaEmails');
+    Route::post('mfcompensos/mark-as-received', [App\Http\Controllers\MfcompensoController::class, 'markAsReceived'])->name('mfcompensos.markAsReceived');
+    Route::post('mfcompensos/mark-as-paid', [App\Http\Controllers\MfcompensoController::class, 'markAsPaid'])->name('mfcompensos.markAsPaid');
+    Route::post('mfcompensos/sync-denominazioni', [App\Http\Controllers\MfcompensoController::class, 'syncDenominazioniToFornitori'])->name('mfcompensos.syncDenominazioni');
+    Route::get('mfcompensos/check-emails', [App\Http\Controllers\MfcompensoController::class, 'checkSentEmails'])->name('mfcompensos.checkSentEmails');
     Route::post('mfcompensos/import', [App\Http\Controllers\MfcompensoController::class, 'import'])->name('mfcompensos.import');
+    Route::post('mfcompensos/bulk-update-to-proforma', [App\Http\Controllers\MfcompensoController::class, 'bulkUpdateToProforma'])->name('mfcompensos.bulkUpdateToProforma');
+    Route::resource('mfcompensos', App\Http\Controllers\MfcompensoController::class);
 
     // Clienti routes
     Route::resource('clientis', App\Http\Controllers\ClientiController::class);
@@ -116,6 +126,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Employroles routes
     Route::resource('employroles', App\Http\Controllers\EmployroleController::class);
+});
+
+// Test route for debugging filters (outside auth middleware)
+Route::get('test-filter', function(Request $request) {
+    $query = Mfcompenso::query();
+
+    if ($request->has('denominazione_riferimento') && $request->denominazione_riferimento !== '') {
+        $query->where('denominazione_riferimento', 'like', '%' . $request->denominazione_riferimento . '%');
+    }
+
+    $results = $query->limit(5)->get();
+
+    return response()->json([
+        'total' => $results->count(),
+        'results' => $results->map(function($item) {
+            return [
+                'id' => $item->id,
+                'denominazione_riferimento' => $item->denominazione_riferimento,
+                'cognome' => $item->cognome,
+                'istituto_finanziario' => $item->istituto_finanziario
+            ];
+        })
+    ]);
 });
 
 // Home route

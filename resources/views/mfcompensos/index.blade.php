@@ -16,9 +16,66 @@
             </form>
         </div>
     </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form action="{{ route('mfcompensos.index') }}" method="GET" class="row" id="filterForm">
+                <div class="col-md-2">
+                    <label for="stato">Filter by Stato:</label>
+                    <select name="stato" id="stato" class="form-control">
+                        <option value="">All Stati</option>
+                        @foreach($statoOptions as $option)
+                            <option value="{{ $option }}" {{ request('stato') == $option ? 'selected' : '' }}>
+                                {{ $option }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="denominazione_riferimento">Denominazione Riferimento:</label>
+                    <input type="text" name="denominazione_riferimento" id="denominazione_riferimento"
+                           class="form-control" value="{{ request('denominazione_riferimento') }}"
+                           placeholder="Search...">
+                </div>
+                <div class="col-md-2">
+                    <label for="istituto_finanziario">Istituto Finanziario:</label>
+                    <input type="text" name="istituto_finanziario" id="istituto_finanziario"
+                           class="form-control" value="{{ request('istituto_finanziario') }}"
+                           placeholder="Search...">
+                </div>
+                <div class="col-md-2">
+                    <label for="cognome">Cognome:</label>
+                    <input type="text" name="cognome" id="cognome"
+                           class="form-control" value="{{ request('cognome') }}"
+                           placeholder="Search...">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-info mr-2">Filter</button>
+                    <a href="{{ route('mfcompensos.index') }}" class="btn btn-secondary ml-2">Clear</a>
+                    <button type="button" class="btn btn-warning ml-2" id="bulkUpdateBtn">
+                        Massive: Inserito → Proforma
+                    </button>
+                </div>
+            </form>
+            <form id="bulkUpdateForm" action="{{ route('mfcompensos.bulkUpdateToProforma') }}" method="POST" style="display:none;">
+                @csrf
+                <input type="hidden" name="stato" id="bulk_stato">
+                <input type="hidden" name="denominazione_riferimento" id="bulk_denominazione_riferimento">
+                <input type="hidden" name="istituto_finanziario" id="bulk_istituto_finanziario">
+                <input type="hidden" name="cognome" id="bulk_cognome">
+            </form>
+        </div>
+    </div>
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">MFCompensos List</h3>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title">MFCompensos List</h3>
+                <div>
+                    <a href="{{ route('mfcompensos.proformaSummary') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-chart-bar"></i> Proforma Summary
+                    </a>
+                </div>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -26,6 +83,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Legacy ID</th>
                             <th>Data Inserimento Compenso</th>
                             <th>Descrizione</th>
                             <th>Tipo</th>
@@ -50,19 +108,29 @@
                             <th>Data Status Pratica</th>
                             <th>Montante</th>
                             <th>Importo Erogato</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($mfcompensos as $item)
                             <tr>
                                 <td>{{ $item->id }}</td>
+                                <td>{{ $item->legacy_id }}</td>
                                 <td>{{ $item->data_inserimento_compenso }}</td>
                                 <td>{{ $item->descrizione }}</td>
                                 <td>{{ $item->tipo }}</td>
                                 <td>{{ $item->importo }}</td>
                                 <td>{{ $item->importo_effettivo }}</td>
                                 <td>{{ $item->quota }}</td>
-                                <td>{{ $item->stato }}</td>
+                                <td>
+                                    <select class="form-control form-control-sm stato-select" data-id="{{ $item->id }}" style="min-width: 100px;">
+                                        @foreach($statoOptions as $option)
+                                            <option value="{{ $option }}" {{ $item->stato == $option ? 'selected' : '' }}>
+                                                {{ $option }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </td>
                                 <td>{{ $item->denominazione_riferimento }}</td>
                                 <td>{{ $item->entrata_uscita }}</td>
                                 <td>{{ $item->cognome }}</td>
@@ -80,10 +148,15 @@
                                 <td>{{ $item->data_status_pratica }}</td>
                                 <td>{{ $item->montante }}</td>
                                 <td>{{ $item->importo_erogato }}</td>
+                                <td>
+                                    <a href="{{ route('mfcompensos.edit', $item->id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="25" class="text-center">No records found</td>
+                                <td colspan="27" class="text-center">No records found</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -91,8 +164,134 @@
             </div>
         </div>
         <div class="card-footer clearfix">
-            {{ $mfcompensos->links() }}
+            {{ $mfcompensos->appends(request()->query())->links() }}
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Debug filter form submission
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            console.log('Filter form submitted');
+            const formData = new FormData(this);
+            console.log('Form data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ': ' + value);
+            }
+        });
+    }
+
+    // Handle inline stato changes
+    document.querySelectorAll('.stato-select').forEach(function(select) {
+        select.addEventListener('change', function() {
+            const id = this.getAttribute('data-id');
+            const newStato = this.value;
+            const originalValue = this.getAttribute('data-original-value') || this.value;
+
+            console.log('Updating stato for ID:', id, 'to:', newStato);
+
+            // Send AJAX request to update stato
+            fetch(`/mfcompensos/${id}`, {
+                method: 'PUT',
+                credentials: 'same-origin', // Include cookies/session
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    stato: newStato
+                })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (response.redirected) {
+                    // If redirected, likely to login page
+                    window.location.href = response.url;
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data) return; // Already handled redirect
+
+                console.log('Response data:', data);
+                if (data.success) {
+                    // Update the original value
+                    this.setAttribute('data-original-value', newStato);
+
+                    // Show success message
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success alert-dismissible fade show';
+                    alert.innerHTML = `
+                        Stato updated successfully!
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    `;
+
+                    // Insert alert at the top of the container
+                    const container = document.querySelector('.container-fluid');
+                    if (container && container.firstChild) {
+                        container.insertBefore(alert, container.firstChild);
+                    } else if (container) {
+                        container.appendChild(alert);
+                    }
+
+                    // Remove alert after 3 seconds
+                    setTimeout(() => {
+                        if (alert.parentNode) {
+                            alert.remove();
+                        }
+                    }, 3000);
+                } else {
+                    console.error('Server returned error:', data);
+                    alert('Error updating stato: ' + (data.message || 'Unknown error'));
+                    // Revert to original value
+                    this.value = originalValue;
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                alert('Error updating stato: ' + error.message);
+                // Revert to original value
+                this.value = originalValue;
+            });
+        });
+
+        // Store original value when page loads
+        select.setAttribute('data-original-value', select.value);
+    });
+
+    // Bulk update button
+    const bulkUpdateBtn = document.getElementById('bulkUpdateBtn');
+    if (bulkUpdateBtn) {
+        bulkUpdateBtn.addEventListener('click', function() {
+            // Get current filter values
+            const stato = document.getElementById('stato').value;
+            const denominazione = document.getElementById('denominazione_riferimento').value;
+            const istituto = document.getElementById('istituto_finanziario').value;
+            const cognome = document.getElementById('cognome').value;
+
+            // Populate hidden form fields
+            document.getElementById('bulk_stato').value = stato;
+            document.getElementById('bulk_denominazione_riferimento').value = denominazione;
+            document.getElementById('bulk_istituto_finanziario').value = istituto;
+            document.getElementById('bulk_cognome').value = cognome;
+
+            console.log('Bulk update with filters:', { stato, denominazione, istituto, cognome });
+
+            if (confirm('Are you sure you want to change stato from Inserito to Proforma for all filtered records?')) {
+                document.getElementById('bulkUpdateForm').submit();
+            }
+        });
+    }
+});
+</script>
 @endsection

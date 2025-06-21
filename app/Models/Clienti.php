@@ -21,8 +21,6 @@ class Clienti extends Model
         'name',
         'piva',
         'email',
-        'iscollaboratore',
-        'isdipendente',
         'regione',
         'citta',
         'company_id',
@@ -42,5 +40,10 @@ class Clienti extends Model
     public function customertype()
     {
         return $this->belongsTo(\App\Models\Customertype::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(\App\Models\Company::class, 'company_id');
     }
 }

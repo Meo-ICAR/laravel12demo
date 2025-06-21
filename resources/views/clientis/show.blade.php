@@ -9,11 +9,10 @@
         <tr><th>Name</th><td>{{ $clienti->name }}</td></tr>
         <tr><th>PIVA</th><td>{{ $clienti->piva }}</td></tr>
         <tr><th>Email</th><td>{{ $clienti->email }}</td></tr>
-        <tr><th>Is Collaboratore</th><td>{{ $clienti->iscollaboratore }}</td></tr>
-        <tr><th>Is Dipendente</th><td>{{ $clienti->isdipendente }}</td></tr>
         <tr><th>Regione</th><td>{{ $clienti->regione }}</td></tr>
         <tr><th>Città</th><td>{{ $clienti->citta }}</td></tr>
         <tr><th>Company ID</th><td>{{ $clienti->company_id }}</td></tr>
+        <tr><th>Customer Type</th><td>{{ $clienti->customertype ? $clienti->customertype->name : '' }}</td></tr>
         <tr><th>Created At</th><td>{{ $clienti->created_at }}</td></tr>
         <tr><th>Updated At</th><td>{{ $clienti->updated_at }}</td></tr>
     </table>

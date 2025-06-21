@@ -23,14 +23,6 @@
             <input type="email" name="email" class="form-control" value="{{ old('email', $clienti->email) }}">
         </div>
         <div class="mb-3">
-            <label for="iscollaboratore" class="form-label">Is Collaboratore</label>
-            <input type="text" name="iscollaboratore" class="form-control" value="{{ old('iscollaboratore', $clienti->iscollaboratore) }}">
-        </div>
-        <div class="mb-3">
-            <label for="isdipendente" class="form-label">Is Dipendente</label>
-            <input type="text" name="isdipendente" class="form-control" value="{{ old('isdipendente', $clienti->isdipendente) }}">
-        </div>
-        <div class="mb-3">
             <label for="regione" class="form-label">Regione</label>
             <input type="text" name="regione" class="form-control" value="{{ old('regione', $clienti->regione) }}">
         </div>
@@ -41,6 +33,15 @@
         <div class="mb-3">
             <label for="company_id" class="form-label">Company ID</label>
             <input type="text" name="company_id" class="form-control" value="{{ old('company_id', $clienti->company_id) }}">
+        </div>
+        <div class="mb-3">
+            <label for="customertype_id" class="form-label">Customer Type</label>
+            <select name="customertype_id" class="form-control">
+                <option value="">-- Select --</option>
+                @foreach($customertypes as $type)
+                    <option value="{{ $type->id }}" {{ old('customertype_id', $clienti->customertype_id) == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                @endforeach
+            </select>
         </div>
         <button type="submit" class="btn btn-primary">Update</button>
         <a href="{{ route('clientis.index') }}" class="btn btn-secondary">Cancel</a>

@@ -53,6 +53,6 @@ class User extends Authenticatable
 
     public function company()
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(\App\Models\Company::class, 'company_id');
     }
 }

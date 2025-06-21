@@ -26,8 +26,17 @@
                 <dd class="col-sm-9">{{ $fornitori->regione }}</dd>
                 <dt class="col-sm-3">Città</dt>
                 <dd class="col-sm-9">{{ $fornitori->citta }}</dd>
-                <dt class="col-sm-3">Company ID</dt>
-                <dd class="col-sm-9">{{ $fornitori->company_id }}</dd>
+                <dt class="col-sm-3">Company</dt>
+                <dd class="col-sm-9">
+                    @if($fornitori->company_id)
+                        @php
+                            $company = \App\Models\Company::find($fornitori->company_id);
+                        @endphp
+                        {{ $company ? $company->name : 'Company not found (ID: ' . $fornitori->company_id . ')' }}
+                    @else
+                        <span class="text-muted">No company assigned</span>
+                    @endif
+                </dd>
             </dl>
         </div>
         <div class="card-footer">

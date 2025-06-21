@@ -2,6 +2,14 @@
 
 @section('title', config('app.name', 'Laravel'))
 
+@section('adminlte_csrf_token')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+@stop
+
+@section('head')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+@stop
+
 @section('content_header')
     @if (isset($content_header))
         <h1>{{ $content_header }}</h1>

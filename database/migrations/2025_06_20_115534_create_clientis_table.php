@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('regione')->nullable()->collation('utf8mb4_bin');
             $table->string('citta')->nullable()->collation('utf8mb4_bin');
             $table->char('company_id', 36)->nullable();
+            $table->foreign('company_id')->references('id')->on('companies')->nullOnDelete();
             $table->unsignedBigInteger('customertype_id')->nullable();
             $table->foreign('customertype_id')->references('id')->on('customertypes')->nullOnDelete();
             $table->timestamp('deleted_at')->nullable();

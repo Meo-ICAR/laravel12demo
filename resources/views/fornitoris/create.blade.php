@@ -14,44 +14,87 @@
                         <div class="form-group">
                             <label for="codice">Codice</label>
                             <input type="text" name="codice" class="form-control" value="{{ old('codice') }}">
+                            @error('codice')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="name">Name</label>
-                            <input type="text" name="name" class="form-control" value="{{ old('name') }}">
+                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+                            @error('name')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="piva">P.IVA</label>
                             <input type="text" name="piva" class="form-control" value="{{ old('piva') }}">
+                            @error('piva')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+                            @error('email')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="operatore">Operatore</label>
                             <input type="text" name="operatore" class="form-control" value="{{ old('operatore') }}">
+                            @error('operatore')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="iscollaboratore">Is Collaboratore</label>
-                            <input type="text" name="iscollaboratore" class="form-control" value="{{ old('iscollaboratore') }}">
+                            <select name="iscollaboratore" class="form-control">
+                                <option value="0" {{ old('iscollaboratore') == 0 ? 'selected' : '' }}>No</option>
+                                <option value="1" {{ old('iscollaboratore') == 1 ? 'selected' : '' }}>Yes</option>
+                            </select>
+                            @error('iscollaboratore')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="isdipendente">Is Dipendente</label>
-                            <input type="text" name="isdipendente" class="form-control" value="{{ old('isdipendente') }}">
+                            <select name="isdipendente" class="form-control">
+                                <option value="0" {{ old('isdipendente') == 0 ? 'selected' : '' }}>No</option>
+                                <option value="1" {{ old('isdipendente') == 1 ? 'selected' : '' }}>Yes</option>
+                            </select>
+                            @error('isdipendente')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="regione">Regione</label>
                             <input type="text" name="regione" class="form-control" value="{{ old('regione') }}">
+                            @error('regione')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="citta">Città</label>
                             <input type="text" name="citta" class="form-control" value="{{ old('citta') }}">
+                            @error('citta')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="form-group">
-                            <label for="company_id">Company ID</label>
-                            <input type="text" name="company_id" class="form-control" value="{{ old('company_id') }}">
+                            <label for="company_id">Company</label>
+                            <select name="company_id" class="form-control">
+                                <option value="">-- Select Company --</option>
+                                @foreach($companies as $company)
+                                    <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                        {{ $company->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('company_id')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>

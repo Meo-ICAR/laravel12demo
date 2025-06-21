@@ -27,4 +27,29 @@ class Fornitori extends Model
         'citta',
         'company_id',
     ];
+
+    public static function importFromInvoices()
+    {
+        $uniqueFornitori = \App\Models\Invoice::query()
+            ->select('fornitore', 'fornitore_piva')
+            ->whereNotNull('fornitore')
+            ->where('fornitore', '!=', '')
+            ->distinct()
+            ->get();
+
+        foreach ($uniqueFornitori as $item) {
+            if (!self::where('name', $item->fornitore)->where('piva', $item->fornitore_piva)->exists()) {
+                self::create([
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'name' => $item->fornitore,
+                    'piva' => $item->fornitore_piva,
+                ]);
+            }
+        }
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(\App\Models\Company::class, 'company_id');
+    }
 }

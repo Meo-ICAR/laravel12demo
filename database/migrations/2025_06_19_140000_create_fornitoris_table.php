@@ -23,7 +23,8 @@ return new class extends Migration
             $table->string('isdipendente')->nullable()->collation('utf8mb4_bin');
             $table->string('regione')->nullable()->collation('utf8mb4_bin');
             $table->string('citta')->nullable()->collation('utf8mb4_bin');
-            $table->char('company_id', 36);
+            $table->char('company_id', 36)->nullable();
+            $table->foreign('company_id')->references('id')->on('companies')->nullOnDelete();
             $table->timestamp('deleted_at')->nullable();
            $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();

@@ -16,6 +16,7 @@ class Mfcompenso extends Model
 
     protected $fillable = [
         'id',
+        'legacy_id',
         'data_inserimento_compenso',
         'descrizione',
         'tipo',
@@ -40,6 +41,9 @@ class Mfcompenso extends Model
         'data_status_pratica',
         'montante',
         'importo_erogato',
+        'sended_at',
+        'received_at',
+        'paided_at',
     ];
 
     protected static function boot()
@@ -73,6 +77,65 @@ class Mfcompenso extends Model
                 ]);
             }
         }
+    }
+
+    /**
+     * Sync missing denominazione_riferimento from mfcompensos to fornitoris table.
+     * This method finds all unique denominazione_riferimento values in mfcompensos
+     * that don't exist in fornitoris.name and adds them.
+     *
+     * @return array Array with counts of added, skipped, and total processed records
+     */
+    public static function syncDenominazioniToFornitori()
+    {
+        // Get all unique denominazione_riferimento from mfcompensos
+        $denominazioni = self::query()
+            ->whereNotNull('denominazione_riferimento')
+            ->where('denominazione_riferimento', '!=', '')
+            ->distinct()
+            ->pluck('denominazione_riferimento');
+
+        $added = 0;
+        $skipped = 0;
+
+        foreach ($denominazioni as $denominazione) {
+            if (!$denominazione) continue;
+
+            // Check if this denominazione already exists in fornitoris
+            $exists = Fornitori::where('name', $denominazione)->exists();
+
+            if (!$exists) {
+                try {
+                    Fornitori::create([
+                        'id' => (string) Str::uuid(),
+                        'name' => $denominazione,
+                        'codice' => null,
+                        'piva' => null,
+                        'email' => null,
+                        'operatore' => null,
+                        'iscollaboratore' => false,
+                        'isdipendente' => false,
+                        'regione' => null,
+                        'citta' => null,
+                        'company_id' => null,
+                    ]);
+                    $added++;
+                } catch (\Exception $e) {
+                    \Log::error('Failed to add denominazione to fornitori', [
+                        'denominazione' => $denominazione,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } else {
+                $skipped++;
+            }
+        }
+
+        return [
+            'added' => $added,
+            'skipped' => $skipped,
+            'total_processed' => $denominazioni->count()
+        ];
     }
 
     /**

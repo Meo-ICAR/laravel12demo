@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 255);
             $table->char('company_id', 36)->nullable();
+            $table->foreign('company_id')->references('id')->on('companies')->nullOnDelete();
             $table->timestamps();
         });
     }

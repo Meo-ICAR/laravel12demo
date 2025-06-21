@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Clienti;
+use App\Models\Customertype;
 use Illuminate\Http\Request;
 
 class ClientiController extends Controller
@@ -12,7 +13,7 @@ class ClientiController extends Controller
      */
     public function index()
     {
-        $clientis = Clienti::all();
+        $clientis = Clienti::with('customertype')->get();
         return view('clientis.index', compact('clientis'));
     }
 
@@ -21,7 +22,8 @@ class ClientiController extends Controller
      */
     public function create()
     {
-        return view('clientis.create');
+        $customertypes = Customertype::all();
+        return view('clientis.create', compact('customertypes'));
     }
 
     /**
@@ -34,11 +36,10 @@ class ClientiController extends Controller
             'name' => 'nullable|string',
             'piva' => 'nullable|string',
             'email' => 'nullable|email',
-            'iscollaboratore' => 'nullable|string',
-            'isdipendente' => 'nullable|string',
             'regione' => 'nullable|string',
             'citta' => 'nullable|string',
             'company_id' => 'nullable|string',
+            'customertype_id' => 'nullable|exists:customertypes,id',
         ]);
         Clienti::create($data);
         return redirect()->route('clientis.index')->with('success', 'Cliente created successfully.');
@@ -57,7 +58,8 @@ class ClientiController extends Controller
      */
     public function edit(Clienti $clienti)
     {
-        return view('clientis.edit', compact('clienti'));
+        $customertypes = Customertype::all();
+        return view('clientis.edit', compact('clienti', 'customertypes'));
     }
 
     /**
@@ -70,11 +72,10 @@ class ClientiController extends Controller
             'name' => 'nullable|string',
             'piva' => 'nullable|string',
             'email' => 'nullable|email',
-            'iscollaboratore' => 'nullable|string',
-            'isdipendente' => 'nullable|string',
             'regione' => 'nullable|string',
             'citta' => 'nullable|string',
             'company_id' => 'nullable|string',
+            'customertype_id' => 'nullable|exists:customertypes,id',
         ]);
         $clienti->update($data);
         return redirect()->route('clientis.index')->with('success', 'Cliente updated successfully.');
