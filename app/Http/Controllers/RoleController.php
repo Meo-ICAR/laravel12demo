@@ -74,4 +74,17 @@ class RoleController extends Controller
         $role->delete();
         return redirect()->route('roles.index')->with('success', 'Role deleted successfully');
     }
+
+    public function companyRoles($company_id)
+    {
+        // Get all roles for this company or global roles (company_id is null)
+        $roles = \Spatie\Permission\Models\Role::where(function($q) use ($company_id) {
+            $q->where('company_id', $company_id)->orWhereNull('company_id');
+        })->with(['users' => function($q) use ($company_id) {
+            $q->where('company_id', $company_id);
+        }])->orderBy('name')->get();
+
+        $company = \App\Models\Company::find($company_id);
+        return view('roles.company_roles', compact('roles', 'company'));
+    }
 }

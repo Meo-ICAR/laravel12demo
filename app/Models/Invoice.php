@@ -18,14 +18,18 @@ class Invoice extends Model
         'currency',
         'payment_method',
         'status',
+        'paid_at',
+        'isreconiled',
         'xml_data'
     ];
 
     protected $casts = [
         'invoice_date' => 'datetime',
+        'paid_at' => 'date',
         'total_amount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
-        'invoice_number' => 'string'
+        'invoice_number' => 'string',
+        'isreconiled' => 'boolean'
     ];
 
     public function getFormattedTotalAmountAttribute(): string

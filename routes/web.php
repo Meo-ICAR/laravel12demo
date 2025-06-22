@@ -92,11 +92,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('companies/{id}/restore', [CompanyController::class, 'restore'])->name('companies.restore');
         Route::delete('companies/{id}/force-delete', [CompanyController::class, 'forceDelete'])->name('companies.force-delete');
         Route::resource('companies', CompanyController::class);
+        Route::get('companies/{company}/roles', [\App\Http\Controllers\RoleController::class, 'companyRoles'])->name('companies.roles');
     });
 
     // Invoice Routes
     Route::middleware(['auth'])->group(function () {
         Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('invoices/reconciliation', [InvoiceController::class, 'reconciliation'])->name('invoices.reconciliation');
+        Route::post('invoices/reconcile', [InvoiceController::class, 'reconcile'])->name('invoices.reconcile');
+        Route::get('invoices/{invoice}/xml', [InvoiceController::class, 'getXmlData'])->name('invoices.xml');
         Route::get('invoices/import', [InvoiceImportController::class, 'index'])->name('invoices.import');
         Route::post('invoices/import', [InvoiceImportController::class, 'import'])->name('invoices.import.store');
     });
