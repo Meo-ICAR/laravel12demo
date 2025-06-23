@@ -248,9 +248,9 @@
                                         <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn btn-sm btn-warning mr-1">
                                             <i class="fas fa-edit mr-1"></i> Edit
                                         </a>
-                                        <a href="{{ route('invoices.reconciliation', ['denominazione_riferimento' => $invoice->fornitore]) }}" class="btn btn-sm btn-primary mr-1">
+                                        {{-- <a href="{{ route('invoices.reconciliation', ['denominazione_riferimento' => $invoice->fornitore]) }}" class="btn btn-sm btn-primary mr-1">
                                             <i class="fas fa-balance-scale mr-1"></i> Reconcile
-                                        </a>
+                                        </a> --}}
                                         <a href="{{ route('invoices.check', $invoice->id) }}" class="btn btn-sm btn-info">
                                             <i class="fas fa-search mr-1"></i> Check
                                         </a>

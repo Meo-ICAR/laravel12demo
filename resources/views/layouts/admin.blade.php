@@ -17,6 +17,7 @@
 @stop
 
 @section('content')
+    @include('layouts.menu')
     @if (session('success'))
         <div class="alert alert-success">
             {{ session('success') }}

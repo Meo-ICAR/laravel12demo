@@ -419,8 +419,35 @@ return [
         ],
         // Sidebar items:
         [
-            'type' => 'sidebar-menu-search',
-            'text' => 'search',
+            'text' => 'DASHBOARD',
+            'icon' => 'fas fa-chart-pie',
+            'submenu' => [
+                [
+                    'text' => 'Main Dashboard',
+                    'url' => 'dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+                [
+                    'text' => 'Invoices Dashboard',
+                    'url' => 'invoices/dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+                [
+                    'text' => 'Provvigioni Dashboard',
+                    'url' => 'provvigioni/dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+                [
+                    'text' => 'Calls Dashboard',
+                    'url' => 'calls/dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+                [
+                    'text' => 'Leads Dashboard',
+                    'url' => 'leads/dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+            ],
         ],
         [
             'header' => 'FATTURAZIONE',
