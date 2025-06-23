@@ -662,5 +662,22 @@ class ProvvigioneController extends Controller
         }
     }
 
+    public function dashboard()
+    {
+        $totalProvvigioni = \App\Models\Provvigione::count();
+        $totalImporto = \App\Models\Provvigione::sum('importo');
+        $totalByStato = \App\Models\Provvigione::select('stato', \DB::raw('COUNT(*) as count'), \DB::raw('SUM(importo) as total_importo'))
+            ->groupBy('stato')
+            ->orderByDesc('count')
+            ->get();
+        $topDenominazioni = \App\Models\Provvigione::select('denominazione_riferimento', \DB::raw('SUM(importo) as total_importo'))
+            ->whereNotNull('denominazione_riferimento')
+            ->groupBy('denominazione_riferimento')
+            ->orderByDesc('total_importo')
+            ->limit(5)
+            ->get();
+        return view('provvigioni.dashboard', compact('totalProvvigioni', 'totalImporto', 'totalByStato', 'topDenominazioni'));
+    }
+
     // ... other CRUD methods ...
 }

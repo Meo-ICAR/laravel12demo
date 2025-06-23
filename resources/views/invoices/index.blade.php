@@ -22,6 +22,9 @@
             <a href="{{ route('invoices.import') }}" class="btn btn-primary">
                 <i class="fas fa-upload mr-1"></i> Import Invoices
             </a>
+            <a href="{{ route('invoices.dashboard') }}" class="btn btn-info">
+                <i class="fas fa-chart-line mr-1"></i> Dashboard
+            </a>
         </div>
     </div>
 @stop

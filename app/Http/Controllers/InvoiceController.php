@@ -946,4 +946,28 @@ class InvoiceController extends Controller
             return redirect()->route('invoices.reconciliation')->with('error', 'Error updating invoice: ' . $e->getMessage());
         }
     }
+
+    public function dashboard()
+    {
+        $totalInvoices = \App\Models\Invoice::count();
+        $totalAmount = \App\Models\Invoice::sum('total_amount');
+        $totalByStatus = \App\Models\Invoice::select('status', \DB::raw('COUNT(*) as count'), \DB::raw('SUM(total_amount) as total_amount'))
+            ->groupBy('status')
+            ->orderByDesc('count')
+            ->get();
+        $topFornitori = \App\Models\Invoice::select('fornitore', \DB::raw('SUM(total_amount) as total_amount'))
+            ->whereNotNull('fornitore')
+            ->groupBy('fornitore')
+            ->orderByDesc('total_amount')
+            ->limit(5)
+            ->get();
+        return view('invoices.dashboard', compact('totalInvoices', 'totalAmount', 'totalByStatus', 'topFornitori'));
+    }
+
+    public function destroy($id)
+    {
+        $invoice = \App\Models\Invoice::findOrFail($id);
+        $invoice->delete();
+        return redirect()->route('invoices.reconciliation')->with('success', 'Invoice deleted successfully!');
+    }
 }

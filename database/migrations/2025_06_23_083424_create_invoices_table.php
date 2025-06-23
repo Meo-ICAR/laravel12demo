@@ -31,6 +31,7 @@ return new class extends Migration
             $table->boolean('isreconiled')->default(false);
             $table->text('xml_data')->nullable();
             $table->timestamps();
+            $table->softDeletes();
             $table->uuid('company_id')->nullable()->default('5c044917-15b3-4471-90c9-38061fcca754')->index('company_id');
         });
     }

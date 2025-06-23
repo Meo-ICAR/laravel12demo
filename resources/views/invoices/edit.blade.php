@@ -123,6 +123,11 @@
                     <button type="submit" class="btn btn-primary">Update Invoice</button>
                 </div>
             </form>
+            <form action="{{ route('invoices.destroy', $invoice->id) }}" method="POST" style="display:inline-block; margin-top: 1rem;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this invoice? This action can be undone from the trash.')">Delete Invoice</button>
+            </form>
         </div>
     </div>
 </div>

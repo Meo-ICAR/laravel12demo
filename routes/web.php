@@ -122,6 +122,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('invoices/{id}/reconcile-checked', [InvoiceController::class, 'reconcileChecked'])->name('invoices.reconcileChecked');
     Route::get('invoices/import', [InvoiceImportController::class, 'index'])->name('invoices.import');
     Route::post('invoices/import', [InvoiceImportController::class, 'import'])->name('invoices.import.store');
+    Route::get('invoices/dashboard', [App\Http\Controllers\InvoiceController::class, 'dashboard'])->name('invoices.dashboard');
+    Route::delete('invoices/{id}', [App\Http\Controllers\InvoiceController::class, 'destroy'])->name('invoices.destroy');
 
     // Fornitori routes
     Route::middleware(['permission:fornitori_management'])->group(function () {
@@ -140,6 +142,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('provvigioni/check-emails', [App\Http\Controllers\ProvvigioneController::class, 'checkSentEmails'])->name('provvigioni.checkSentEmails');
     Route::match(['GET', 'POST'], 'provvigioni/import', [App\Http\Controllers\ProvvigioneController::class, 'import'])->name('provvigioni.import');
     Route::post('provvigioni/bulk-update-to-proforma', [App\Http\Controllers\ProvvigioneController::class, 'bulkUpdateToProforma'])->name('provvigioni.bulkUpdateToProforma');
+    Route::get('provvigioni/dashboard', [App\Http\Controllers\ProvvigioneController::class, 'dashboard'])->name('provvigioni.dashboard');
     Route::put('provvigioni/{id}/stato', [App\Http\Controllers\ProvvigioneController::class, 'updateStato'])->name('provvigioni.updateStato');
     Route::resource('provvigioni', App\Http\Controllers\ProvvigioneController::class);
 

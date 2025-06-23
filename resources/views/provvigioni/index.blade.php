@@ -171,6 +171,9 @@
                     <a href="{{ route('provvigioni.import') }}" class="btn btn-primary btn-sm mr-2">
                         <i class="fas fa-upload mr-1"></i> Import Provvigioni
                     </a>
+                    <a href="{{ route('provvigioni.dashboard') }}" class="btn btn-info btn-sm mr-2">
+                        <i class="fas fa-chart-line mr-1"></i> Dashboard
+                    </a>
                     <a href="{{ route('provvigioni.proformaSummary') }}" class="btn btn-success btn-sm">
                         <i class="fas fa-chart-bar mr-1"></i> Proforma Summary
                     </a>
