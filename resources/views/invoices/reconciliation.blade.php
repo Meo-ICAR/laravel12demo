@@ -14,31 +14,38 @@
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="fas fa-filter mr-2"></i>
-                    Filter MFCompensos by Email Date
+                    Filter Provvigioni
                 </h3>
             </div>
             <div class="card-body">
                 <form method="GET" action="{{ route('invoices.reconciliation') }}" class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <label for="denominazione_riferimento">Denominazione Riferimento:</label>
+                        <input type="text" class="form-control" id="denominazione_riferimento" name="denominazione_riferimento"
+                               value="{{ request('denominazione_riferimento') }}" placeholder="Search...">
+                    </div>
+                    <div class="col-md-2">
                         <label for="email_date_from">From Date:</label>
                         <input type="date" class="form-control" id="email_date_from" name="email_date_from"
                                value="{{ request('email_date_from') }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="email_date_to">To Date:</label>
                         <input type="date" class="form-control" id="email_date_to" name="email_date_to"
                                value="{{ request('email_date_to') }}">
                     </div>
                     <div class="col-md-3">
-                        <label>&nbsp;</label>
-                        <div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search mr-1"></i> Filter
-                            </button>
-                            <a href="{{ route('invoices.reconciliation') }}" class="btn btn-secondary">
-                                <i class="fas fa-times mr-1"></i> Clear
-                            </a>
-                        </div>
+                        <fieldset>
+                            <legend class="sr-only">Filter Actions</legend>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search mr-1"></i> Filter
+                                </button>
+                                <a href="{{ route('invoices.reconciliation') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times mr-1"></i> Clear
+                                </a>
+                            </div>
+                        </fieldset>
                     </div>
                 </form>
             </div>
@@ -47,7 +54,91 @@
 </div>
 
 <div class="row">
-    <!-- Left Column: Unreconciled Invoices -->
+    <!-- Left Column: Provvigioni Summary -->
+    <div class="col-md-6">
+        <div class="card card-success">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-envelope mr-2"></i>
+                    Sent Provvigioni (Proforma Status)
+                    <span class="badge badge-info ml-2">{{ $provvigioniSummary->count() }}</span>
+                </h3>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Click the link button to select an Provvigione, then click reconcile on an invoice to match them.
+                </small>
+            </div>
+            <div class="card-body p-0">
+                @if($provvigioniSummary->isEmpty())
+                    <div class="p-3 text-center text-muted">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No sent Provvigioni with Proforma status</p>
+                    </div>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Denominazione</th>
+                                    <th class="text-center">Sent Date</th>
+                                    <th class="text-center">Records</th>
+                                    <th class="text-right">Total Amount</th>
+                                    <th class="text-center">Select</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($provvigioniSummary as $summary)
+                                    <tr>
+                                        <td>
+                                            <a href="{{ route('provvigioni.index', [
+                                                'denominazione_riferimento' => $summary->denominazione_riferimento,
+                                                'sended_at' => $summary->sent_date
+                                            ]) }}"
+                                               class="text-primary font-weight-bold"
+                                               title="Click to view Provvigioni for {{ $summary->denominazione_riferimento }} sent on {{ \Carbon\Carbon::parse($summary->sent_date)->format('d/m/Y') }}">
+                                                {{ $summary->denominazione_riferimento ?: 'N/A' }}
+                                            </a>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-secondary">
+                                                {{ \Carbon\Carbon::parse($summary->sent_date)->format('d/m/Y') }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-primary">{{ $summary->total_records }}</span>
+                                        </td>
+                                        <td class="text-right">
+                                            <span class="badge badge-success">
+                                                € {{ number_format($summary->total_amount, 2, ',', '.') }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-primary provvigione-select-btn"
+                                                    data-denominazione="{{ $summary->denominazione_riferimento }}"
+                                                    data-sent-date="{{ $summary->sent_date }}"
+                                                    data-total-records="{{ $summary->total_records }}"
+                                                    data-total-amount="{{ $summary->total_amount }}"
+                                                    title="Click to select">
+                                                <i class="fas fa-link"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+            <div class="card-footer">
+                <a href="{{ route('provvigioni.index') }}" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-list mr-1"></i> View All Provvigioni
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Unreconciled Invoices -->
     <div class="col-md-6">
         <div class="card card-primary">
             <div class="card-header">
@@ -56,6 +147,10 @@
                     Unreconciled Invoices
                     <span class="badge badge-warning ml-2">{{ $unreconciledInvoices->count() }}</span>
                 </h3>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Reconcile buttons are enabled only when an Provvigione is selected.
+                </small>
             </div>
             <div class="card-body p-0">
                 @if($unreconciledInvoices->isEmpty())
@@ -68,22 +163,49 @@
                         <table class="table table-striped table-hover mb-0">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>Invoice #</th>
+                                    <th>Action</th>
                                     <th>Fornitore</th>
                                     <th>Date</th>
+                                    <th>Invoice #</th>
                                     <th>Amount</th>
                                     <th>Status</th>
-                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($unreconciledInvoices as $invoice)
                                     <tr>
                                         <td>
-                                            <strong>{{ $invoice->invoice_number ?: 'N/A' }}</strong>
+                                            <button type="button" class="btn btn-sm btn-primary reconcile-btn"
+                                                    data-invoice-id="{{ $invoice->id }}"
+                                                    data-invoice-number="{{ $invoice->invoice_number }}"
+                                                    data-fornitore="{{ $invoice->fornitore }}"
+                                                    title="Reconcile this invoice">
+                                                <i class="fas fa-link"></i>
+                                            </button>
                                         </td>
-                                        <td>{{ $invoice->fornitore ?: 'N/A' }}</td>
+                                        <td>
+                                            @if($invoice->fornitore)
+                                                <a href="{{ route('invoices.reconciliation', array_merge(request()->query(), ['denominazione_riferimento' => $invoice->fornitore])) }}"
+                                                   class="text-primary font-weight-bold"
+                                                   title="Click to filter by {{ $invoice->fornitore }}">
+                                                    {{ $invoice->fornitore }}
+                                                </a>
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
                                         <td>{{ $invoice->invoice_date ? $invoice->invoice_date->format('d/m/Y') : 'N/A' }}</td>
+                                        <td>
+                                            @if($invoice->invoice_number)
+                                                <a href="{{ route('invoices.edit', $invoice->id) }}"
+                                                   class="text-primary font-weight-bold"
+                                                   title="Click to edit invoice {{ $invoice->invoice_number }}">
+                                                    <strong>{{ Str::limit($invoice->invoice_number, 10, '...') }}</strong>
+                                                </a>
+                                            @else
+                                                <strong>N/A</strong>
+                                            @endif
+                                        </td>
                                         <td class="text-right">
                                             <span class="badge badge-info">
                                                 € {{ number_format($invoice->total_amount, 2, ',', '.') }}
@@ -95,14 +217,6 @@
                                             @else
                                                 <span class="badge badge-warning">Unreconciled</span>
                                             @endif
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-success reconcile-btn"
-                                                    data-invoice-id="{{ $invoice->id }}"
-                                                    data-invoice-number="{{ $invoice->invoice_number }}"
-                                                    data-fornitore="{{ $invoice->fornitore }}">
-                                                <i class="fas fa-link mr-1"></i> Reconcile
-                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -118,130 +232,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Right Column: MFCompensos Summary -->
-    <div class="col-md-6">
-        <div class="card card-success">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-envelope mr-2"></i>
-                    Sent MFCompensos (No Invoice)
-                    <span class="badge badge-info ml-2">{{ $mfcompensosSummary->count() }}</span>
-                </h3>
-            </div>
-            <div class="card-body p-0">
-                @if($mfcompensosSummary->isEmpty())
-                    <div class="p-3 text-center text-muted">
-                        <i class="fas fa-inbox fa-2x mb-2"></i>
-                        <p>No sent MFCompensos without invoice numbers</p>
-                    </div>
-                @else
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover mb-0">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>
-                                        <input type="checkbox" id="select-all-mfcompensos">
-                                    </th>
-                                    <th>Denominazione</th>
-                                    <th class="text-center">Records</th>
-                                    <th class="text-right">Total Amount</th>
-                                    <th class="text-center">Email Date Range</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($mfcompensosSummary as $summary)
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="mfcompenso-checkbox"
-                                                   value="{{ $summary->denominazione_riferimento }}"
-                                                   data-denominazione="{{ $summary->denominazione_riferimento }}">
-                                        </td>
-                                        <td>
-                                            <strong>{{ $summary->denominazione_riferimento ?: 'N/A' }}</strong>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge badge-primary">{{ $summary->total_records }}</span>
-                                        </td>
-                                        <td class="text-right">
-                                            <span class="badge badge-success">
-                                                € {{ number_format($summary->total_amount, 2, ',', '.') }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <small class="text-muted">
-                                                @if($summary->first_sent_date && $summary->last_sent_date)
-                                                    {{ \Carbon\Carbon::parse($summary->first_sent_date)->format('d/m/Y') }} -
-                                                    {{ \Carbon\Carbon::parse($summary->last_sent_date)->format('d/m/Y') }}
-                                                @else
-                                                    N/A
-                                                @endif
-                                            </small>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
-            </div>
-            <div class="card-footer">
-                <a href="{{ route('mfcompensos.index') }}" class="btn btn-sm btn-outline-success">
-                    <i class="fas fa-list mr-1"></i> View All MFCompensos
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reconciliation Modal -->
-<div class="modal fade" id="reconciliationModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Reconcile Invoice</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="reconciliationForm">
-                    @csrf
-                    <input type="hidden" id="invoice_id" name="invoice_id">
-                    <input type="hidden" id="denominazione_riferimento" name="denominazione_riferimento">
-
-                    <div class="form-group">
-                        <label>Invoice Number:</label>
-                        <input type="text" class="form-control" id="modal_invoice_number" readonly>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Fornitore:</label>
-                        <input type="text" class="form-control" id="modal_fornitore" readonly>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Select MFCompenso Group:</label>
-                        <select class="form-control" id="denominazione_select" required>
-                            <option value="">Select a denominazione...</option>
-                            @foreach($mfcompensosSummary as $summary)
-                                <option value="{{ $summary->denominazione_riferimento }}">
-                                    {{ $summary->denominazione_riferimento }}
-                                    ({{ $summary->total_records }} records - €{{ number_format($summary->total_amount, 2, ',', '.') }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="confirmReconcile">
-                    <i class="fas fa-link mr-1"></i> Confirm Reconciliation
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Summary Cards Row -->
@@ -252,8 +242,21 @@
                 <i class="fas fa-file-invoice"></i>
             </span>
             <div class="info-box-content">
-                <span class="info-box-text">Unreconciled Invoices</span>
+                <span class="info-box-text">
+                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
+                        Filtered Unreconciled Invoices
+                    @else
+                        Unreconciled Invoices
+                    @endif
+                </span>
                 <span class="info-box-number">{{ $unreconciledInvoices->count() }}</span>
+                <span class="info-box-text">
+                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
+                        Filtered: € {{ number_format($unreconciledInvoices->sum('total_amount'), 2, ',', '.') }}
+                    @else
+                        Total: € {{ number_format($unreconciledInvoices->sum('total_amount'), 2, ',', '.') }}
+                    @endif
+                </span>
             </div>
         </div>
     </div>
@@ -264,21 +267,20 @@
                 <i class="fas fa-envelope"></i>
             </span>
             <div class="info-box-content">
-                <span class="info-box-text">Sent MFCompensos</span>
-                <span class="info-box-number">{{ $mfcompensosSummary->count() }}</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="info-box">
-            <span class="info-box-icon bg-success">
-                <i class="fas fa-euro-sign"></i>
-            </span>
-            <div class="info-box-content">
-                <span class="info-box-text">Total MFCompensos Amount</span>
-                <span class="info-box-number">
-                    € {{ number_format($mfcompensosSummary->sum('total_amount'), 2, ',', '.') }}
+                <span class="info-box-text">
+                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
+                        Filtered Provvigioni
+                    @else
+                        Sent Provvigioni
+                    @endif
+                </span>
+                <span class="info-box-number">{{ $provvigioniSummary->count() }}</span>
+                <span class="info-box-text">
+                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
+                        Filtered: € {{ number_format($provvigioniSummary->sum('total_amount'), 2, ',', '.') }}
+                    @else
+                        Total: € {{ number_format($provvigioniSummary->sum('total_amount'), 2, ',', '.') }}
+                    @endif
                 </span>
             </div>
         </div>
@@ -286,12 +288,65 @@
 
     <div class="col-md-3">
         <div class="info-box">
-            <span class="info-box-icon bg-primary">
+            <span class="info-box-icon bg-success">
                 <i class="fas fa-users"></i>
             </span>
             <div class="info-box-content">
                 <span class="info-box-text">Total Records</span>
-                <span class="info-box-number">{{ $mfcompensosSummary->sum('total_records') }}</span>
+                <span class="info-box-number">{{ $provvigioniSummary->sum('total_records') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-primary">
+                <i class="fas fa-balance-scale"></i>
+            </span>
+            <div class="info-box-content">
+                <span class="info-box-text">Difference</span>
+                @php
+                    $invoiceTotal = $unreconciledInvoices->sum('total_amount');
+                    $provvigioneTotal = $provvigioniSummary->sum('total_amount');
+                    $difference = $invoiceTotal - $provvigioneTotal;
+                @endphp
+                <span class="info-box-number">
+                    € {{ number_format($difference, 2, ',', '.') }}
+                </span>
+                <span class="info-box-text">
+                    @if($difference == 0)
+                        <span class="text-success">Balanced</span>
+                    @elseif($difference > 0)
+                        <span class="text-warning">Invoices higher</span>
+                    @else
+                        <span class="text-info">Provvigioni higher</span>
+                    @endif
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Provvigione Selection Modal -->
+<div class="modal fade" id="provvigioneModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Provvigione Selected
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="provvigione-details">
+                    <!-- Details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -304,6 +359,7 @@
         border-top: none;
         font-weight: 600;
     }
+
     .info-box {
         box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
         border-radius: 0.25rem;
@@ -349,65 +405,33 @@
 @section('js')
 <script>
 $(document).ready(function() {
-    // Enable tooltips
-    $('[data-toggle="tooltip"]').tooltip();
+    console.log('Document ready!');
 
-    // Select all checkbox functionality
-    $('#select-all-mfcompensos').change(function() {
-        $('.mfcompenso-checkbox').prop('checked', $(this).is(':checked'));
+    // Simple Provvigione selection
+    $(document).on('click', '.provvigione-select-btn', function() {
+        console.log('Provvigione button clicked!');
+
+        var $btn = $(this);
+        var denominazione = $btn.data('denominazione');
+        var sentDate = $btn.data('sent-date');
+
+        // Simple alert to show selection
+        alert('Selected: ' + (denominazione || 'N/A') + '\nSent Date: ' + (sentDate || 'N/A'));
+
+        // Change button color to show selection
+        $('.provvigione-select-btn').removeClass('btn-success').addClass('btn-primary');
+        $btn.removeClass('btn-primary').addClass('btn-success');
     });
 
-    // Reconcile button click
-    $('.reconcile-btn').click(function() {
+    // Simple reconcile button
+    $(document).on('click', '.reconcile-btn', function() {
+        console.log('Reconcile button clicked!');
+
         var invoiceId = $(this).data('invoice-id');
         var invoiceNumber = $(this).data('invoice-number');
-        var fornitore = $(this).data('fornitore');
 
-        $('#invoice_id').val(invoiceId);
-        $('#modal_invoice_number').val(invoiceNumber);
-        $('#modal_fornitore').val(fornitore);
-        $('#denominazione_select').val('');
-
-        $('#reconciliationModal').modal('show');
+        alert('Reconcile invoice: ' + (invoiceNumber || 'N/A') + '\nID: ' + invoiceId);
     });
-
-    // Confirm reconciliation
-    $('#confirmReconcile').click(function() {
-        var denominazione = $('#denominazione_select').val();
-        if (!denominazione) {
-            alert('Please select a MFCompenso group to reconcile with.');
-            return;
-        }
-
-        $('#denominazione_riferimento').val(denominazione);
-
-        $.ajax({
-            url: '{{ route("invoices.reconcile") }}',
-            method: 'POST',
-            data: $('#reconciliationForm').serialize(),
-            success: function(response) {
-                if (response.success) {
-                    // Show success message
-                    alert(response.message);
-
-                    // Close modal and reload page
-                    $('#reconciliationModal').modal('hide');
-                    location.reload();
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            },
-            error: function(xhr) {
-                var response = xhr.responseJSON;
-                alert('Error: ' + (response ? response.message : 'Unknown error occurred'));
-            }
-        });
-    });
-
-    // Auto-refresh every 5 minutes
-    setTimeout(function() {
-        location.reload();
-    }, 300000); // 5 minutes
 });
 </script>
 @stop

@@ -144,11 +144,17 @@ class InvoiceImportController extends Controller
         $body = $invoiceXml->FatturaElettronicaBody;
 
         $cliente_piva = (string)$header->CessionarioCommittente->DatiAnagrafici->IdFiscaleIVA->IdCodice;
+        $fornitore_piva = (string)$header->CedentePrestatore->DatiAnagrafici->IdFiscaleIVA->IdCodice;
         $invoice_number = (string)$body->DatiGenerali->DatiGeneraliDocumento->Numero;
+        $invoice_date = date('Y-m-d H:i:s', strtotime((string)$body->DatiGenerali->DatiGeneraliDocumento->Data));
 
-        // Skip if invoice with same cliente_piva and invoice_number exists
-        if (\App\Models\Invoice::where('cliente_piva', $cliente_piva)->where('invoice_number', $invoice_number)->exists()) {
-            throw new \Exception("Invoice with cliente_piva $cliente_piva and invoice_number $invoice_number already exists. Skipped.");
+        // Skip if invoice with same invoice_number, invoice_date, cliente_piva, and fornitore_piva exists
+        if (\App\Models\Invoice::where('invoice_number', $invoice_number)
+            ->where('invoice_date', $invoice_date)
+            ->where('cliente_piva', $cliente_piva)
+            ->where('fornitore_piva', $fornitore_piva)
+            ->exists()) {
+            throw new \Exception("Invoice with invoice_number $invoice_number, invoice_date $invoice_date, cliente_piva $cliente_piva, and fornitore_piva $fornitore_piva already exists. Skipped.");
         }
 
         // Calculate total tax amount from DatiRiepilogo
@@ -159,12 +165,12 @@ class InvoiceImportController extends Controller
 
         // Create invoice record
         $invoice = new Invoice();
-        $invoice->fornitore_piva = (string)$header->CedentePrestatore->DatiAnagrafici->IdFiscaleIVA->IdCodice;
+        $invoice->fornitore_piva = $fornitore_piva;
         $invoice->fornitore = (string)$header->CedentePrestatore->DatiAnagrafici->Anagrafica->Denominazione;
         $invoice->cliente_piva = $cliente_piva;
         $invoice->cliente = (string)$header->CessionarioCommittente->DatiAnagrafici->Anagrafica->Denominazione;
         $invoice->invoice_number = $invoice_number;
-        $invoice->invoice_date = date('Y-m-d H:i:s', strtotime((string)$body->DatiGenerali->DatiGeneraliDocumento->Data));
+        $invoice->invoice_date = $invoice_date;
         $invoice->total_amount = (float)$body->DatiGenerali->DatiGeneraliDocumento->ImportoTotaleDocumento;
         $invoice->tax_amount = $taxAmount;
         $invoice->currency = (string)$body->DatiGenerali->DatiGeneraliDocumento->Divisa;

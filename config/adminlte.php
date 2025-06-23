@@ -310,153 +310,240 @@ return [
             'type' => 'fullscreen-widget',
             'topnav_right' => true,
         ],
+        [
+            'text' => 'Help',
+            'url' => 'help/home',
+            'icon' => 'fas fa-question-circle',
+            'topnav_right' => true,
+        ],
+        [
+            'text' => 'FATTURAZIONE',
+            'topnav' => true,
+            'submenu' => [
+                [
+                    'text' => 'Provvigioni',
+                    'url' => 'provvigioni',
+                    'icon' => 'fas fa-money-bill-wave',
 
+                ],
+                [
+                    'text' => 'Proforma',
+                    'url' => 'provvigioni/proforma-summary',
+                    'icon' => 'fas fa-file-alt',
+                ],
+                [
+                    'text' => 'Invoices',
+                    'url' => 'invoices',
+                    'icon' => 'fas fa-file-invoice',
+                ],
+                [
+                    'text' => 'Riconciliazione',
+                    'url' => 'invoices/reconciliation',
+                    'icon' => 'fas fa-balance-scale',
+                ],
+            ],
+        ],
+        [
+            'text' => 'CALL CENTER',
+            'topnav' => true,
+            'submenu' => [
+                [
+                    'text' => 'Leads',
+                    'url' => 'leads',
+                    'icon' => 'fas fa-user-plus',
+                ],
+                [
+                    'text' => 'Calls',
+                    'url' => 'calls',
+                    'icon' => 'fas fa-phone',
+                ],
+            ],
+        ],
+        [
+            'text' => 'ANAGRAFICHE',
+            'topnav' => true,
+            'submenu' => [
+                [
+                    'text' => 'Fornitori',
+                    'url' => 'fornitoris',
+                    'icon' => 'fas fa-truck',
+                ],
+                [
+                    'text' => 'Clienti',
+                    'url' => 'clientis',
+                    'icon' => 'fas fa-users',
+                    'can' => 'clientis_access',
+                ],
+            ],
+        ],
+        [
+            'text' => 'USER SETTINGS',
+            'topnav' => true,
+            'submenu' => [
+                [
+                    'text' => 'User Management',
+                    'icon' => 'fas fa-users',
+                    'can' => 'user_management',
+                    'submenu' => [
+                        [
+                            'text' => 'Users',
+                            'url' => 'users',
+                            'icon' => 'fas fa-user',
+                        ],
+
+                    ],
+                ],
+                [
+                    'text' => 'Setting',
+                    'icon' => 'fas fa-cogs',
+                    'can' => 'super_admin',
+                    'submenu' => [
+                        [
+                            'text' => 'Companies',
+                            'url' => 'companies',
+                            'icon' => 'fas fa-building',
+                        ],
+                        [
+                            'text' => 'Roles',
+                            'url' => 'roles',
+                            'icon' => 'fas fa-user-tag',
+                        ],
+                        [
+                            'text' => 'Permissions',
+                            'url' => 'permissions',
+                            'icon' => 'fas fa-key',
+                        ],
+                    ],
+                ],
+            ],
+        ],
         // Sidebar items:
         [
             'type' => 'sidebar-menu-search',
             'text' => 'search',
         ],
         [
-            'text' => 'Dashboard',
-            'url' => 'dashboard',
-            'icon' => 'fas fa-fw fa-tachometer-alt',
+            'header' => 'FATTURAZIONE',
         ],
         [
-            'header' => 'ACCOUNT SETTINGS',
-        ],
-        [
-            'text' => 'Profile',
-            'url' => 'profile',
-            'icon' => 'fas fa-fw fa-user',
-        ],
-        [
-            'text' => 'Change Password',
-            'url' => 'profile',
-            'icon' => 'fas fa-fw fa-lock',
-        ],
-        [
-            'header' => 'MANAGEMENT',
-            'can' => 'user_management',
-        ],
-        [
-            'text' => 'User Management',
-            'icon' => 'fas fa-fw fa-users',
-            'can' => 'user_management',
+            'text' => 'Fatturazione',
+            'icon' => 'fas fa-file-invoice-dollar',
             'submenu' => [
                 [
-                    'text' => 'Users',
-                    'url' => 'users',
-                    'icon' => 'fas fa-fw fa-user',
+                    'text' => 'Provvigioni',
+                    'url' => 'provvigioni',
+                    'icon' => 'fas fa-money-bill-wave',
                 ],
                 [
-                    'text' => 'Roles',
-                    'url' => 'roles',
-                    'icon' => 'fas fa-fw fa-user-tag',
-                    'can' => 'role_management',
+                    'text' => 'Proforma',
+                    'url' => 'provvigioni/proforma-summary',
+                    'icon' => 'fas fa-file-alt',
                 ],
                 [
-                    'text' => 'Permissions',
-                    'url' => 'permissions',
-                    'icon' => 'fas fa-fw fa-key',
-                    'can' => 'permission_management',
+                    'text' => 'Invoices',
+                    'url' => 'invoices',
+                    'icon' => 'fas fa-file-invoice',
+                ],
+                [
+                    'text' => 'Riconciliazione',
+                    'url' => 'invoices/reconciliation',
+                    'icon' => 'fas fa-balance-scale',
                 ],
             ],
         ],
         [
-            'header' => 'SETTING',
-            'can' => 'super_admin',
+            'header' => 'CALL CENTER',
         ],
         [
-            'text' => 'Setting',
-            'icon' => 'fas fa-cogs',
-            'can' => 'super_admin',
+            'text' => 'Call Center',
+            'icon' => 'fas fa-headset',
             'submenu' => [
                 [
-                    'text' => 'Companies',
-                    'url' => 'companies',
-                    'icon' => 'fas fa-building',
-                ],
-                [
-                    'text' => 'Roles',
-                    'url' => 'roles',
-                    'icon' => 'fas fa-user-tag',
-                ],
-                [
-                    'text' => 'Permissions',
-                    'url' => 'permissions',
-                    'icon' => 'fas fa-key',
-                ],
-            ],
-        ],
-        [
-            'text' => 'Invoices',
-            'url' => 'invoices',
-            'icon' => 'fas fa-file-invoice',
-            'can' => null,
-        ],
-        [
-            'text' => 'Fornitori',
-            'url' => 'fornitoris',
-            'icon' => 'fas fa-truck',
-            'can' => null,
-        ],
-        [
-            'text' => 'Mfcompensos',
-            'url' => 'mfcompensos',
-            'icon' => 'fas fa-coins',
-            'can' => null,
-        ],
-        [
-            'text' => 'Calls',
-            'icon' => 'fas fa-phone',
-            'can' => null,
-            'submenu' => [
-                [
-                    'text' => 'Calls List',
-                    'url' => 'calls',
-                    'icon' => 'fas fa-list',
-                ],
-                [
-                    'text' => 'Calls Dashboard',
-                    'url' => 'calls/dashboard',
-                    'icon' => 'fas fa-chart-line',
-                ],
-            ],
-        ],
-        [
-            'text' => 'Leads',
-            'icon' => 'fas fa-user-plus',
-            'can' => null,
-            'submenu' => [
-                [
-                    'text' => 'Leads List',
+                    'text' => 'Leads',
                     'url' => 'leads',
-                    'icon' => 'fas fa-list',
+                    'icon' => 'fas fa-user-plus',
                 ],
                 [
-                    'text' => 'Leads Dashboard',
-                    'url' => 'leads/dashboard',
-                    'icon' => 'fas fa-chart-line',
+                    'text' => 'Calls',
+                    'url' => 'calls',
+                    'icon' => 'fas fa-phone',
                 ],
             ],
         ],
         [
-            'text' => 'Clientis',
-            'url' => 'clientis',
-            'icon' => 'fas fa-users',
-            'can' => 'clientis_access',
+            'header' => 'ANAGRAFICHE',
         ],
         [
-            'text' => 'Customer Types',
-            'url' => 'customertypes',
-            'icon' => 'fas fa-tags',
-            'can' => null,
+            'text' => 'Anagrafiche',
+            'icon' => 'fas fa-address-book',
+            'submenu' => [
+                [
+                    'text' => 'Fornitori',
+                    'url' => 'fornitoris',
+                    'icon' => 'fas fa-truck',
+                ],
+                [
+                    'text' => 'Clienti',
+                    'url' => 'clientis',
+                    'icon' => 'fas fa-users',
+                ],
+            ],
         ],
         [
-            'text' => 'Employ Roles',
-            'url' => 'employroles',
-            'icon' => 'fas fa-user-tie',
-            'can' => null,
+            'header' => 'USER SETTINGS',
+        ],
+        [
+            'text' => 'User Settings',
+            'icon' => 'fas fa-user-cog',
+            'submenu' => [
+                [
+                    'text' => 'Customer Types',
+                    'url' => 'customertypes',
+                    'icon' => 'fas fa-tags',
+                ],
+                [
+                    'text' => 'User Management',
+                    'icon' => 'fas fa-users',
+                    'submenu' => [
+                        [
+                            'text' => 'Users',
+                            'url' => 'users',
+                            'icon' => 'fas fa-user',
+                        ],
+                        [
+                            'text' => 'Roles',
+                            'url' => 'roles',
+                            'icon' => 'fas fa-user-tag',
+                        ],
+                        [
+                            'text' => 'Permissions',
+                            'url' => 'permissions',
+                            'icon' => 'fas fa-key',
+                        ],
+                    ],
+                ],
+                [
+                    'text' => 'Setting',
+                    'icon' => 'fas fa-cogs',
+                    'submenu' => [
+                        [
+                            'text' => 'Companies',
+                            'url' => 'companies',
+                            'icon' => 'fas fa-building',
+                        ],
+                        [
+                            'text' => 'Roles',
+                            'url' => 'roles',
+                            'icon' => 'fas fa-user-tag',
+                        ],
+                        [
+                            'text' => 'Permissions',
+                            'url' => 'permissions',
+                            'icon' => 'fas fa-key',
+                        ],
+                    ],
+                ],
+            ],
         ],
     ],
 

@@ -22,30 +22,26 @@
                 <table class="table table-bordered table-striped mb-0">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Codice</th>
                             <th>Name</th>
+                            <th>Customer Type</th>
                             <th>PIVA</th>
                             <th>Email</th>
                             <th>Regione</th>
                             <th>Città</th>
-                            <th>Company ID</th>
-                            <th>Customer Type</th>
+                            <th>Codice</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($clientis as $clienti)
                             <tr>
-                                <td>{{ $clienti->id }}</td>
-                                <td>{{ $clienti->codice }}</td>
                                 <td>{{ $clienti->name }}</td>
+                                <td>{{ $clienti->customertype ? $clienti->customertype->name : '' }}</td>
                                 <td>{{ $clienti->piva }}</td>
                                 <td>{{ $clienti->email }}</td>
                                 <td>{{ $clienti->regione }}</td>
                                 <td>{{ $clienti->citta }}</td>
-                                <td>{{ $clienti->company_id }}</td>
-                                <td>{{ $clienti->customertype ? $clienti->customertype->name : '' }}</td>
+                                <td>{{ $clienti->codice }}</td>
                                 <td>
                                     <a href="{{ route('clientis.show', $clienti) }}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
                                     <a href="{{ route('clientis.edit', $clienti) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
@@ -60,7 +56,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center">No clienti found.</td>
+                                <td colspan="8" class="text-center">No clienti found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -68,7 +64,7 @@
             </div>
         </div>
         <div class="card-footer clearfix">
-            {{ $clientis->links() }}
+            <!-- Pagination removed - using Collection instead of paginated results -->
         </div>
     </div>
 </div>

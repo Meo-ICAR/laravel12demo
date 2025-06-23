@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\Mfcompenso;
+use App\Models\Provvigione;
 
 class SyncDenominazioniToFornitori extends Command
 {
@@ -12,14 +12,14 @@ class SyncDenominazioniToFornitori extends Command
      *
      * @var string
      */
-    protected $signature = 'mfcompensos:sync-denominazioni {--dry-run : Show what would be added without actually adding}';
+    protected $signature = 'provvigioni:sync-denominazioni {--dry-run : Show what would be added without actually adding}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Sync missing denominazione_riferimento from mfcompensos to fornitori table';
+    protected $description = 'Sync missing denominazione_riferimento from provvigioni to fornitori table';
 
     /**
      * Execute the console command.
@@ -32,14 +32,14 @@ class SyncDenominazioniToFornitori extends Command
             $this->warn('DRY RUN MODE - No changes will be made');
         }
 
-        // Get all unique denominazione_riferimento from mfcompensos
-        $denominazioni = Mfcompenso::query()
+        // Get all unique denominazione_riferimento from provvigioni
+        $denominazioni = Provvigione::query()
             ->whereNotNull('denominazione_riferimento')
             ->where('denominazione_riferimento', '!=', '')
             ->distinct()
             ->pluck('denominazione_riferimento');
 
-        $this->info("Found {$denominazioni->count()} unique denominazioni in mfcompensos");
+        $this->info("Found {$denominazioni->count()} unique denominazioni in provvigioni");
 
         $added = 0;
         $skipped = 0;

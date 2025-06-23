@@ -61,10 +61,29 @@
                     </a>
                 </li>
 
+                <!-- Help -->
+                <li class="nav-item">
+                    <a href="{{ route('help.show', 'home') }}" class="nav-link {{ request()->routeIs('help.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-question-circle"></i>
+                        <p>Help</p>
+                    </a>
+                </li>
+
+                <!-- Admin Help Management -->
+                @if(auth()->user()->hasRole('super_admin'))
+                <li class="nav-item">
+                    <a href="{{ route('help.admin.index') }}" class="nav-link {{ request()->routeIs('help.admin.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-cog"></i>
+                        <p>Manage Help</p>
+                    </a>
+                </li>
+                @endif
+
                 <!-- Logout -->
                 <li class="nav-item">
                     <form method="POST" action="{{ route('logout') }}" id="logout-form">
                         @csrf
+                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     </form>
                     <a href="#" class="nav-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                         <i class="nav-icon fas fa-sign-out-alt"></i>

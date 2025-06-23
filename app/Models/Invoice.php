@@ -20,12 +20,17 @@ class Invoice extends Model
         'status',
         'paid_at',
         'isreconiled',
-        'xml_data'
+        'sended_at',
+        'sended2_at',
+        'xml_data',
+        'delta',
     ];
 
     protected $casts = [
         'invoice_date' => 'datetime',
         'paid_at' => 'date',
+        'sended_at' => 'datetime',
+        'sended2_at' => 'datetime',
         'total_amount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'invoice_number' => 'string',

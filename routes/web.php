@@ -9,12 +9,13 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceImportController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\FornitoriController;
+use App\Http\Controllers\HelpController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use App\Models\Mfcompenso;
+use App\Models\Provvigione;
 
 // Redirect root to login if not authenticated
 Route::get('/', function () {
@@ -66,6 +67,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Help Routes
+    Route::get('help/{page?}', [App\Http\Controllers\HelpController::class, 'show'])->name('help.show');
+    Route::post('help/upload-screenshot', [App\Http\Controllers\HelpController::class, 'uploadScreenshot'])->name('help.uploadScreenshot');
+    Route::post('help/capture-screenshot', [App\Http\Controllers\HelpController::class, 'captureScreenshot'])->name('help.captureScreenshot');
+
+    // Admin Help Management Routes
+    Route::middleware(['auth', 'role:super_admin'])->group(function () {
+        Route::get('help-admin', [App\Http\Controllers\HelpController::class, 'index'])->name('help.admin.index');
+        Route::get('help-admin/{page}/edit', [App\Http\Controllers\HelpController::class, 'edit'])->name('help.admin.edit');
+        Route::put('help-admin/{page}', [App\Http\Controllers\HelpController::class, 'update'])->name('help.admin.update');
+    });
+
     // Roles and Permissions Routes
     Route::middleware(['permission:role_management'])->group(function () {
         Route::resource('roles', RoleController::class);
@@ -100,7 +113,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('invoices/reconciliation', [InvoiceController::class, 'reconciliation'])->name('invoices.reconciliation');
         Route::post('invoices/reconcile', [InvoiceController::class, 'reconcile'])->name('invoices.reconcile');
-        Route::get('invoices/{invoice}/xml', [InvoiceController::class, 'getXmlData'])->name('invoices.xml');
+        Route::get('invoices/test-reconciliation', [InvoiceController::class, 'testReconciliation'])->name('invoices.testReconciliation');
+        Route::get('invoices/{id}/xml-data', [InvoiceController::class, 'getXmlData'])->name('invoices.xml');
+        Route::get('invoices/{id}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+        Route::put('invoices/{id}', [InvoiceController::class, 'update'])->name('invoices.update');
+        Route::get('invoices/{id}/check', [InvoiceController::class, 'check'])->name('invoices.check');
+        Route::post('invoices/{id}/reconcile-checked', [InvoiceController::class, 'reconcileChecked'])->name('invoices.reconcileChecked');
         Route::get('invoices/import', [InvoiceImportController::class, 'index'])->name('invoices.import');
         Route::post('invoices/import', [InvoiceImportController::class, 'import'])->name('invoices.import.store');
     });
@@ -111,17 +129,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('fornitoris', FornitoriController::class);
     });
 
-    // MFCompensos routes
-    Route::get('mfcompensos/proforma-summary', [App\Http\Controllers\MfcompensoController::class, 'proformaSummary'])->name('mfcompensos.proformaSummary');
-    Route::post('mfcompensos/send-proforma-email', [App\Http\Controllers\MfcompensoController::class, 'sendProformaEmail'])->name('mfcompensos.sendProformaEmail');
-    Route::post('mfcompensos/send-all-proforma-emails', [App\Http\Controllers\MfcompensoController::class, 'sendAllProformaEmails'])->name('mfcompensos.sendAllProformaEmails');
-    Route::post('mfcompensos/mark-as-received', [App\Http\Controllers\MfcompensoController::class, 'markAsReceived'])->name('mfcompensos.markAsReceived');
-    Route::post('mfcompensos/mark-as-paid', [App\Http\Controllers\MfcompensoController::class, 'markAsPaid'])->name('mfcompensos.markAsPaid');
-    Route::post('mfcompensos/sync-denominazioni', [App\Http\Controllers\MfcompensoController::class, 'syncDenominazioniToFornitori'])->name('mfcompensos.syncDenominazioni');
-    Route::get('mfcompensos/check-emails', [App\Http\Controllers\MfcompensoController::class, 'checkSentEmails'])->name('mfcompensos.checkSentEmails');
-    Route::post('mfcompensos/import', [App\Http\Controllers\MfcompensoController::class, 'import'])->name('mfcompensos.import');
-    Route::post('mfcompensos/bulk-update-to-proforma', [App\Http\Controllers\MfcompensoController::class, 'bulkUpdateToProforma'])->name('mfcompensos.bulkUpdateToProforma');
-    Route::resource('mfcompensos', App\Http\Controllers\MfcompensoController::class);
+    // Provvigioni routes
+    Route::get('provvigioni/proforma-summary', [App\Http\Controllers\ProvvigioneController::class, 'proformaSummary'])->name('provvigioni.proformaSummary');
+    Route::post('provvigioni/send-proforma-email', [App\Http\Controllers\ProvvigioneController::class, 'sendProformaEmail'])->name('provvigioni.sendProformaEmail');
+    Route::post('provvigioni/send-all-proforma-emails', [App\Http\Controllers\ProvvigioneController::class, 'sendAllProformaEmails'])->name('provvigioni.sendAllProformaEmails');
+    Route::post('provvigioni/mark-as-received', [App\Http\Controllers\ProvvigioneController::class, 'markAsReceived'])->name('provvigioni.markAsReceived');
+    Route::post('provvigioni/mark-as-paid', [App\Http\Controllers\ProvvigioneController::class, 'markAsPaid'])->name('provvigioni.markAsPaid');
+    Route::post('provvigioni/mark-as-sent', [App\Http\Controllers\ProvvigioneController::class, 'markAsSent'])->name('provvigioni.markAsSent');
+    Route::post('provvigioni/sync-denominazioni', [App\Http\Controllers\ProvvigioneController::class, 'syncDenominazioniToFornitori'])->name('provvigioni.syncDenominazioni');
+    Route::get('provvigioni/check-emails', [App\Http\Controllers\ProvvigioneController::class, 'checkSentEmails'])->name('provvigioni.checkSentEmails');
+    Route::match(['GET', 'POST'], 'provvigioni/import', [App\Http\Controllers\ProvvigioneController::class, 'import'])->name('provvigioni.import');
+    Route::post('provvigioni/bulk-update-to-proforma', [App\Http\Controllers\ProvvigioneController::class, 'bulkUpdateToProforma'])->name('provvigioni.bulkUpdateToProforma');
+    Route::put('provvigioni/{id}/stato', [App\Http\Controllers\ProvvigioneController::class, 'updateStato'])->name('provvigioni.updateStato');
+    Route::resource('provvigioni', App\Http\Controllers\ProvvigioneController::class);
 
     // Calls routes
     Route::post('calls/import', [App\Http\Controllers\CallController::class, 'import'])->name('calls.import');
@@ -141,14 +161,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Customertypes routes
     Route::resource('customertypes', App\Http\Controllers\CustomertypeController::class);
-
-    // Employroles routes
-    Route::resource('employroles', App\Http\Controllers\EmployroleController::class);
 });
 
 // Test route for debugging filters (outside auth middleware)
 Route::get('test-filter', function(Request $request) {
-    $query = Mfcompenso::query();
+    $query = Provvigione::query();
 
     if ($request->has('denominazione_riferimento') && $request->denominazione_riferimento !== '') {
         $query->where('denominazione_riferimento', 'like', '%' . $request->denominazione_riferimento . '%');

@@ -3,64 +3,172 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
-use App\Models\Mfcompenso;
+use App\Models\Provvigione;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use FatturaElettronica\FatturaElettronica;
-use FatturaElettronica\FatturaElettronicaBody\DatiGenerali\DatiGenerali;
-use FatturaElettronica\FatturaElettronicaBody\DatiBeniServizi\DatiBeniServizi;
-use FatturaElettronica\FatturaElettronicaBody\DatiPagamento\DatiPagamento;
+use FatturaElettronicaPhp\FatturaElettronica\DigitalDocument;
+use FatturaElettronicaPhp\FatturaElettronica\Parser\DigitalDocumentParser;
+use FatturaElettronicaPhp\FatturaElettronica\FatturaElettronica;
+use FatturaElettronicaPhp\FatturaElettronica\FatturaElettronicaBody\DatiGenerali\DatiGenerali;
+use FatturaElettronicaPhp\FatturaElettronica\FatturaElettronicaBody\DatiBeniServizi\DatiBeniServizi;
+use FatturaElettronicaPhp\FatturaElettronica\FatturaElettronicaBody\DatiPagamento\DatiPagamento;
+use FatturaElettronicaPhp\FatturaElettronica\Decoder\XMLDecoder;
 
 class InvoiceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = \App\Models\Invoice::select('*')->orderByDesc('invoice_date')->paginate(15);
-        return view('invoices.index', compact('invoices'));
+        $query = Invoice::query();
+
+        // Apply filters
+        if ($request->filled('stato')) {
+            $query->where('status', $request->stato);
+        }
+
+        if ($request->filled('fornitore')) {
+            $query->where('fornitore', 'like', '%' . $request->fornitore . '%');
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('invoice_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('invoice_date', '<=', $request->date_to);
+        }
+
+        // Apply sorting
+        $sortBy = $request->get('sort_by', 'invoice_date');
+        $sortDirection = $request->get('sort_direction', 'desc');
+
+        // Validate sort fields
+        $allowedSortFields = ['fornitore', 'total_amount', 'invoice_date'];
+        if (!in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'invoice_date';
+        }
+
+        // Validate sort direction
+        if (!in_array($sortDirection, ['asc', 'desc'])) {
+            $sortDirection = 'desc';
+        }
+
+        $query->orderBy($sortBy, $sortDirection);
+
+        $invoices = $query->paginate(15)->withQueryString();
+
+        // Get unique statuses for filter dropdown
+        $statuses = Invoice::distinct()->pluck('status')->filter()->values();
+
+        // Get unique fornitori for filter dropdown
+        $fornitori = Invoice::distinct()->pluck('fornitore')->filter()->values();
+
+        // Monthly statistics
+        $today = now();
+        $firstOfCurrentMonth = $today->copy()->startOfMonth();
+        $firstOfLastMonth = $today->copy()->subMonth()->startOfMonth();
+        $endOfLastMonth = $today->copy()->subMonth()->endOfMonth();
+
+        $currentMonthCount = Invoice::whereDate('invoice_date', '>=', $firstOfCurrentMonth)
+            ->whereDate('invoice_date', '<=', $today)
+            ->count();
+        $currentMonthTotal = Invoice::whereDate('invoice_date', '>=', $firstOfCurrentMonth)
+            ->whereDate('invoice_date', '<=', $today)
+            ->sum('total_amount');
+
+        $lastMonthCount = Invoice::whereDate('invoice_date', '>=', $firstOfLastMonth)
+            ->whereDate('invoice_date', '<=', $endOfLastMonth)
+            ->count();
+        $lastMonthTotal = Invoice::whereDate('invoice_date', '>=', $firstOfLastMonth)
+            ->whereDate('invoice_date', '<=', $endOfLastMonth)
+            ->sum('total_amount');
+
+        return view('invoices.index', compact(
+            'invoices',
+            'statuses',
+            'fornitori',
+            'currentMonthCount',
+            'currentMonthTotal',
+            'lastMonthCount',
+            'lastMonthTotal'
+        ));
     }
 
     public function reconciliation(Request $request)
     {
         // Get unreconciled invoices (isreconiled = false or null)
-        $unreconciledInvoices = Invoice::where(function($query) {
+        $unreconciledInvoicesQuery = Invoice::where(function($query) {
             $query->where('isreconiled', false)
                   ->orWhereNull('isreconiled');
-        })
-        ->orderBy('invoice_date', 'desc')
-        ->get();
+        });
 
-        // Get MFCompensos summary - records with empty invoice_number but sent emails
-        $mfcompensosQuery = Mfcompenso::whereNull('invoice_number')
-            ->whereNotNull('sended_at');
+        // Apply denominazione_riferimento filter to invoices if provided
+        if ($request->filled('denominazione_riferimento')) {
+            $unreconciledInvoicesQuery->where('fornitore', 'like', '%' . $request->denominazione_riferimento . '%');
+        }
+
+        $unreconciledInvoices = $unreconciledInvoicesQuery
+            ->orderBy('invoice_date', 'desc')
+            ->get();
+
+        // Get Provvigioni summary - only Proforma records with sended_at not null, grouped by denominazione and sended_at date
+        $provvigioniQuery = Provvigione::where('stato', 'Proforma')
+            ->whereNotNull('sended_at')
+            ->whereNull('invoice_number');
+
+        // Apply denominazione_riferimento filter if provided
+        if ($request->filled('denominazione_riferimento')) {
+            $provvigioniQuery->where('denominazione_riferimento', 'like', '%' . $request->denominazione_riferimento . '%');
+        }
 
         // Apply email date filter if provided
         if ($request->filled('email_date_from')) {
-            $mfcompensosQuery->whereDate('sended_at', '>=', $request->email_date_from);
+            $provvigioniQuery->whereDate('sended_at', '>=', $request->email_date_from);
         }
         if ($request->filled('email_date_to')) {
-            $mfcompensosQuery->whereDate('sended_at', '<=', $request->email_date_to);
+            $provvigioniQuery->whereDate('sended_at', '<=', $request->email_date_to);
         }
 
-        $mfcompensosSummary = $mfcompensosQuery
+        $provvigioniSummary = $provvigioniQuery
             ->selectRaw('
                 denominazione_riferimento,
+                DATE(sended_at) as sent_date,
                 COUNT(*) as total_records,
                 SUM(CAST(importo AS DECIMAL(10,2))) as total_amount,
                 MAX(sended_at) as last_sent_date,
                 MIN(sended_at) as first_sent_date
             ')
-            ->groupBy('denominazione_riferimento')
+            ->groupBy('denominazione_riferimento', 'sent_date')
             ->orderBy('denominazione_riferimento')
+            ->orderBy('sent_date', 'desc')
             ->get();
 
-        return view('invoices.reconciliation', compact('unreconciledInvoices', 'mfcompensosSummary'));
+        // Get total unfiltered amounts for comparison
+        $totalUnfilteredInvoices = Invoice::where(function($query) {
+            $query->where('isreconiled', false)
+                  ->orWhereNull('isreconiled');
+        })->sum('total_amount');
+
+        $totalUnfilteredProvvigioni = Provvigione::where('stato', 'Proforma')
+            ->whereNotNull('sended_at')
+            ->whereNull('invoice_number')
+            ->sum('importo');
+
+        return view('invoices.reconciliation', compact(
+            'unreconciledInvoices',
+            'provvigioniSummary',
+            'totalUnfilteredInvoices',
+            'totalUnfilteredProvvigioni'
+        ));
     }
 
     public function reconcile(Request $request)
     {
+        \Log::info('Reconciliation request received', $request->all());
+
         $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
             'denominazione_riferimento' => 'required|string',
+            'sent_date' => 'nullable|date',
         ]);
 
         try {
@@ -68,34 +176,84 @@ class InvoiceController extends Controller
 
             $invoice = Invoice::findOrFail($request->invoice_id);
             $denominazione = $request->denominazione_riferimento;
+            $sentDate = $request->sent_date;
+
+            \Log::info('Starting reconciliation', [
+                'invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'denominazione' => $denominazione,
+                'sent_date' => $sentDate
+            ]);
 
             // Update invoice as reconciled
             $invoice->update([
-                'isreconiled' => true,
-                'paid_at' => now(),
+                'isreconiled' => 1,
+                'status' => 'reconciled',
             ]);
 
-            // Update MFCompensos records
-            $updatedCount = Mfcompenso::whereNull('invoice_number')
+            \Log::info('Invoice updated', [
+                'invoice_id' => $invoice->id,
+                'isreconiled' => $invoice->isreconiled,
+                'status' => $invoice->status
+            ]);
+
+            // Update Provvigioni records - only Proforma records with sended_at not null
+            $provvigioniQuery = Provvigione::where('stato', 'Proforma')
                 ->whereNotNull('sended_at')
-                ->where('denominazione_riferimento', $denominazione)
-                ->update([
-                    'invoice_number' => $invoice->invoice_number,
-                    'stato' => 'Fatturato',
-                ]);
+                ->whereNull('invoice_number')
+                ->where('denominazione_riferimento', $denominazione);
+
+            // If sent_date is provided, filter by that specific date
+            if ($sentDate) {
+                $provvigioniQuery->whereDate('sended_at', $sentDate);
+            }
+
+            // Log the query conditions
+            \Log::info('Provvigioni query conditions', [
+                'stato' => 'Proforma',
+                'sended_at_not_null' => true,
+                'invoice_number_null' => true,
+                'denominazione_riferimento' => $denominazione,
+                'sent_date_filter' => $sentDate
+            ]);
+
+            $updatedCount = $provvigioniQuery->update([
+                'invoice_number' => $invoice->invoice_number,
+                'stato' => 'Fatturato',
+                'received_at' => now(),
+            ]);
+
+            \Log::info('Provvigioni updated', [
+                'updated_count' => $updatedCount,
+                'invoice_number_set' => $invoice->invoice_number,
+                'stato_set' => 'Fatturato',
+                'received_at_set' => now()
+            ]);
 
             DB::commit();
 
-            return response()->json([
+            $dateInfo = $sentDate ? " for date {$sentDate}" : "";
+            $response = [
                 'success' => true,
-                'message' => "Successfully reconciled invoice #{$invoice->invoice_number} with {$updatedCount} MFCompenso records for {$denominazione}",
+                'message' => "Successfully reconciled invoice #{$invoice->invoice_number} with {$updatedCount} Provvigione records for {$denominazione}{$dateInfo}",
                 'invoice_number' => $invoice->invoice_number,
                 'updated_count' => $updatedCount,
-                'denominazione' => $denominazione
-            ]);
+                'denominazione' => $denominazione,
+                'sent_date' => $sentDate
+            ];
+
+            \Log::info('Reconciliation completed successfully', $response);
+
+            return response()->json($response);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Reconciliation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error during reconciliation: ' . $e->getMessage()
@@ -144,15 +302,21 @@ class InvoiceController extends Controller
     private function parseFatturaElettronica($xmlString)
     {
         try {
-            $fattura = new FatturaElettronica();
-            $fattura->loadFromXML($xmlString);
+            $xml = simplexml_load_string($xmlString);
+            $parser = new DigitalDocumentParser($xml);
+            $document = $parser->parse();
 
+            // Extract basic information that we know exists
             $data = [
-                'header' => $this->extractFatturaHeader($fattura),
-                'body' => $this->extractFatturaBody($fattura),
+                'document_type' => 'Fattura Elettronica',
+                'supplier' => $this->extractSupplierFromDocument($document),
+                'customer' => $this->extractCustomerFromDocument($document),
+                'invoice_details' => $this->extractInvoiceDetailsFromDocument($document),
+                'line_items' => $this->extractLineItemsFromDocument($document),
+                'totals' => $this->extractTotalsFromDocument($document),
                 'validation' => [
                     'valid' => true,
-                    'schema_used' => 'Fattura Elettronica v1.6.1',
+                    'schema_used' => 'Fattura Elettronica',
                     'errors' => [],
                     'warnings' => []
                 ]
@@ -168,171 +332,152 @@ class InvoiceController extends Controller
         }
     }
 
-    private function extractFatturaHeader($fattura)
+    private function extractSupplierFromDocument($document)
     {
-        $header = $fattura->getFatturaElettronicaHeader();
+        try {
+            $supplier = $document->getSupplier();
+            if (!$supplier) {
+                return ['error' => 'No supplier data found'];
+            }
 
-        return [
-            'dati_trasmissione' => [
-                'id_trasmittente' => $header->getDatiTrasmissione()->getIdTrasmittente()->getIdPaese() .
-                                   $header->getDatiTrasmissione()->getIdTrasmittente()->getIdCodice(),
-                'progressivo_invio' => $header->getDatiTrasmissione()->getProgressivoInvio(),
-                'formato_trasmissione' => $header->getDatiTrasmissione()->getFormatoTrasmissione(),
-                'codice_destinatario' => $header->getDatiTrasmissione()->getCodiceDestinatario(),
-                'pec_destinatario' => $header->getDatiTrasmissione()->getPecDestinatario(),
-            ],
-            'cedente_prestatore' => $this->extractCedentePrestatore($header->getCedentePrestatore()),
-            'cessionario_committente' => $this->extractCessionarioCommittente($header->getCessionarioCommittente()),
-        ];
-    }
-
-    private function extractFatturaBody($fattura)
-    {
-        $bodies = $fattura->getFatturaElettronicaBody();
-        $bodyData = [];
-
-        foreach ($bodies as $index => $body) {
-            $bodyData[$index] = [
-                'dati_generali' => $this->extractDatiGenerali($body->getDatiGenerali()),
-                'dati_beni_servizi' => $this->extractDatiBeniServizi($body->getDatiBeniServizi()),
-                'dati_pagamento' => $this->extractDatiPagamento($body->getDatiPagamento()),
-                'allegati' => $this->extractAllegati($body->getAllegati()),
+            $address = $supplier->getAddress();
+            return [
+                'name' => $supplier->getName(),
+                'surname' => $supplier->getSurname(),
+                'organization' => $supplier->getOrganization(),
+                'fiscal_code' => $supplier->getFiscalCode(),
+                'vat_number' => $supplier->getVatNumber(),
+                'country_code' => $supplier->getCountryCode(),
+                'email' => $supplier->getEmail(),
+                'phone' => $supplier->getPhone(),
+                'address' => $address ? [
+                    'street' => $address->getStreet(),
+                    'street_number' => $address->getStreetNumber(),
+                    'city' => $address->getCity(),
+                    'zip' => $address->getZip(),
+                    'state' => $address->getState(),
+                    'country_code' => $address->getCountryCode(),
+                ] : null,
             ];
+        } catch (\Exception $e) {
+            return ['error' => 'Could not extract supplier data: ' . $e->getMessage()];
         }
-
-        return $bodyData;
     }
 
-    private function extractCedentePrestatore($cedente)
+    private function extractCustomerFromDocument($document)
     {
-        return [
-            'dati_anagrafici' => [
-                'id_fiscale_iva' => [
-                    'id_paese' => $cedente->getDatiAnagrafici()->getIdFiscaleIVA()->getIdPaese(),
-                    'id_codice' => $cedente->getDatiAnagrafici()->getIdFiscaleIVA()->getIdCodice(),
-                ],
-                'codice_fiscale' => $cedente->getDatiAnagrafici()->getCodiceFiscale(),
-                'anagrafica' => [
-                    'denominazione' => $cedente->getDatiAnagrafici()->getAnagrafica()->getDenominazione(),
-                    'nome' => $cedente->getDatiAnagrafici()->getAnagrafica()->getNome(),
-                    'cognome' => $cedente->getDatiAnagrafici()->getAnagrafica()->getCognome(),
-                ],
-                'regime_fiscale' => $cedente->getDatiAnagrafici()->getRegimeFiscale(),
-            ],
-            'sede' => [
-                'indirizzo' => $cedente->getSede()->getIndirizzo(),
-                'numero_civico' => $cedente->getSede()->getNumeroCivico(),
-                'cap' => $cedente->getSede()->getCAP(),
-                'comune' => $cedente->getSede()->getComune(),
-                'provincia' => $cedente->getSede()->getProvincia(),
-                'nazione' => $cedente->getSede()->getNazione(),
-            ],
-        ];
-    }
+        try {
+            $customer = $document->getCustomer();
+            if (!$customer) {
+                return ['error' => 'No customer data found'];
+            }
 
-    private function extractCessionarioCommittente($cessionario)
-    {
-        return [
-            'dati_anagrafici' => [
-                'id_fiscale_iva' => [
-                    'id_paese' => $cessionario->getDatiAnagrafici()->getIdFiscaleIVA()->getIdPaese(),
-                    'id_codice' => $cessionario->getDatiAnagrafici()->getIdFiscaleIVA()->getIdCodice(),
-                ],
-                'codice_fiscale' => $cessionario->getDatiAnagrafici()->getCodiceFiscale(),
-                'anagrafica' => [
-                    'denominazione' => $cessionario->getDatiAnagrafici()->getAnagrafica()->getDenominazione(),
-                    'nome' => $cessionario->getDatiAnagrafici()->getAnagrafica()->getNome(),
-                    'cognome' => $cessionario->getDatiAnagrafici()->getAnagrafica()->getCognome(),
-                ],
-            ],
-            'sede' => [
-                'indirizzo' => $cessionario->getSede()->getIndirizzo(),
-                'numero_civico' => $cessionario->getSede()->getNumeroCivico(),
-                'cap' => $cessionario->getSede()->getCAP(),
-                'comune' => $cessionario->getSede()->getComune(),
-                'provincia' => $cessionario->getSede()->getProvincia(),
-                'nazione' => $cessionario->getSede()->getNazione(),
-            ],
-        ];
-    }
-
-    private function extractDatiGenerali($datiGenerali)
-    {
-        $datiGeneraliDocumento = $datiGenerali->getDatiGeneraliDocumento();
-
-        return [
-            'tipo_documento' => $datiGeneraliDocumento->getTipoDocumento(),
-            'divisa' => $datiGeneraliDocumento->getDivisa(),
-            'data' => $datiGeneraliDocumento->getData(),
-            'numero' => $datiGeneraliDocumento->getNumero(),
-            'causale' => $datiGeneraliDocumento->getCausale(),
-        ];
-    }
-
-    private function extractDatiBeniServizi($datiBeniServizi)
-    {
-        $dettaglioLinee = $datiBeniServizi->getDettaglioLinee();
-        $linee = [];
-
-        foreach ($dettaglioLinee as $linea) {
-            $linee[] = [
-                'numero_linea' => $linea->getNumeroLinea(),
-                'descrizione' => $linea->getDescrizione(),
-                'quantita' => $linea->getQuantita(),
-                'prezzo_unitario' => $linea->getPrezzoUnitario(),
-                'prezzo_totale' => $linea->getPrezzoTotale(),
-                'aliquota_iva' => $linea->getAliquotaIVA(),
+            $address = $customer->getAddress();
+            return [
+                'name' => $customer->getName(),
+                'surname' => $customer->getSurname(),
+                'organization' => $customer->getOrganization(),
+                'fiscal_code' => $customer->getFiscalCode(),
+                'vat_number' => $customer->getVatNumber(),
+                'country_code' => $customer->getCountryCode(),
+                'address' => $address ? [
+                    'street' => $address->getStreet(),
+                    'street_number' => $address->getStreetNumber(),
+                    'city' => $address->getCity(),
+                    'zip' => $address->getZip(),
+                    'state' => $address->getState(),
+                    'country_code' => $address->getCountryCode(),
+                ] : null,
             ];
+        } catch (\Exception $e) {
+            return ['error' => 'Could not extract customer data: ' . $e->getMessage()];
         }
-
-        $datiRiepilogo = $datiBeniServizi->getDatiRiepilogo();
-        $riepiloghi = [];
-
-        foreach ($datiRiepilogo as $riepilogo) {
-            $riepiloghi[] = [
-                'aliquota_iva' => $riepilogo->getAliquotaIVA(),
-                'imponibile_importo' => $riepilogo->getImponibileImporto(),
-                'imposta' => $riepilogo->getImposta(),
-            ];
-        }
-
-        return [
-            'linee' => $linee,
-            'riepiloghi' => $riepiloghi,
-            'importo_totale_documento' => $datiBeniServizi->getImportoTotaleDocumento(),
-        ];
     }
 
-    private function extractDatiPagamento($datiPagamento)
+    private function extractInvoiceDetailsFromDocument($document)
     {
-        $dettaglioPagamenti = $datiPagamento->getDettaglioPagamento();
-        $pagamenti = [];
+        try {
+            $instances = $document->getDocumentInstances();
+            if (empty($instances)) {
+                return ['error' => 'No document instances found'];
+            }
 
-        foreach ($dettaglioPagamenti as $pagamento) {
-            $pagamenti[] = [
-                'modalita_pagamento' => $pagamento->getModalitaPagamento(),
-                'data_scadenza_pagamento' => $pagamento->getDataScadenzaPagamento(),
-                'importo_pagamento' => $pagamento->getImportoPagamento(),
+            // Get the first instance for basic details
+            $instance = $instances[0];
+            return [
+                'document_type' => 'Fattura Elettronica',
+                'transmission_format' => $document->getTransmissionFormat() ? $document->getTransmissionFormat()->value : null,
+                'sender_vat_id' => $document->getSenderVatId(),
+                'sending_id' => $document->getSendingId(),
+                'customer_sdi_code' => $document->getCustomerSdiCode(),
+                'customer_pec' => $document->getCustomerPec(),
+                'sender_phone' => $document->getSenderPhone(),
+                'sender_email' => $document->getSenderEmail(),
             ];
+        } catch (\Exception $e) {
+            return ['error' => 'Could not extract invoice details: ' . $e->getMessage()];
         }
-
-        return $pagamenti;
     }
 
-    private function extractAllegati($allegati)
+    private function extractLineItemsFromDocument($document)
     {
-        $allegatiData = [];
+        try {
+            $instances = $document->getDocumentInstances();
+            if (empty($instances)) {
+                return ['error' => 'No document instances found'];
+            }
 
-        foreach ($allegati as $allegato) {
-            $allegatiData[] = [
-                'nome_attachment' => $allegato->getNomeAttachment(),
-                'algoritmo_compressione' => $allegato->getAlgoritmoCompressione(),
-                'formato_attachment' => $allegato->getFormatoAttachment(),
-                'descrizione_attachment' => $allegato->getDescrizioneAttachment(),
-            ];
+            $lineItems = [];
+            foreach ($instances as $instance) {
+                $lines = $instance->getLines();
+                foreach ($lines as $line) {
+                    $lineItems[] = [
+                        'number' => $line->getNumber(),
+                        'description' => $line->getDescription(),
+                        'quantity' => $line->getQuantity(),
+                        'unit' => $line->getUnit(),
+                        'unit_price' => $line->getUnitPrice(),
+                        'total' => $line->getTotal(),
+                        'tax_percentage' => $line->getTaxPercentage(),
+                        'start_date' => $line->getStartDate() ? $line->getStartDate()->format('Y-m-d') : null,
+                        'end_date' => $line->getEndDate() ? $line->getEndDate()->format('Y-m-d') : null,
+                    ];
+                }
+            }
+
+            return $lineItems;
+        } catch (\Exception $e) {
+            return ['error' => 'Could not extract line items: ' . $e->getMessage()];
         }
+    }
 
-        return $allegatiData;
+    private function extractTotalsFromDocument($document)
+    {
+        try {
+            $instances = $document->getDocumentInstances();
+            if (empty($instances)) {
+                return ['error' => 'No document instances found'];
+            }
+
+            $totals = [];
+            foreach ($instances as $instance) {
+                $instanceTotals = $instance->getTotals();
+                foreach ($instanceTotals as $total) {
+                    $totals[] = [
+                        'total' => $total->getTotal(),
+                        'tax_amount' => $total->getTaxAmount(),
+                        'tax_percentage' => $total->getTaxPercentage(),
+                        'other_expenses' => $total->getOtherExpenses(),
+                        'rounding' => $total->getRounding(),
+                        'reference' => $total->getReference(),
+                    ];
+                }
+            }
+
+            return $totals;
+        } catch (\Exception $e) {
+            return ['error' => 'Could not extract totals: ' . $e->getMessage()];
+        }
     }
 
     private function parseGenericXml($xmlString, $invoiceNumber)
@@ -636,5 +781,169 @@ class InvoiceController extends Controller
         $dom->loadXML($xmlString);
 
         return $dom->saveXML();
+    }
+
+    public function testReconciliation()
+    {
+        $unreconciledInvoicesCount = Invoice::where(function($query) {
+            $query->where('isreconiled', false)
+                  ->orWhereNull('isreconiled');
+        })->count();
+
+        $proformaProvvigioniCount = Provvigione::where('stato', 'Proforma')
+            ->whereNotNull('sended_at')
+            ->whereNull('invoice_number')
+            ->count();
+
+        return response()->json([
+            'unreconciled_invoices_count' => $unreconciledInvoicesCount,
+            'proforma_provvigioni_count' => $proformaProvvigioniCount,
+            'message' => 'Test completed successfully'
+        ]);
+    }
+
+    public function edit($id)
+    {
+        $invoice = Invoice::findOrFail($id);
+        $statusOptions = ['pending', 'paid', 'reconciled', 'cancelled', 'overdue'];
+        return view('invoices.edit', compact('invoice', 'statusOptions'));
+    }
+
+    public function check($id)
+    {
+        $invoice = Invoice::findOrFail($id);
+
+        // Get individual provvigioni records that match the criteria
+        $provvigioniRecords = Provvigione::where('stato', 'Proforma')
+            ->whereNull('invoice_number')
+            ->where('denominazione_riferimento', $invoice->fornitore)
+            ->whereNotNull('sended_at')
+            ->where('sended_at', '<=', $invoice->invoice_date)
+            ->orderBy('sended_at', 'desc')
+            ->orderBy('cognome')
+            ->orderBy('nome')
+            ->get();
+
+        return view('invoices.check', compact('invoice', 'provvigioniRecords'));
+    }
+
+    public function reconcileChecked(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'checked_ids' => 'required|array',
+                'checked_ids.*' => 'string|exists:provvigioni,id'
+            ]);
+
+            $invoice = Invoice::findOrFail($id);
+            $checkedIds = $request->input('checked_ids');
+
+            // Update all checked provvigioni records
+            $updatedCount = Provvigione::whereIn('id', $checkedIds)
+                ->where('stato', 'Proforma')
+                ->whereNull('invoice_number')
+                ->where('denominazione_riferimento', $invoice->fornitore)
+                ->update([
+                    'invoice_number' => $invoice->invoice_number,
+                    'received_at' => $invoice->invoice_date,
+                    'stato' => 'Fatturato'
+                ]);
+
+            // Update invoice as reconciled
+            $invoice->update([
+                'isreconiled' => 1,
+                'status' => 'reconciled',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully reconciled {$updatedCount} provvigioni records with invoice #{$invoice->invoice_number}",
+                'updated_count' => $updatedCount,
+                'invoice_number' => $invoice->invoice_number
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error during reconciliation: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'status' => 'required|in:pending,paid,reconciled,cancelled,overdue',
+                'isreconiled' => 'nullable|boolean',
+                'paid_at' => 'nullable|date',
+                'sended_at' => 'nullable|date',
+                'sended2_at' => 'nullable|date',
+            ]);
+
+            $invoice = Invoice::findOrFail($id);
+
+            // Prepare the data for update
+            $updateData = [
+                'status' => $request->status,
+            ];
+
+            // Handle isreconiled field
+            if ($request->has('isreconiled')) {
+                $updateData['isreconiled'] = $request->boolean('isreconiled');
+            }
+
+            // Handle paid_at field
+            if ($request->filled('paid_at')) {
+                $updateData['paid_at'] = $request->paid_at;
+            } else {
+                $updateData['paid_at'] = null;
+            }
+
+            // Handle sended_at field
+            if ($request->filled('sended_at')) {
+                $updateData['sended_at'] = $request->sended_at;
+            } else {
+                $updateData['sended_at'] = null;
+            }
+
+            // Handle sended2_at field
+            if ($request->filled('sended2_at')) {
+                $updateData['sended2_at'] = $request->sended2_at;
+            } else {
+                $updateData['sended2_at'] = null;
+            }
+
+            // Handle delta field
+            if ($request->filled('delta')) {
+                $updateData['delta'] = $request->delta;
+            } else {
+                $updateData['delta'] = null;
+            }
+
+            $result = $invoice->update($updateData);
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice updated successfully!',
+                    'status' => $request->status
+                ]);
+            }
+
+            // Return redirect for regular form submissions
+            return redirect()->route('invoices.reconciliation')->with('success', 'Invoice updated successfully!');
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error updating invoice: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('invoices.reconciliation')->with('error', 'Error updating invoice: ' . $e->getMessage());
+        }
     }
 }

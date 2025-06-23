@@ -9,27 +9,6 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <!-- Import Form -->
-    <div class="card mb-3">
-        <div class="card-header">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-upload"></i> Import Leads
-            </h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('leads.import') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="form-group mb-2">
-                    <input type="file" name="file" class="form-control-file" required accept=".csv,.xlsx">
-                    <small class="form-text text-muted">Supported formats: CSV, Excel (.xlsx)</small>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-upload"></i> Import Leads
-                </button>
-            </form>
-        </div>
-    </div>
-
     <!-- Filter Form -->
     <div class="card mb-3">
         <div class="card-header">
@@ -194,11 +173,14 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Leads List</h3>
                 <div>
+                    <a href="{{ route('leads.import') }}" class="btn btn-success btn-sm mr-2">
+                        <i class="fas fa-upload"></i> Import Leads
+                    </a>
                     <a href="{{ route('leads.dashboard') }}" class="btn btn-info btn-sm mr-2">
                         <i class="fas fa-chart-line"></i> Dashboard
                     </a>
                     <a href="{{ route('leads.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Add Lead
+                        <i class="fas fa-plus"></i> Create Lead
                     </a>
                 </div>
             </div>

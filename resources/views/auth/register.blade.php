@@ -10,7 +10,7 @@
 
         {{-- Name field --}}
         <div class="input-group mb-3">
-            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
+            <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror"
                    value="{{ old('name') }}" placeholder="Full name" autofocus>
             <div class="input-group-append">
                 <div class="input-group-text">
@@ -26,7 +26,7 @@
 
         {{-- Email field --}}
         <div class="input-group mb-3">
-            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
+            <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror"
                    value="{{ old('email') }}" placeholder="Email">
             <div class="input-group-append">
                 <div class="input-group-text">
@@ -42,7 +42,7 @@
 
         {{-- Password field --}}
         <div class="input-group mb-3">
-            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
+            <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror"
                    placeholder="Password">
             <div class="input-group-append">
                 <div class="input-group-text">
@@ -58,7 +58,7 @@
 
         {{-- Confirm password field --}}
         <div class="input-group mb-3">
-            <input type="password" name="password_confirmation" class="form-control"
+            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control"
                    placeholder="Retype password">
             <div class="input-group-append">
                 <div class="input-group-text">

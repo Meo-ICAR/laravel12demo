@@ -13,42 +13,42 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="codice">Codice</label>
-                            <input type="text" name="codice" class="form-control" value="{{ old('codice') }}">
+                            <input type="text" name="codice" id="codice" class="form-control" value="{{ old('codice') }}">
                             @error('codice')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label for="name">Name</label>
-                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+                            <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required>
                             @error('name')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label for="piva">P.IVA</label>
-                            <input type="text" name="piva" class="form-control" value="{{ old('piva') }}">
+                            <input type="text" name="piva" id="piva" class="form-control" value="{{ old('piva') }}">
                             @error('piva')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label for="email">Email</label>
-                            <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+                            <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}">
                             @error('email')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label for="anticipo">Anticipo</label>
-                            <input type="number" name="anticipo" class="form-control" value="{{ old('anticipo') }}" step="0.01" min="0" max="999999999.99">
+                            <input type="number" name="anticipo" id="anticipo" class="form-control" value="{{ old('anticipo') }}" step="0.01" min="0" max="999999999.99">
                             @error('anticipo')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label for="operatore">Operatore</label>
-                            <input type="text" name="operatore" class="form-control" value="{{ old('operatore') }}">
+                            <input type="text" name="operatore" id="operatore" class="form-control" value="{{ old('operatore') }}">
                             @error('operatore')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror

@@ -54,7 +54,7 @@
             </div>
         </div>
         <div class="card-footer clearfix">
-            {{ $customertypes->links() }}
+            <!-- Pagination removed - using Collection instead of paginated results -->
         </div>
     </div>
 </div>
