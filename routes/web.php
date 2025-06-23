@@ -22,7 +22,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Authentication Routes
+// Authentication Routes (public)
 Route::middleware('guest')->group(function () {
     Route::get('login', function () {
         return view('auth.login');
@@ -53,15 +53,19 @@ Route::middleware('guest')->group(function () {
     });
 });
 
-// Protected Routes
+// All other routes require authentication
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/', function () {
+        return redirect()->route('dashboard');
+    });
+
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
     Route::get('/home', function () {
         return view('dashboard');
-    })->name('dashboard');
+    })->name('home');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -73,7 +77,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('help/capture-screenshot', [App\Http\Controllers\HelpController::class, 'captureScreenshot'])->name('help.captureScreenshot');
 
     // Admin Help Management Routes
-    Route::middleware(['auth', 'role:super_admin'])->group(function () {
+    Route::middleware(['role:super_admin'])->group(function () {
         Route::get('help-admin', [App\Http\Controllers\HelpController::class, 'index'])->name('help.admin.index');
         Route::get('help-admin/{page}/edit', [App\Http\Controllers\HelpController::class, 'edit'])->name('help.admin.edit');
         Route::put('help-admin/{page}', [App\Http\Controllers\HelpController::class, 'update'])->name('help.admin.update');
@@ -100,28 +104,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Company routes
-    Route::middleware(['auth'])->group(function () {
-        Route::get('companies/trashed', [CompanyController::class, 'trashed'])->name('companies.trashed');
-        Route::post('companies/{id}/restore', [CompanyController::class, 'restore'])->name('companies.restore');
-        Route::delete('companies/{id}/force-delete', [CompanyController::class, 'forceDelete'])->name('companies.force-delete');
-        Route::resource('companies', CompanyController::class);
-        Route::get('companies/{company}/roles', [\App\Http\Controllers\RoleController::class, 'companyRoles'])->name('companies.roles');
-    });
+    Route::get('companies/trashed', [CompanyController::class, 'trashed'])->name('companies.trashed');
+    Route::post('companies/{id}/restore', [CompanyController::class, 'restore'])->name('companies.restore');
+    Route::delete('companies/{id}/force-delete', [CompanyController::class, 'forceDelete'])->name('companies.force-delete');
+    Route::resource('companies', CompanyController::class);
+    Route::get('companies/{company}/roles', [\App\Http\Controllers\RoleController::class, 'companyRoles'])->name('companies.roles');
 
     // Invoice Routes
-    Route::middleware(['auth'])->group(function () {
-        Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-        Route::get('invoices/reconciliation', [InvoiceController::class, 'reconciliation'])->name('invoices.reconciliation');
-        Route::post('invoices/reconcile', [InvoiceController::class, 'reconcile'])->name('invoices.reconcile');
-        Route::get('invoices/test-reconciliation', [InvoiceController::class, 'testReconciliation'])->name('invoices.testReconciliation');
-        Route::get('invoices/{id}/xml-data', [InvoiceController::class, 'getXmlData'])->name('invoices.xml');
-        Route::get('invoices/{id}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
-        Route::put('invoices/{id}', [InvoiceController::class, 'update'])->name('invoices.update');
-        Route::get('invoices/{id}/check', [InvoiceController::class, 'check'])->name('invoices.check');
-        Route::post('invoices/{id}/reconcile-checked', [InvoiceController::class, 'reconcileChecked'])->name('invoices.reconcileChecked');
-        Route::get('invoices/import', [InvoiceImportController::class, 'index'])->name('invoices.import');
-        Route::post('invoices/import', [InvoiceImportController::class, 'import'])->name('invoices.import.store');
-    });
+    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('invoices/reconciliation', [InvoiceController::class, 'reconciliation'])->name('invoices.reconciliation');
+    Route::post('invoices/reconcile', [InvoiceController::class, 'reconcile'])->name('invoices.reconcile');
+    Route::get('invoices/test-reconciliation', [InvoiceController::class, 'testReconciliation'])->name('invoices.testReconciliation');
+    Route::get('invoices/{id}/xml-data', [InvoiceController::class, 'getXmlData'])->name('invoices.xml');
+    Route::get('invoices/{id}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+    Route::put('invoices/{id}', [InvoiceController::class, 'update'])->name('invoices.update');
+    Route::get('invoices/{id}/check', [InvoiceController::class, 'check'])->name('invoices.check');
+    Route::post('invoices/{id}/reconcile-checked', [InvoiceController::class, 'reconcileChecked'])->name('invoices.reconcileChecked');
+    Route::get('invoices/import', [InvoiceImportController::class, 'index'])->name('invoices.import');
+    Route::post('invoices/import', [InvoiceImportController::class, 'import'])->name('invoices.import.store');
 
     // Fornitori routes
     Route::middleware(['permission:fornitori_management'])->group(function () {
@@ -161,69 +161,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Customertypes routes
     Route::resource('customertypes', App\Http\Controllers\CustomertypeController::class);
-});
 
-// Test route for debugging filters (outside auth middleware)
-Route::get('test-filter', function(Request $request) {
-    $query = Provvigione::query();
+    // Test and debug routes (should be protected or removed in production)
+    Route::get('test-filter', function(Request $request) {
+        $query = Provvigione::query();
 
-    if ($request->has('denominazione_riferimento') && $request->denominazione_riferimento !== '') {
-        $query->where('denominazione_riferimento', 'like', '%' . $request->denominazione_riferimento . '%');
-    }
+        if ($request->has('denominazione_riferimento') && $request->denominazione_riferimento !== '') {
+            $query->where('denominazione_riferimento', 'like', '%' . $request->denominazione_riferimento . '%');
+        }
 
-    $results = $query->limit(5)->get();
-
-    return response()->json([
-        'total' => $results->count(),
-        'results' => $results->map(function($item) {
-            return [
-                'id' => $item->id,
-                'denominazione_riferimento' => $item->denominazione_riferimento,
-                'cognome' => $item->cognome,
-                'istituto_finanziario' => $item->istituto_finanziario
-            ];
-        })
-    ]);
-});
-
-// Test route for debugging file upload
-Route::post('test-upload', function(Request $request) {
-    \Log::info('Test upload request', [
-        'has_file' => $request->hasFile('file'),
-        'all_files' => $request->allFiles(),
-        'content_type' => $request->header('Content-Type'),
-        'method' => $request->method(),
-        'all_input' => $request->all()
-    ]);
-
-    if ($request->hasFile('file')) {
-        $file = $request->file('file');
-
-        // Check file extension
-        $extension = strtolower($file->getClientOriginalExtension());
-        $allowedExtensions = ['csv', 'xlsx', 'xls'];
-        $isValidExtension = in_array($extension, $allowedExtensions);
+        $results = $query->limit(5)->get();
 
         return response()->json([
-            'success' => true,
-            'filename' => $file->getClientOriginalName(),
-            'extension' => $extension,
-            'is_valid_extension' => $isValidExtension,
-            'size' => $file->getSize(),
-            'mime_type' => $file->getMimeType(),
-            'is_valid' => $file->isValid(),
-            'allowed_extensions' => $allowedExtensions
+            'total' => $results->count(),
+            'results' => $results->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'denominazione_riferimento' => $item->denominazione_riferimento,
+                    'cognome' => $item->cognome,
+                    'istituto_finanziario' => $item->istituto_finanziario
+                ];
+            })
         ]);
-    }
+    });
 
-    return response()->json([
-        'success' => false,
-        'message' => 'No file uploaded',
-        'request_data' => $request->all()
-    ]);
-})->name('test.upload');
+    Route::post('test-upload', function(Request $request) {
+        \Log::info('Test upload request', [
+            'has_file' => $request->hasFile('file'),
+            'all_files' => $request->allFiles(),
+            'content_type' => $request->header('Content-Type'),
+            'method' => $request->method(),
+            'all_input' => $request->all()
+        ]);
 
-// Home route
-Route::get('/', [HomeController::class, 'index'])->name('home');
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            // ... handle file upload ...
+        }
+        return response()->json(['success' => true]);
+    });
+});
 
 require __DIR__.'/auth.php';
