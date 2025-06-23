@@ -294,4 +294,12 @@ class CallController extends Controller
             'recentCalls'
         ));
     }
+
+    /**
+     * Show the form for importing calls.
+     */
+    public function showImportForm()
+    {
+        return view('calls.import');
+    }
 }

@@ -144,6 +144,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('provvigioni', App\Http\Controllers\ProvvigioneController::class);
 
     // Calls routes
+    Route::get('calls/import', [App\Http\Controllers\CallController::class, 'showImportForm'])->name('calls.import.form');
     Route::post('calls/import', [App\Http\Controllers\CallController::class, 'import'])->name('calls.import');
     Route::get('calls/dashboard', [App\Http\Controllers\CallController::class, 'dashboard'])->name('calls.dashboard');
     Route::get('calls', [App\Http\Controllers\CallController::class, 'index'])->name('calls.index');
@@ -199,7 +200,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // ... handle file upload ...
         }
         return response()->json(['success' => true]);
-    });
+    })->name('test.upload');
 });
 
 require __DIR__.'/auth.php';

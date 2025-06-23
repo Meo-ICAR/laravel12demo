@@ -18,141 +18,95 @@
         </div>
     @endif
 
-    <!-- Import Form -->
-    <div class="card mb-3">
-        <div class="card-header">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-upload"></i> Import Calls
-            </h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('calls.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
-                @csrf
-                <div class="form-group mb-3">
-                    <label for="import_file">Select CSV or Excel File:</label>
-                    <input type="file" name="file" id="import_file" class="form-control" required accept=".csv,.xlsx,.xls">
-                    <small class="form-text text-muted">
-                        <strong>Supported formats:</strong> CSV (.csv), Excel (.xlsx, .xls)<br>
-                        <strong>Note:</strong> CSV files should use semicolon (;) as delimiter<br>
-                        <strong>Max size:</strong> 2MB
-                    </small>
-                    <div id="file-info" class="mt-2" style="display: none;">
-                        <div class="alert alert-info">
-                            <strong>Selected file:</strong> <span id="file-name"></span><br>
-                            <strong>Size:</strong> <span id="file-size"></span>
-                        </div>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary" id="import-btn">
-                    <i class="fas fa-upload"></i> Import Calls
-                </button>
-                <button type="button" class="btn btn-secondary ml-2" onclick="clearImportForm()">
-                    <i class="fas fa-times"></i> Clear
-                </button>
-            </form>
-
-            <!-- Test Form for Debugging -->
-            <hr class="my-3">
-            <div class="alert alert-info">
-                <strong>Debug:</strong> If import is not working, try this test form:
-            </div>
-            <form action="{{ route('test.upload') }}" method="POST" enctype="multipart/form-data" id="testForm">
-                @csrf
-                <div class="form-group mb-2">
-                    <label for="test_file">Test File Upload:</label>
-                    <input type="file" name="file" id="test_file" class="form-control" accept=".csv,.xlsx,.xls">
-                </div>
-                <button type="submit" class="btn btn-warning btn-sm">
-                    <i class="fas fa-bug"></i> Test Upload
-                </button>
-            </form>
-        </div>
-    </div>
-
     <!-- Filter Form -->
     <div class="card mb-3">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">
                 <i class="fas fa-filter"></i> Filter Calls
             </h5>
+            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                <i class="fas fa-chevron-down"></i> Show Filters
+            </button>
         </div>
-        <div class="card-body">
-            <form action="{{ route('calls.index') }}" method="GET" class="row" id="filterForm">
-                <div class="col-md-2">
-                    <label for="numero_chiamato">Numero Chiamato:</label>
-                    <input type="text" name="numero_chiamato" id="numero_chiamato" class="form-control"
-                           value="{{ request('numero_chiamato') }}" placeholder="Search...">
-                </div>
-                <div class="col-md-2">
-                    <label for="stato_chiamata">Stato Chiamata:</label>
-                    <select name="stato_chiamata" id="stato_chiamata" class="form-control">
-                        <option value="">All Stati</option>
-                        @foreach($statoChiamataOptions as $option)
-                            <option value="{{ $option }}" {{ request('stato_chiamata') == $option ? 'selected' : '' }}>
-                                {{ $option }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="esito">Esito:</label>
-                    <select name="esito" id="esito" class="form-control">
-                        <option value="">All Esiti</option>
-                        @foreach($esitoOptions as $option)
-                            <option value="{{ $option }}" {{ request('esito') == $option ? 'selected' : '' }}>
-                                {{ $option }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="utente">Utente:</label>
-                    <select name="utente" id="utente" class="form-control">
-                        <option value="">All Utenti</option>
-                        @foreach($utenteOptions as $option)
-                            <option value="{{ $option }}" {{ request('utente') == $option ? 'selected' : '' }}>
-                                {{ $option }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="data_from">Data From:</label>
-                    <input type="date" name="data_from" id="data_from" class="form-control"
-                           value="{{ request('data_from') }}">
-                </div>
-                <div class="col-md-2">
-                    <label for="data_to">Data To:</label>
-                    <input type="date" name="data_to" id="data_to" class="form-control"
-                           value="{{ request('data_to') }}">
-                </div>
-                <div class="col-md-12 mt-3">
-                    <div class="d-flex align-items-end">
-                        <button type="submit" class="btn btn-info mr-2">
-                            <i class="fas fa-search"></i> Filter
-                        </button>
-                        <button type="button" class="btn btn-secondary ml-2" onclick="clearFilters()">
-                            <i class="fas fa-times"></i> Clear
-                        </button>
-                        <div class="ml-auto">
-                            <label for="sort_by">Sort by:</label>
-                            <select name="sort_by" id="sort_by" class="form-control d-inline-block" style="width: auto;">
-                                <option value="data_inizio" {{ $sortBy === 'data_inizio' ? 'selected' : '' }}>Data Inizio</option>
-                                <option value="numero_chiamato" {{ $sortBy === 'numero_chiamato' ? 'selected' : '' }}>Numero Chiamato</option>
-                                <option value="durata" {{ $sortBy === 'durata' ? 'selected' : '' }}>Durata</option>
-                                <option value="stato_chiamata" {{ $sortBy === 'stato_chiamata' ? 'selected' : '' }}>Stato Chiamata</option>
-                                <option value="esito" {{ $sortBy === 'esito' ? 'selected' : '' }}>Esito</option>
-                                <option value="utente" {{ $sortBy === 'utente' ? 'selected' : '' }}>Utente</option>
-                                <option value="created_at" {{ $sortBy === 'created_at' ? 'selected' : '' }}>Created Date</option>
-                            </select>
-                            <select name="sort_direction" id="sort_direction" class="form-control d-inline-block ml-2" style="width: auto;">
-                                <option value="desc" {{ $sortDirection === 'desc' ? 'selected' : '' }}>Desc</option>
-                                <option value="asc" {{ $sortDirection === 'asc' ? 'selected' : '' }}>Asc</option>
-                            </select>
+        <div class="collapse" id="filterCollapse">
+            <div class="card-body">
+                <form action="{{ route('calls.index') }}" method="GET" class="row" id="filterForm">
+                    <div class="col-md-2">
+                        <label for="numero_chiamato">Numero Chiamato:</label>
+                        <input type="text" name="numero_chiamato" id="numero_chiamato" class="form-control"
+                               value="{{ request('numero_chiamato') }}" placeholder="Search...">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="stato_chiamata">Stato Chiamata:</label>
+                        <select name="stato_chiamata" id="stato_chiamata" class="form-control">
+                            <option value="">All Stati</option>
+                            @foreach($statoChiamataOptions as $option)
+                                <option value="{{ $option }}" {{ request('stato_chiamata') == $option ? 'selected' : '' }}>
+                                    {{ $option }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="esito">Esito:</label>
+                        <select name="esito" id="esito" class="form-control">
+                            <option value="">All Esiti</option>
+                            @foreach($esitoOptions as $option)
+                                <option value="{{ $option }}" {{ request('esito') == $option ? 'selected' : '' }}>
+                                    {{ $option }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="utente">Utente:</label>
+                        <select name="utente" id="utente" class="form-control">
+                            <option value="">All Utenti</option>
+                            @foreach($utenteOptions as $option)
+                                <option value="{{ $option }}" {{ request('utente') == $option ? 'selected' : '' }}>
+                                    {{ $option }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="data_from">Data From:</label>
+                        <input type="date" name="data_from" id="data_from" class="form-control"
+                               value="{{ request('data_from') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="data_to">Data To:</label>
+                        <input type="date" name="data_to" id="data_to" class="form-control"
+                               value="{{ request('data_to') }}">
+                    </div>
+                    <div class="col-md-12 mt-3">
+                        <div class="d-flex align-items-end">
+                            <button type="submit" class="btn btn-info mr-2">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                            <button type="button" class="btn btn-secondary ml-2" onclick="clearFilters()">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                            <div class="ml-auto">
+                                <label for="sort_by">Sort by:</label>
+                                <select name="sort_by" id="sort_by" class="form-control d-inline-block" style="width: auto;">
+                                    <option value="data_inizio" {{ $sortBy === 'data_inizio' ? 'selected' : '' }}>Data Inizio</option>
+                                    <option value="numero_chiamato" {{ $sortBy === 'numero_chiamato' ? 'selected' : '' }}>Numero Chiamato</option>
+                                    <option value="durata" {{ $sortBy === 'durata' ? 'selected' : '' }}>Durata</option>
+                                    <option value="stato_chiamata" {{ $sortBy === 'stato_chiamata' ? 'selected' : '' }}>Stato Chiamata</option>
+                                    <option value="esito" {{ $sortBy === 'esito' ? 'selected' : '' }}>Esito</option>
+                                    <option value="utente" {{ $sortBy === 'utente' ? 'selected' : '' }}>Utente</option>
+                                    <option value="created_at" {{ $sortBy === 'created_at' ? 'selected' : '' }}>Created Date</option>
+                                </select>
+                                <select name="sort_direction" id="sort_direction" class="form-control d-inline-block ml-2" style="width: auto;">
+                                    <option value="desc" {{ $sortDirection === 'desc' ? 'selected' : '' }}>Desc</option>
+                                    <option value="asc" {{ $sortDirection === 'asc' ? 'selected' : '' }}>Asc</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -162,8 +116,11 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Calls List</h3>
                 <div>
-                    <a href="{{ route('calls.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Add Call
+                    <a href="{{ route('calls.import.form') }}" class="btn btn-info btn-sm mr-2">
+                        <i class="fas fa-upload"></i> Import Calls
+                    </a>
+                    <a href="{{ route('calls.dashboard') }}" class="btn btn-secondary btn-sm mr-2">
+                        <i class="fas fa-chart-line"></i> Calls Dashboard
                     </a>
                 </div>
             </div>
@@ -230,101 +187,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // File input change handler
-    const fileInput = document.getElementById('import_file');
-    const fileInfo = document.getElementById('file-info');
-    const fileName = document.getElementById('file-name');
-    const fileSize = document.getElementById('file-size');
-    const importBtn = document.getElementById('import-btn');
-
-    if (fileInput) {
-        fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                // Show file info
-                fileName.textContent = file.name;
-                fileSize.textContent = formatFileSize(file.size);
-                fileInfo.style.display = 'block';
-
-                // Enable import button
-                importBtn.disabled = false;
-
-                // Validate file type
-                const allowedTypes = ['.csv', '.xlsx', '.xls'];
-                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-
-                if (!allowedTypes.includes(fileExtension)) {
-                    alert('Please select a valid file type: CSV, XLSX, or XLS');
-                    clearImportForm();
-                    return;
-                }
-            } else {
-                fileInfo.style.display = 'none';
-                importBtn.disabled = true;
-            }
-        });
-    }
-
-    // Import form submission handler
-    const importForm = document.getElementById('importForm');
-    if (importForm) {
-        importForm.addEventListener('submit', function(e) {
-            const file = fileInput.files[0];
-            if (!file) {
-                e.preventDefault();
-                alert('Please select a file to import');
-                return;
-            }
-
-            // Show loading state
-            importBtn.disabled = true;
-            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
-        });
-    }
-
-    // Test form submission handler
-    const testForm = document.getElementById('testForm');
-    if (testForm) {
-        testForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            const testFile = document.getElementById('test_file').files[0];
-
-            if (!testFile) {
-                alert('Please select a file for testing');
-                return;
-            }
-
-            // Show loading state
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
-
-            fetch('{{ route("test.upload") }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Test upload result:', data);
-                alert('Test result: ' + JSON.stringify(data, null, 2));
-            })
-            .catch(error => {
-                console.error('Test upload error:', error);
-                alert('Test upload error: ' + error.message);
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            });
-        });
-    }
-
     // Filter form submission - omit empty values from URL
     const filterForm = document.getElementById('filterForm');
     if (filterForm) {
@@ -353,15 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Function to format file size
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
 // Function to clear all filters and navigate to base URL
 function clearFilters() {
     // Clear all form fields
@@ -386,20 +239,6 @@ function clearFilters() {
 
     // Navigate to base URL without any parameters
     window.location.href = '{{ route("calls.index") }}';
-}
-
-// Function to clear import form
-function clearImportForm() {
-    // Reset form fields
-    document.getElementById('import_file').value = '';
-    document.getElementById('file-info').style.display = 'none';
-
-    // Reset button state
-    const importBtn = document.getElementById('import-btn');
-    if (importBtn) {
-        importBtn.disabled = false;
-        importBtn.innerHTML = '<i class="fas fa-upload"></i> Import Calls';
-    }
 }
 </script>
 @endsection

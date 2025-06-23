@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'User Details')
 
@@ -90,6 +90,25 @@
                                 </td>
                             </tr>
                         </table>
+                    </div>
+                </div>
+                <!-- User Roles and Permissions -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h5>User Roles</h5>
+                        @forelse($user->getRoleNames() as $role)
+                            <span class="badge badge-primary">{{ $role }}</span>
+                        @empty
+                            <span class="text-muted">No roles assigned</span>
+                        @endforelse
+                    </div>
+                    <div class="col-md-6">
+                        <h5>User Permissions</h5>
+                        @forelse($user->getPermissionNames() as $permission)
+                            <span class="badge badge-info">{{ $permission }}</span>
+                        @empty
+                            <span class="text-muted">No direct permissions</span>
+                        @endforelse
                     </div>
                 </div>
             </div>
