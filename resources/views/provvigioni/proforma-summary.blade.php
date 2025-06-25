@@ -8,12 +8,6 @@
             <p class="text-muted">Records with stato 'Inserito' grouped by Denominazione Riferimento</p>
         </div>
         <div class="col-md-6 text-right">
-            <button class="btn btn-warning mr-2" id="syncDenominazioniBtn">
-                <i class="fas fa-sync"></i> Sync Denominazioni
-            </button>
-            <button class="btn btn-success mr-2" id="sendEmailToAllBtn">
-                <i class="fas fa-envelope"></i> Send Email to All
-            </button>
             <a href="{{ route('provvigioni.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Provvigioni
             </a>

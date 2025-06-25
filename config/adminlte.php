@@ -328,7 +328,7 @@ return [
                 ],
                 [
                     'text' => 'Proforma',
-                    'url' => 'provvigioni/proforma-summary',
+                    'url' => 'proforma',
                     'icon' => 'fas fa-file-alt',
                 ],
                 [
@@ -449,8 +449,8 @@ return [
                 ],
             ],
         ],
-        [
-            'header' => 'FATTURAZIONE',
+         [
+            'header' => 'PROFORMA',
         ],
         [
             'text' => 'Fatturazione',
@@ -463,7 +463,7 @@ return [
                 ],
                 [
                     'text' => 'Proforma',
-                    'url' => 'provvigioni/proforma-summary',
+                    'url' => 'proformas',
                     'icon' => 'fas fa-file-alt',
                 ],
                 [

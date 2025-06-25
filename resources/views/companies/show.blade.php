@@ -65,6 +65,18 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-primary"><i class="fas fa-envelope"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Email</span>
+                                <span class="info-box-number">{{ $company->email ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">

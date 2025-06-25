@@ -53,6 +53,13 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+                        <div class="form-group">
+                            <label for="coge">Coge</label>
+                            <input type="text" name="coge" id="coge" class="form-control" value="{{ old('coge') }}">
+                            @error('coge')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">

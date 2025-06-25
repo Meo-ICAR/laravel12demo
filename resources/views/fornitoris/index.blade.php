@@ -185,6 +185,7 @@
                                     @endif
                                 </a>
                             </th>
+                            <th>Coge</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -200,6 +201,13 @@
                                 <td>{{ $fornitore->regione }}</td>
                                 <td>{{ $fornitore->citta }}</td>
                                 <td>{{ $fornitore->coordinatore }}</td>
+                                <td>
+                                    @if($fornitore->coge)
+                                        <a href="{{ route('fornitoris.invoices.show', $fornitore->id) }}">{{ $fornitore->coge }}</a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td>
                                     <a href="{{ route('fornitoris.edit', $fornitore) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                                 </td>

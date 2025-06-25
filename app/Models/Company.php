@@ -17,7 +17,8 @@ class Company extends Model
         'crm',
         'callcenter',
         'updated_by',
-        'deleted_by'
+        'deleted_by',
+        'email',
     ];
 
     protected $casts = [

@@ -34,6 +34,27 @@
                             @enderror
                         </div>
                         <div class="form-group">
+                            <label for="cf">CF</label>
+                            <input type="text" name="cf" class="form-control" value="{{ old('cf', $fornitori->cf) }}" maxlength="16">
+                            @error('cf')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="nomecoge">Nome Coge</label>
+                            <input type="text" name="nomecoge" class="form-control" value="{{ old('nomecoge', $fornitori->nomecoge) }}">
+                            @error('nomecoge')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="nomefattura">Nome Fattura</label>
+                            <input type="text" name="nomefattura" class="form-control" value="{{ old('nomefattura', $fornitori->nomefattura) }}">
+                            @error('nomefattura')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" name="email" class="form-control" value="{{ old('email', $fornitori->email) }}">
                             @error('email')
@@ -72,6 +93,13 @@
                             <label for="operatore">Operatore</label>
                             <input type="text" name="operatore" class="form-control" value="{{ old('operatore', $fornitori->operatore) }}">
                             @error('operatore')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="coge">Coge</label>
+                            <input type="text" name="coge" class="form-control" value="{{ old('coge', $fornitori->coge) }}">
+                            @error('coge')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>

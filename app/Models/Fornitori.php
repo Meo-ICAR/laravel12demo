@@ -39,6 +39,7 @@ class Fornitori extends Model
         'citta',
         'coordinatore',
         'company_id',
+        'coge',
     ];
 
     public static function importFromInvoices()
@@ -64,5 +65,10 @@ class Fornitori extends Model
     public function company()
     {
         return $this->belongsTo(\App\Models\Company::class, 'company_id');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(\App\Models\Invoice::class, 'coge', 'coge');
     }
 }

@@ -6,23 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('invoices', function (Blueprint $table) {
-            $table->foreign(['company_id'], 'invoices_ibfk_1')->references(['id'])->on('companies')->onUpdate('restrict')->onDelete('restrict');
+            $table->string('coge', 255)->nullable()->after('company_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('invoices', function (Blueprint $table) {
-            $table->dropForeign('invoices_ibfk_1');
+            $table->dropColumn('coge');
         });
     }
 };

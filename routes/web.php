@@ -10,6 +10,7 @@ use App\Http\Controllers\InvoiceImportController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\FornitoriController;
 use App\Http\Controllers\HelpController;
+use App\Http\Controllers\InvoiceinImportController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
@@ -208,7 +209,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('test.upload');
 
     // Proformas routes
+    Route::post('proformas/{proforma}/send-email', [App\Http\Controllers\ProformaController::class, 'sendEmail'])->name('proformas.sendEmail');
     Route::resource('proformas', App\Http\Controllers\ProformaController::class);
+
+    // Invoiceins routes
+    Route::get('invoiceins/import', [InvoiceinImportController::class, 'index'])->name('invoiceins.import');
+    Route::post('invoiceins/import', [InvoiceinImportController::class, 'import']);
+    Route::resource('invoiceins', App\Http\Controllers\InvoiceinController::class);
+
+    // FornitoriInvoice routes
+    Route::get('fornitoris-invoices', [App\Http\Controllers\FornitoriInvoiceController::class, 'index'])->name('fornitoris.invoices.index');
+    Route::get('fornitoris-invoices/{id}', [App\Http\Controllers\FornitoriInvoiceController::class, 'show'])->name('fornitoris.invoices.show');
 });
 
 require __DIR__.'/auth.php';

@@ -46,6 +46,7 @@
                                 <th style="width: 15%">P.IVA</th>
                                 <th style="width: 15%">CRM</th>
                                 <th style="width: 15%">Call Center</th>
+                                <th style="width: 15%">Email</th>
                                 <th style="width: 10%">Last Updated By</th>
                                 <th style="width: 15%">Actions</th>
                             </tr>
@@ -57,6 +58,7 @@
                                     <td>{{ $company->piva }}</td>
                                     <td>{{ $company->crm }}</td>
                                     <td>{{ $company->callcenter }}</td>
+                                    <td>{{ $company->email }}</td>
                                     <td>{{ $company->updatedByUser->name ?? 'N/A' }}</td>
                                     <td>
                                         <div class="btn-group">

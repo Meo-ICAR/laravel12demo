@@ -737,8 +737,62 @@ class ProvvigioneController extends Controller
                 ->where('stato', 'Inserito')
                 ->update(['stato' => 'Proforma']);
 
+            // --- AGGIORNAMENTO CAMPI EMAIL ---
+            $company = $fornitore->company;
+            $proforma->emailfrom = $company ? $company->email : null;
+            $proforma->emailsubject = 'Proforma provvigioni # ' . $proforma->id;
+
+            // Costruzione emailbody HTML
+            $emailbody = '<h3>Proforma # ' . $proforma->id . '</h3>';
+            $emailbody .= '<table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse;">';
+            $emailbody .= '<thead><tr>';
+            $emailbody .= '<th>Nome</th><th>Pratica</th><th>Prodotto</th><th>Descrizione</th><th style="text-align:right;">Importo</th>';
+            $emailbody .= '</tr></thead><tbody>';
+            foreach ($proforma->provvigioni as $provvigione) {
+                $emailbody .= '<tr>';
+                $emailbody .= '<td>' . htmlspecialchars($provvigione->cognome . ' ' . $provvigione->nome) . '</td>';
+                $emailbody .= '<td>' . htmlspecialchars($provvigione->legacy_id ?? '-') . '</td>';
+                $emailbody .= '<td>' . htmlspecialchars($provvigione->prodotto ?? '-') . '</td>';
+                $emailbody .= '<td>' . htmlspecialchars($provvigione->descrizione ?? '-') . '</td>';
+                $emailbody .= '<td style="text-align:right;">€ ' . number_format($provvigione->importo, 2, ',', '.') . '</td>';
+                $emailbody .= '</tr>';
+            }
+            $emailbody .= '</tbody>';
+            $emailbody .= '<tfoot><tr style="background-color:#f8f9fa; font-weight:bold;">';
+            $emailbody .= '<td colspan="4">Totale provvigioni</td>';
+            $emailbody .= '<td style="text-align:right;">€ ' . number_format($proforma->provvigioni->sum('importo'), 2, ',', '.') . '</td>';
+            $emailbody .= '</tr>';
+
+            // Riga contributo
+            if ($fornitore->contributo > 0) {
+                $emailbody .= '<tr>';
+                $emailbody .= '<td colspan="3">' . htmlspecialchars($fornitore->contributo_description ?? 'Contributo') . '</td>';
+                $emailbody .= '<td>Contributo</td>';
+                $emailbody .= '<td style="text-align:right;">€ ' . number_format($fornitore->contributo, 2, ',', '.') . '</td>';
+                $emailbody .= '</tr>';
+            }
+            // Riga anticipo
+            if ($fornitore->anticipo > 0) {
+                $emailbody .= '<tr>';
+                $emailbody .= '<td colspan="3">' . htmlspecialchars($fornitore->anticipo_description ?? 'Anticipo') . '</td>';
+                $emailbody .= '<td>Anticipo</td>';
+                $emailbody .= '<td style="text-align:right; color:#dc3545;"><strong>- € ' . number_format($fornitore->anticipo, 2, ',', '.') . '</strong></td>';
+                $emailbody .= '</tr>';
+            }
+            // Riga totale finale
+            $totale = $proforma->provvigioni->sum('importo') + ($fornitore->contributo ?? 0) - ($fornitore->anticipo ?? 0);
+            if (($fornitore->contributo ?? 0) + ($fornitore->anticipo ?? 0) > 0) {
+                $emailbody .= '<tr style="background-color:#343a40; color:white; font-weight:bold;">';
+                $emailbody .= '<td colspan="4">TOTALE</td>';
+                $emailbody .= '<td style="text-align:right;">€ ' . number_format($totale, 2, ',', '.') . '</td>';
+                $emailbody .= '</tr>';
+            }
+            $emailbody .= '</tfoot></table>';
+            $proforma->emailbody = $emailbody;
+            $proforma->save();
+
             \Log::info('Proforma creata con successo per ' . $denominazione);
-            return redirect()->back()->with('success', 'Proforma creata con successo per "' . $denominazione . '".');
+            return redirect()->route('proformas.index')->with('success', 'Proforma creata con successo per "' . $denominazione . '".');
         } catch (\Exception $e) {
             \Log::error('Errore creazione proforma: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Errore durante la creazione della proforma: ' . $e->getMessage());

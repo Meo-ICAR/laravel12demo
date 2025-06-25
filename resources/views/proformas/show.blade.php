@@ -81,6 +81,11 @@
                             <a href="{{ route('proformas.edit', $proforma) }}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
+                            @if($proforma->emailto)
+                                <button type="button" class="btn btn-info" onclick="sendProformaEmail()">
+                                    <i class="fas fa-envelope"></i> Send Email
+                                </button>
+                            @endif
                             <a href="{{ route('proformas.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Back
                             </a>
@@ -100,7 +105,8 @@
                                         <thead>
                                             <tr>
                                                 <th>Name</th>
-                                                <th>Legacy ID</th>
+                                                <th>Pratica</th>
+                                                <th>Prodotto</th>
                                                 <th>Descrizione</th>
                                                 <th class="text-right">Importo</th>
                                             </tr>
@@ -110,6 +116,7 @@
                                                 <tr>
                                                     <td>{{ $provvigione->cognome }} {{ $provvigione->nome }}</td>
                                                     <td>{{ $provvigione->legacy_id ?? '-' }}</td>
+                                                    <td>{{ $provvigione->prodotto ?? '-' }}</td>
                                                     <td>{{ $provvigione->descrizione ?? '-' }}</td>
                                                     <td class="text-right">€ {{ number_format($provvigione->importo, 2, ',', '.') }}</td>
                                                 </tr>
@@ -117,7 +124,7 @@
                                         </tbody>
                                         <tfoot>
                                             <tr class="table-dark">
-                                                <td colspan="3"><strong>Total</strong></td>
+                                                <td colspan="4"><strong>Total</strong></td>
                                                 <td class="text-right">
                                                     <strong>€ {{ number_format($proforma->provvigioni->sum('importo'), 2, ',', '.') }}</strong>
                                                 </td>
@@ -138,4 +145,41 @@
         </div>
     </section>
 </div>
+
+<script>
+function sendProformaEmail() {
+    if (confirm('Send email to {{ $proforma->emailto }}?')) {
+        // Create form data
+        const formData = new FormData();
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('proforma_id', '{{ $proforma->id }}');
+
+        // Show loading state
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        btn.disabled = true;
+
+        fetch('{{ route("proformas.sendEmail", $proforma) }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Email sent successfully!');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error sending email: ' + error.message);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+}
+</script>
 @endsection
