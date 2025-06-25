@@ -13,14 +13,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="company_id">Company</label>
-                            <select name="company_id" class="form-control">
-                                <option value="">-- Select Company --</option>
-                                @foreach($companies as $company)
-                                    <option value="{{ $company->id }}" {{ old('company_id', $proforma->company_id) == $company->id ? 'selected' : '' }}>{{ $company->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+
                         <div class="form-group">
                             <label for="fornitori_id">Fornitore</label>
                             <select name="fornitori_id" class="form-control">
@@ -31,29 +24,31 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="anticipo">Anticipo</label>
-                            <input type="number" name="anticipo" class="form-control" value="{{ old('anticipo', $proforma->anticipo) }}" step="0.01">
-                        </div>
-                        <div class="form-group">
                             <label for="anticipo_descrizione">Anticipo Descrizione</label>
                             <input type="text" name="anticipo_descrizione" class="form-control" value="{{ old('anticipo_descrizione', $proforma->anticipo_descrizione) }}">
                         </div>
                         <div class="form-group">
-                            <label for="compenso">Compenso</label>
-                            <input type="text" class="form-control" value="{{ $proforma->compenso }}" readonly>
+                            <label for="anticipo">Anticipo</label>
+                            <input type="number" name="anticipo" class="form-control" value="{{ old('anticipo', $proforma->anticipo) }}" step="0.01">
                         </div>
+
                         <div class="form-group">
                             <label for="compenso_descrizione">Compenso Descrizione</label>
                             <textarea name="compenso_descrizione" class="form-control">{{ old('compenso_descrizione', $proforma->compenso_descrizione) }}</textarea>
+                        </div>
+                         <div class="form-group">
+                            <label for="compenso">Compenso</label>
+                            <input type="number" name="compenso" class="form-control" value="{{ old('compenso', $proforma->compenso) }}" step="0.01">
+                        </div>
+                          <div class="form-group">
+                            <label for="contributo_descrizione">Contributo Descrizione</label>
+                            <input type="text" name="contributo_descrizione" class="form-control" value="{{ old('contributo_descrizione', $proforma->contributo_descrizione) }}">
                         </div>
                         <div class="form-group">
                             <label for="contributo">Contributo</label>
                             <input type="number" name="contributo" class="form-control" value="{{ old('contributo', $proforma->contributo) }}" step="0.01">
                         </div>
-                        <div class="form-group">
-                            <label for="contributo_descrizione">Contributo Descrizione</label>
-                            <input type="text" name="contributo_descrizione" class="form-control" value="{{ old('contributo_descrizione', $proforma->contributo_descrizione) }}">
-                        </div>
+
                         <div class="form-group">
                             <label for="stato">Stato</label>
                             <select name="stato" class="form-control">
@@ -74,23 +69,7 @@
                             <input type="text" name="emailto" class="form-control" value="{{ old('emailto', $proforma->emailto) }}">
                         </div>
                         <div class="form-group">
-                            <label for="emailsubject">Email Subject</label>
-                            <input type="text" name="emailsubject" class="form-control" value="{{ old('emailsubject', $proforma->emailsubject) }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="emailbody">Email Body</label>
-                            <textarea name="emailbody" class="form-control">{{ old('emailbody', $proforma->emailbody) }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="provvigioni">Provvigioni</label>
-                            <select name="provvigioni[]" class="form-control" multiple>
-                                @foreach($provvigioni as $provvigione)
-                                    <option value="{{ $provvigione->id }}" {{ ($proforma->provvigioni->contains($provvigione->id)) ? 'selected' : '' }}>
-                                        {{ $provvigione->id }} - {{ $provvigione->descrizione }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">

@@ -92,11 +92,22 @@ class ProformaController extends Controller
             'provvigioni' => 'nullable|array',
             'provvigioni.*' => 'uuid|exists:provvigioni,id',
         ]);
+
         $provvigioni = $data['provvigioni'] ?? [];
         unset($data['provvigioni']);
+
+        // Create the proforma
         $proforma = Proforma::create($data);
         $proforma->provvigioni()->sync($provvigioni);
-        return redirect()->route('proformas.index')->with('success', 'Proforma created successfully.');
+
+        // Reload the proforma with relationships to get updated data
+        $proforma->load(['fornitore', 'provvigioni']);
+
+        // Generate email body with the same logic as update
+        $data['emailbody'] = $this->generateDefaultEmailContent($proforma);
+        $proforma->update(['emailbody' => $data['emailbody']]);
+
+        return redirect()->route('proformas.index')->with('success', 'Proforma created successfully. Email body generated.');
     }
 
     /**
@@ -144,11 +155,22 @@ class ProformaController extends Controller
             'provvigioni' => 'nullable|array',
             'provvigioni.*' => 'uuid|exists:provvigioni,id',
         ]);
+
         $provvigioni = $data['provvigioni'] ?? [];
         unset($data['provvigioni']);
+
+        // Update the proforma
         $proforma->update($data);
         $proforma->provvigioni()->sync($provvigioni);
-        return redirect()->route('proformas.index')->with('success', 'Proforma updated successfully.');
+
+        // Reload the proforma with relationships to get updated data
+        $proforma->load(['fornitore', 'provvigioni']);
+
+        // Regenerate email body with updated values
+        $data['emailbody'] = $this->generateDefaultEmailContent($proforma);
+        $proforma->update(['emailbody' => $data['emailbody']]);
+
+        return redirect()->route('proformas.index')->with('success', 'Proforma updated successfully. Email body regenerated with updated values.');
     }
 
     /**
@@ -216,15 +238,117 @@ class ProformaController extends Controller
         $fornitoreName = $proforma->fornitore->name ?? 'Unknown';
         $totalImporto = $proforma->provvigioni->sum('importo');
         $provvigioniCount = $proforma->provvigioni->count();
+        $totale = $totalImporto + ($proforma->contributo ?? 0) - ($proforma->anticipo ?? 0);
 
-        return "
-        <h2>Proforma Details</h2>
-        <p><strong>Fornitore:</strong> {$fornitoreName}</p>
-        <p><strong>Compenso:</strong> € " . number_format($proforma->compenso, 2, ',', '.') . "</p>
-        <p><strong>Contributo:</strong> € " . number_format($proforma->contributo ?? 0, 2, ',', '.') . "</p>
-        <p><strong>Anticipo:</strong> € " . number_format($proforma->anticipo ?? 0, 2, ',', '.') . "</p>
-        <p><strong>Totale Provvigioni:</strong> € " . number_format($totalImporto, 2, ',', '.') . " ({$provvigioniCount} records)</p>
-        <p><strong>Stato:</strong> {$proforma->stato}</p>
-        " . ($proforma->annotation ? "<p><strong>Note:</strong> {$proforma->annotation}</p>" : "");
+        $html = "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='utf-8'>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+                .header { background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+                .section { margin-bottom: 20px; }
+                .section h3 { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+                table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f8f9fa; font-weight: bold; }
+                .amount { text-align: right; font-weight: bold; }
+                .total { background-color: #e9ecef; font-weight: bold; }
+                .positive { color: #28a745; }
+                .negative { color: #dc3545; }
+                .info-box { background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; padding: 15px; margin: 10px 0; }
+                .note { background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 10px 0; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h2>📋 Proforma Details</h2>
+                    <p><strong>Proforma ID:</strong> #{$proforma->id}</p>
+                    <p><strong>Date:</strong> " . now()->format('d/m/Y H:i') . "</p>
+                </div>
+
+                <div class='section'>
+                    <h3>🏢 Fornitore Information</h3>
+                    <p><strong>Nome:</strong> {$fornitoreName}</p>
+                </div>
+
+                <div class='section'>
+                    <h3>💰 Financial Summary</h3>
+                    <table>
+                        <tr>
+                            <th>Description</th>
+                            <th class='amount'>Amount</th>
+                        </tr>
+                        <tr>
+                            <td>Compenso (from Provvigioni)</td>
+                            <td class='amount positive'>€ " . number_format($totalImporto, 2, ',', '.') . "</td>
+                        </tr>";
+
+        if ($proforma->contributo) {
+            $html .= "
+                        <tr>
+                            <td>Contributo" . ($proforma->contributo_descrizione ? " - {$proforma->contributo_descrizione}" : "") . "</td>
+                            <td class='amount positive'>€ " . number_format($proforma->contributo, 2, ',', '.') . "</td>
+                        </tr>";
+        }
+
+        if ($proforma->anticipo) {
+            $html .= "
+                        <tr>
+                            <td>Anticipo" . ($proforma->anticipo_descrizione ? " - {$proforma->anticipo_descrizione}" : "") . "</td>
+                            <td class='amount negative'>€ " . number_format($proforma->anticipo, 2, ',', '.') . "</td>
+                        </tr>";
+        }
+
+        $html .= "
+                        <tr class='total'>
+                            <td><strong>TOTALE</strong></td>
+                            <td class='amount " . ($totale >= 0 ? 'positive' : 'negative') . "'><strong>€ " . number_format($totale, 2, ',', '.') . "</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class='section'>
+                    <h3>📊 Provvigioni Details</h3>
+                    <div class='info-box'>
+                        <p><strong>Total Provvigioni:</strong> {$provvigioniCount} records</p>
+                        <p><strong>Total Amount:</strong> € " . number_format($totalImporto, 2, ',', '.') . "</p>
+                    </div>";
+
+        if ($proforma->compenso_descrizione) {
+            $html .= "
+                    <div class='note'>
+                        <p><strong>Compenso Description:</strong></p>
+                        <p>" . nl2br(htmlspecialchars($proforma->compenso_descrizione)) . "</p>
+                    </div>";
+        }
+
+        $html .= "
+                </div>
+
+                <div class='section'>
+                    <h3>📋 Status Information</h3>
+                    <p><strong>Status:</strong> <span style='background-color: #007bff; color: white; padding: 5px 10px; border-radius: 3px;'>{$proforma->stato}</span></p>
+                </div>";
+
+        if ($proforma->annotation) {
+            $html .= "
+                <div class='section'>
+                    <h3>📝 Notes</h3>
+                    <div class='note'>
+                        <p>" . nl2br(htmlspecialchars($proforma->annotation)) . "</p>
+                    </div>
+                </div>";
+        }
+
+        $html .= "
+            </div>
+        </body>
+        </html>";
+
+        return $html;
     }
 }

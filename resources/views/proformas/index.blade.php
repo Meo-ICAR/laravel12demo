@@ -167,18 +167,26 @@
                                                 </button>
                                               </div>
                                               <div class="modal-body">
+                                                <label for="emailsubject_{{ $proforma->id }}"><strong>Email Subject:</strong></label>
+                                                <input type="text" id="emailsubject_{{ $proforma->id }}" class="form-control mb-3" value="{{ $proforma->emailsubject ?? '' }}" placeholder="Enter email subject">
+
                                                 <label for="compenso_descrizione_{{ $proforma->id }}"><strong>Compenso Descrizione (HTML):</strong></label>
                                                 <textarea id="compenso_descrizione_{{ $proforma->id }}" class="form-control mb-3" rows="3">{!! $proforma->compenso_descrizione !!}</textarea>
                                                 <button type="button" class="btn btn-primary mb-3" onclick="saveCompensoDescrizione('{{ $proforma->id }}')">
-                                                    <i class="fas fa-save"></i> Salva Descrizione
-                                                </button>
-                                                <button type="button" class="btn btn-success mb-3 ml-2" onclick="sendProformaEmail('{{ $proforma->id }}')">
-                                                    <i class="fas fa-paper-plane"></i> Invia Email
+                                                    <i class="fas fa-save"></i> Salva Dati
                                                 </button>
                                                 <div id="modal-feedback-{{ $proforma->id }}" class="mt-2"></div>
                                                 {!! $proforma->emailbody !!}
+
+                                                <div class="mt-4">
+                                                    <label for="annotation_{{ $proforma->id }}"><strong>Annotazioni interne non inviate:</strong></label>
+                                                    <textarea id="annotation_{{ $proforma->id }}" class="form-control" rows="3" placeholder="Enter internal annotations">{{ $proforma->annotation ?? '' }}</textarea>
+                                                </div>
                                               </div>
                                               <div class="modal-footer">
+                                                <button type="button" class="btn btn-success" onclick="sendProformaEmail('{{ $proforma->id }}')">
+                                                    <i class="fas fa-paper-plane"></i> Invia Email
+                                                </button>
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                               </div>
                                             </div>
@@ -227,6 +235,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function saveCompensoDescrizione(proformaId) {
     const textarea = document.getElementById('compenso_descrizione_' + proformaId);
+    const emailsubject = document.getElementById('emailsubject_' + proformaId);
+    const annotation = document.getElementById('annotation_' + proformaId);
     const feedback = document.getElementById('modal-feedback-' + proformaId);
     feedback.innerHTML = '';
     fetch('/proformas/' + proformaId, {
@@ -237,7 +247,9 @@ function saveCompensoDescrizione(proformaId) {
             'Accept': 'application/json'
         },
         body: JSON.stringify({
-            compenso_descrizione: textarea.value
+            compenso_descrizione: textarea.value,
+            emailsubject: emailsubject.value,
+            annotation: annotation.value
         })
     })
     .then(response => response.json())
@@ -245,7 +257,7 @@ function saveCompensoDescrizione(proformaId) {
         if (data.errors) {
             feedback.innerHTML = '<div class="alert alert-danger">' + Object.values(data.errors).join('<br>') + '</div>';
         } else {
-            feedback.innerHTML = '<div class="alert alert-success">Descrizione salvata!</div>';
+            feedback.innerHTML = '<div class="alert alert-success">Dati salvati!</div>';
         }
     })
     .catch(() => {
@@ -275,5 +287,61 @@ function sendProformaEmail(proformaId) {
         feedback.innerHTML = '<div class="alert alert-danger">Errore invio email.</div>';
     });
 }
+
+// Add CSS to style anticipo amount in red
+const style = document.createElement('style');
+style.textContent = `
+    .anticipo-red {
+        color: #dc3545 !important;
+        font-weight: bold !important;
+    }
+`;
+document.head.appendChild(style);
+
+// Function to style anticipo amounts in modal
+function styleAnticipoAmounts(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    // Find all text nodes that contain "Anticipo" or anticipo amounts
+    const walker = document.createTreeWalker(
+        modal,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+    );
+
+    let node;
+    while (node = walker.nextNode()) {
+        const text = node.textContent;
+        if (text.includes('Anticipo') || (text.includes('€') && text.includes('anticipo'))) {
+            // Create a span to wrap the text
+            const span = document.createElement('span');
+            span.className = 'anticipo-red';
+            span.textContent = text;
+            node.parentNode.replaceChild(span, node);
+        }
+    }
+
+    // Also target table cells that might contain anticipo amounts
+    const tableCells = modal.querySelectorAll('td');
+    tableCells.forEach(cell => {
+        const text = cell.textContent;
+        if (text.includes('Anticipo') || (text.includes('€') && text.toLowerCase().includes('anticipo'))) {
+            cell.classList.add('anticipo-red');
+        }
+    });
+}
+
+// Apply styling when modal is shown
+document.addEventListener('DOMContentLoaded', function() {
+    // Listen for modal show events
+    document.addEventListener('shown.bs.modal', function(event) {
+        const modal = event.target;
+        if (modal.id && modal.id.startsWith('emailBodyModal-')) {
+            styleAnticipoAmounts(modal.id);
+        }
+    });
+});
 </script>
 @endsection

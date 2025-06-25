@@ -177,23 +177,30 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Invoices</h3>
-                    @if(request()->hasAny(['stato', 'fornitore', 'date_from', 'date_to']))
-                        <div class="float-right">
-                            <small class="text-muted">
-                                Showing {{ $invoices->total() }} results
-                                @if(request('stato'))
-                                    | Status: {{ ucfirst(request('stato')) }}
-                                @endif
-                                @if(request('fornitore'))
-                                    | Fornitore: {{ request('fornitore') }}
-                                @endif
-                                @if(request('date_from') || request('date_to'))
-                                    | Date: {{ request('date_from', 'Any') }} to {{ request('date_to', 'Any') }}
-                                @endif
-                            </small>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">Invoices</h3>
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3">
+                                <small class="text-muted">
+                                    <strong>Total Amount:</strong> <span class="text-success font-weight-bold">€ {{ number_format($filteredTotalAmount, 2, ',', '.') }}</span>
+                                </small>
+                            </div>
+                            @if(request()->hasAny(['stato', 'fornitore', 'date_from', 'date_to']))
+                                <small class="text-muted">
+                                    Showing {{ $invoices->total() }} results
+                                    @if(request('stato'))
+                                        | Status: {{ ucfirst(request('stato')) }}
+                                    @endif
+                                    @if(request('fornitore'))
+                                        | Fornitore: {{ request('fornitore') }}
+                                    @endif
+                                    @if(request('date_from') || request('date_to'))
+                                        | Date: {{ request('date_from', 'Any') }} to {{ request('date_to', 'Any') }}
+                                    @endif
+                                </small>
+                            @endif
                         </div>
-                    @endif
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -263,29 +270,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                    </div>
-
-                    <!-- Summary Section -->
-                    <div class="summary-section">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="alert alert-info mb-0">
-                                    <i class="fas fa-info-circle mr-2"></i>
-                                    <strong>Filtered Results:</strong>
-                                    <span class="summary-count">{{ number_format($filteredTotalCount) }}</span> invoices |
-                                    <strong>Total Amount:</strong> <span class="summary-amount">€ {{ number_format($filteredTotalAmount, 2, ',', '.') }}</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-right">
-                                <small class="text-muted">
-                                    Showing {{ $invoices->firstItem() ?? 0 }} to {{ $invoices->lastItem() ?? 0 }} of {{ $invoices->total() }} results
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-3">
-                        {{ $invoices->links() }}
                     </div>
                 </div>
             </div>
@@ -496,6 +480,42 @@
     }
     .xml-collapsed .xml-children {
         display: none;
+    }
+
+    /* Pagination Styling */
+    .pagination {
+        justify-content: center;
+        margin-bottom: 0;
+    }
+    .pagination .page-link {
+        color: #007bff;
+        border: 1px solid #dee2e6;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .pagination .page-link:hover {
+        color: #0056b3;
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+    }
+    .pagination-info {
+        text-align: center;
+        margin-bottom: 1rem;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    /* Layout Fixes */
+    .card-body {
+        overflow: hidden;
+    }
+    .table-responsive {
+        margin-bottom: 0;
+    }
+    .summary-section {
+        margin-top: 1rem;
     }
 </style>
 @endsection
