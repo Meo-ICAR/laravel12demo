@@ -14,6 +14,16 @@ class ClientiController extends Controller
     public function index()
     {
         $clientis = Clienti::with('customertype')->get();
+
+        // Add invoice count for each clienti
+        foreach ($clientis as $clienti) {
+            if ($clienti->coge) {
+                $clienti->invoice_count = \App\Models\Invoice::where('coge', $clienti->coge)->count();
+            } else {
+                $clienti->invoice_count = 0;
+            }
+        }
+
         return view('clientis.index', compact('clientis'));
     }
 
@@ -35,6 +45,8 @@ class ClientiController extends Controller
             'codice' => 'nullable|string',
             'name' => 'nullable|string',
             'piva' => 'nullable|string',
+            'cf' => 'nullable|string',
+            'coge' => 'nullable|string',
             'email' => 'nullable|email',
             'regione' => 'nullable|string',
             'citta' => 'nullable|string',
@@ -71,6 +83,8 @@ class ClientiController extends Controller
             'codice' => 'nullable|string',
             'name' => 'nullable|string',
             'piva' => 'nullable|string',
+            'cf' => 'nullable|string',
+            'coge' => 'nullable|string',
             'email' => 'nullable|email',
             'regione' => 'nullable|string',
             'citta' => 'nullable|string',

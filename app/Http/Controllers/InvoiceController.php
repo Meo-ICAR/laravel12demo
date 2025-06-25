@@ -54,13 +54,17 @@ class InvoiceController extends Controller
 
         $query->orderBy($sortBy, $sortDirection);
 
+        // Calculate total amount for filtered records (before pagination)
+        $filteredTotalAmount = (clone $query)->sum('total_amount');
+        $filteredTotalCount = (clone $query)->count();
+
         $invoices = $query->paginate(15)->withQueryString();
 
         // Get unique statuses for filter dropdown
         $statuses = Invoice::distinct()->pluck('status')->filter()->values();
 
         // Get unique fornitori for filter dropdown
-        $fornitori = Invoice::distinct()->pluck('fornitore')->filter()->values();
+        $fornitori = Invoice::distinct()->pluck('fornitore')->filter()->sort()->values();
 
         // Monthly statistics
         $today = now();
@@ -89,7 +93,9 @@ class InvoiceController extends Controller
             'currentMonthCount',
             'currentMonthTotal',
             'lastMonthCount',
-            'lastMonthTotal'
+            'lastMonthTotal',
+            'filteredTotalAmount',
+            'filteredTotalCount'
         ));
     }
 

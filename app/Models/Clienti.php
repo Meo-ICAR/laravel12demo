@@ -20,6 +20,8 @@ class Clienti extends Model
         'codice',
         'name',
         'piva',
+        'cf',
+        'coge',
         'email',
         'regione',
         'citta',

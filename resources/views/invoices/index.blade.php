@@ -19,8 +19,8 @@
             <a href="{{ route('invoices.reconciliation') }}" class="btn btn-warning">
                 <i class="fas fa-balance-scale mr-1"></i> Reconciliation Dashboard
             </a>
-            <a href="{{ route('invoices.import') }}" class="btn btn-primary">
-                <i class="fas fa-upload mr-1"></i> Import Invoices
+            <a href="{{ route('invoiceins.import') }}" class="btn btn-primary">
+                <i class="fas fa-upload mr-1"></i> Import from CSV/Excel
             </a>
             <a href="{{ route('invoices.dashboard') }}" class="btn btn-info">
                 <i class="fas fa-chart-line mr-1"></i> Dashboard
@@ -264,6 +264,26 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Summary Section -->
+                    <div class="summary-section">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <strong>Filtered Results:</strong>
+                                    <span class="summary-count">{{ number_format($filteredTotalCount) }}</span> invoices |
+                                    <strong>Total Amount:</strong> <span class="summary-amount">€ {{ number_format($filteredTotalAmount, 2, ',', '.') }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <small class="text-muted">
+                                    Showing {{ $invoices->firstItem() ?? 0 }} to {{ $invoices->lastItem() ?? 0 }} of {{ $invoices->total() }} results
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mt-3">
                         {{ $invoices->links() }}
                     </div>
@@ -404,6 +424,34 @@
         color: #007bff;
     }
 
+    /* Summary Section Styling */
+    .summary-section {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .summary-section .alert {
+        border: none;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+    .summary-section .alert-info {
+        color: #0c5460;
+        background-color: transparent;
+    }
+    .summary-amount {
+        font-size: 1.1em;
+        font-weight: 600;
+        color: #28a745;
+    }
+    .summary-count {
+        font-weight: 600;
+        color: #007bff;
+    }
+
     /* Pretty XML Tree Styles */
     .xml-tree {
         font-family: 'Courier New', monospace;
@@ -448,34 +496,6 @@
     }
     .xml-collapsed .xml-children {
         display: none;
-    }
-    .xml-toggle {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        margin-right: 5px;
-        text-align: center;
-        line-height: 12px;
-        font-size: 10px;
-        color: #6c757d;
-        cursor: pointer;
-        user-select: none;
-    }
-    .xml-toggle:hover {
-        color: #495057;
-    }
-    .xml-leaf {
-        margin-left: 17px;
-    }
-    .xml-highlight {
-        background-color: #fff3cd;
-        border-radius: 3px;
-        padding: 1px 3px;
-    }
-    .xml-search-highlight {
-        background-color: #d1ecf1;
-        border-radius: 3px;
-        padding: 1px 3px;
     }
 </style>
 @endsection

@@ -25,6 +25,8 @@
                             <th>Name</th>
                             <th>Customer Type</th>
                             <th>PIVA</th>
+                            <th>CF</th>
+                            <th>COGE</th>
                             <th>Email</th>
                             <th>Regione</th>
                             <th>Città</th>
@@ -38,6 +40,19 @@
                                 <td>{{ $clienti->name }}</td>
                                 <td>{{ $clienti->customertype ? $clienti->customertype->name : '' }}</td>
                                 <td>{{ $clienti->piva }}</td>
+                                <td>{{ $clienti->cf }}</td>
+                                <td>
+                                    @if($clienti->coge)
+                                        <a href="{{ route('clientis.invoices.show', $clienti->id) }}" class="coge-link">
+                                            {{ $clienti->coge }}
+                                            @if($clienti->invoice_count > 0)
+                                                <span class="badge badge-info ml-1">{{ $clienti->invoice_count }}</span>
+                                            @endif
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td>{{ $clienti->email }}</td>
                                 <td>{{ $clienti->regione }}</td>
                                 <td>{{ $clienti->citta }}</td>
@@ -69,3 +84,22 @@
     </div>
 </div>
 @endsection
+
+<style>
+.coge-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.coge-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.coge-link:active {
+    color: #004085;
+}
+</style>

@@ -16,7 +16,9 @@
             </div>
         </div>
     </form>
-    <a href="{{ route('invoiceins.create') }}" class="btn btn-success mb-3">Create New Invoicein</a>
+    <div class="mb-3">
+        <a href="{{ route('invoiceins.create') }}" class="btn btn-success">Create New Invoicein</a>
+    </div>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif

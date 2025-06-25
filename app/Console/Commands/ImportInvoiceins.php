@@ -16,6 +16,9 @@ class ImportInvoiceins extends Command
         if ($file === 'update-fornitori-piva') {
             return $this->updateFornitoriPiva();
         }
+        if ($file === 'import-to-invoices') {
+            return $this->importToInvoices();
+        }
         if (!file_exists($file)) {
             $this->error("File not found: $file");
             return 1;
@@ -153,6 +156,47 @@ class ImportInvoiceins extends Command
             }
         }
         $this->info("Updated $updated fornitori records with piva from invoiceins (case-insensitive match).");
+        return 0;
+    }
+
+    protected function importToInvoices()
+    {
+        $imported = 0;
+        $skipped = 0;
+
+        // Get invoiceins that have matching fornitoris
+        $invoiceins = \App\Models\Invoicein::join('fornitoris', 'fornitoris.coge', '=', 'invoiceins.nr_cliente_fornitore')
+            ->select('invoiceins.*')
+            ->get();
+
+        foreach ($invoiceins as $invoicein) {
+            // Check if invoice with same nr_documento already exists
+            if (\App\Models\Invoice::where('invoice_number', $invoicein->nr_documento)->exists()) {
+                $skipped++;
+                continue;
+            }
+
+            // Create new invoice
+            $invoice = new \App\Models\Invoice([
+                'fornitore_piva' => $invoicein->partita_iva,
+                'fornitore' => $invoicein->nome_fornitore,
+                'invoice_number' => $invoicein->nr_documento,
+                'invoice_date' => $invoicein->data_ricezione_fatt,
+                'total_amount' => $invoicein->importo_totale_fornitore,
+                'tax_amount' => $invoicein->importo_iva,
+                'coge' => $invoicein->nr_cliente_fornitore,
+                'status' => 'imported',
+                'currency' => 'EUR',
+            ]);
+
+            $invoice->save();
+            $imported++;
+        }
+
+        $this->info("Imported $imported invoices from invoiceins.");
+        if ($skipped > 0) {
+            $this->warn("Skipped $skipped invoices (duplicate invoice_number).");
+        }
         return 0;
     }
 }

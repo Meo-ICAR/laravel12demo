@@ -165,6 +165,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Clienti routes
     Route::resource('clientis', App\Http\Controllers\ClientiController::class);
+    Route::get('clientis-invoices/{id}', [App\Http\Controllers\ClientiInvoiceController::class, 'show'])->name('clientis.invoices.show');
 
     // Customertypes routes
     Route::resource('customertypes', App\Http\Controllers\CustomertypeController::class);
