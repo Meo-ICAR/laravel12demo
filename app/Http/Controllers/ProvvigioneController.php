@@ -6,6 +6,9 @@ use App\Models\Provvigione;
 use Illuminate\Http\Request;
 use App\Imports\ProvvigioniImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Proforma;
+use App\Models\Fornitori;
+use Illuminate\Support\Str;
 
 class ProvvigioneController extends Controller
 {
@@ -297,11 +300,10 @@ class ProvvigioneController extends Controller
                 fornitoris.email,
                 COUNT(*) as n,
                 SUM(CAST(provvigioni.importo AS DECIMAL(10,2))) as totale,
-                MAX(provvigioni.sended_at) as sended_at,
-                MAX(provvigioni.received_at) as received_at,
-                MAX(provvigioni.paided_at) as paided_at
+                fornitoris.contributo,
+                fornitoris.anticipo
             ')
-            ->groupBy('provvigioni.denominazione_riferimento', 'fornitoris.email');
+            ->groupBy('provvigioni.denominazione_riferimento', 'fornitoris.email', 'fornitoris.contributo', 'fornitoris.anticipo');
 
         // Apply ordering
         if ($orderBy === 'totale') {
@@ -677,6 +679,70 @@ class ProvvigioneController extends Controller
             ->limit(5)
             ->get();
         return view('provvigioni.dashboard', compact('totalProvvigioni', 'totalImporto', 'totalByStato', 'topDenominazioni'));
+    }
+
+    public function toggleStato(Request $request, $id)
+    {
+        $provvigione = Provvigione::findOrFail($id);
+        $current = $provvigione->stato;
+        $new = $request->input('stato');
+        if (!in_array($current, ['Inserito', 'Sospeso']) || !in_array($new, ['Inserito', 'Sospeso'])) {
+            return response()->json(['success' => false, 'message' => 'Invalid stato change.'], 400);
+        }
+        if ($current === $new) {
+            return response()->json(['success' => true, 'message' => 'No change needed.']);
+        }
+        $provvigione->stato = $new;
+        $provvigione->save();
+        return response()->json(['success' => true, 'message' => 'Stato updated.', 'stato' => $new]);
+    }
+
+    public function createProformaFromSummary(Request $request)
+    {
+        $request->validate([
+            'denominazione_riferimento' => 'required|string',
+        ]);
+        $denominazione = $request->input('denominazione_riferimento');
+
+        // Trova il fornitore
+        $fornitore = Fornitori::where('name', $denominazione)->first();
+        if (!$fornitore) {
+            return redirect()->back()->with('error', 'Fornitore non trovato per "' . $denominazione . '"');
+        }
+
+        // Trova tutte le provvigioni con questa denominazione
+        $provvigioni = \App\Models\Provvigione::where('denominazione_riferimento', $denominazione)->get();
+        if ($provvigioni->isEmpty()) {
+            return redirect()->back()->with('error', 'Nessuna provvigione trovata per "' . $denominazione . '"');
+        }
+
+        try {
+            // Crea la proforma
+            $proforma = Proforma::create([
+                'company_id' => $fornitore->company_id,
+                'fornitori_id' => $fornitore->id,
+                'emailto' => $fornitore->email,
+                'anticipo' => $fornitore->anticipo,
+                'contributo' => $fornitore->contributo,
+                'anticipo_descrizione' => $fornitore->anticipo_description,
+                'compenso_descrizione' => $fornitore->contributo_description, // o altro campo se serve
+                'stato' => 'Inserito',
+            ]);
+
+            // Associa tutte le provvigioni alla proforma
+            $proforma->provvigioni()->sync($provvigioni->pluck('id')->toArray());
+
+            // Aggiorna lo stato delle provvigioni associate
+            \App\Models\Provvigione::whereIn('id', $provvigioni->pluck('id')->toArray())
+                ->where('stato', 'Inserito')
+                ->update(['stato' => 'Proforma']);
+
+            \Log::info('Proforma creata con successo per ' . $denominazione);
+            return redirect()->back()->with('success', 'Proforma creata con successo per "' . $denominazione . '".');
+        } catch (\Exception $e) {
+            \Log::error('Errore creazione proforma: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Errore durante la creazione della proforma: ' . $e->getMessage());
+        }
     }
 
     // ... other CRUD methods ...

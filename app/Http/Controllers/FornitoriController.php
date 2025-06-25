@@ -28,12 +28,18 @@ class FornitoriController extends Controller
             });
         }
 
+        // Filter by coordinatore if provided
+        if ($request->has('coordinatore') && $request->coordinatore !== '') {
+            $coordinatoreTerm = strtolower($request->coordinatore);
+            $query->whereRaw('LOWER(coordinatore) LIKE ?', ['%' . $coordinatoreTerm . '%']);
+        }
+
         // Handle sorting
         $sortBy = $request->get('sort_by', 'name');
         $sortDirection = $request->get('sort_direction', 'asc');
 
         // Validate sort parameters
-        $allowedSortBy = ['name', 'codice', 'piva', 'email', 'anticipo', 'issubfornitore', 'regione', 'citta', 'created_at'];
+        $allowedSortBy = ['name', 'codice', 'piva', 'email', 'anticipo', 'contributo', 'regione', 'citta', 'coordinatore', 'created_at'];
         $allowedDirections = ['asc', 'desc'];
 
         if (!in_array($sortBy, $allowedSortBy)) {
@@ -76,13 +82,16 @@ class FornitoriController extends Controller
             // Custom validation for file type
             $file = $request->file('file');
             $extension = strtolower($file->getClientOriginalExtension());
-            $allowedExtensions = ['csv', 'xlsx', 'xls'];
+            $allowedExtensions = ['csv', 'tsv', 'xlsx', 'xls'];
 
             if (!in_array($extension, $allowedExtensions)) {
-                return redirect()->route('fornitoris.index')->with('error', 'The file must be a CSV, XLSX, or XLS file. Detected extension: ' . $extension);
+                return redirect()->route('fornitoris.index')->with('error', 'The file must be a CSV, TSV, XLSX, or XLS file. Detected extension: ' . $extension);
             }
 
-            Excel::import(new FornitoriImport, $file);
+            // Determine delimiter based on file extension
+            $delimiter = ($extension === 'tsv') ? "\t" : ',';
+
+            Excel::import(new FornitoriImport($delimiter), $file);
 
             return redirect()->route('fornitoris.index')->with('success', 'Fornitori imported successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -106,12 +115,16 @@ class FornitoriController extends Controller
             'piva' => 'nullable|string|max:16',
             'email' => 'nullable|string|max:255',
             'anticipo' => 'nullable|numeric|min:0|max:999999999.99',
+            'contributo' => 'nullable|numeric|min:0|max:999999999.99',
+            'contributo_description' => 'nullable|string|max:255',
+            'anticipo_description' => 'nullable|string|max:255',
             'issubfornitore' => 'nullable|boolean',
             'operatore' => 'nullable|string|max:255',
             'iscollaboratore' => 'nullable|boolean',
             'isdipendente' => 'nullable|boolean',
             'regione' => 'nullable|string|max:255',
             'citta' => 'nullable|string|max:255',
+            'coordinatore' => 'nullable|string|max:255',
             'company_id' => 'nullable|string|max:36|exists:companies,id',
         ]);
         $data['id'] = (string) Str::uuid();
@@ -138,12 +151,16 @@ class FornitoriController extends Controller
             'piva' => 'nullable|string|max:16',
             'email' => 'nullable|string|max:255',
             'anticipo' => 'nullable|numeric|min:0|max:999999999.99',
+            'contributo' => 'nullable|numeric|min:0|max:999999999.99',
+            'contributo_description' => 'nullable|string|max:255',
+            'anticipo_description' => 'nullable|string|max:255',
             'issubfornitore' => 'nullable|boolean',
             'operatore' => 'nullable|string|max:255',
             'iscollaboratore' => 'nullable|boolean',
             'isdipendente' => 'nullable|boolean',
             'regione' => 'nullable|string|max:255',
             'citta' => 'nullable|string|max:255',
+            'coordinatore' => 'nullable|string|max:255',
             'company_id' => 'nullable|string|max:36|exists:companies,id',
         ]);
         $fornitori->update($data);

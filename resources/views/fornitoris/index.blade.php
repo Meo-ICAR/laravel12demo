@@ -7,54 +7,68 @@
         <div class="card-header">
             <h5 class="card-title mb-0">
                 <i class="fas fa-filter"></i> Filter Fornitori
+                <button class="btn btn-link float-right p-0" type="button" data-toggle="collapse" data-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
             </h5>
         </div>
-        <div class="card-body">
-            <form method="GET" action="{{ route('fornitoris.index') }}" class="row">
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="name">Search</label>
-                        <input type="text" name="name" id="name" class="form-control"
-                               value="{{ request('name') }}"
-                               placeholder="Search by name, codice, P.IVA, email, regione, città...">
+        <div id="filterCollapse" class="collapse">
+            <div class="card-body">
+                <form method="GET" action="{{ route('fornitoris.index') }}" class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="name">Search</label>
+                            <input type="text" name="name" id="name" class="form-control"
+                                   value="{{ request('name') }}"
+                                   placeholder="Search by name, codice, P.IVA, email, regione, città...">
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="sort_by">Sort by</label>
-                        <select name="sort_by" id="sort_by" class="form-control">
-                            <option value="name" {{ $sortBy === 'name' ? 'selected' : '' }}>Name</option>
-                            <option value="codice" {{ $sortBy === 'codice' ? 'selected' : '' }}>Codice</option>
-                            <option value="piva" {{ $sortBy === 'piva' ? 'selected' : '' }}>P.IVA</option>
-                            <option value="email" {{ $sortBy === 'email' ? 'selected' : '' }}>Email</option>
-                            <option value="anticipo" {{ $sortBy === 'anticipo' ? 'selected' : '' }}>Anticipo</option>
-                            <option value="issubfornitore" {{ $sortBy === 'issubfornitore' ? 'selected' : '' }}>Is Subfornitore</option>
-                            <option value="regione" {{ $sortBy === 'regione' ? 'selected' : '' }}>Regione</option>
-                            <option value="citta" {{ $sortBy === 'citta' ? 'selected' : '' }}>Città</option>
-                            <option value="created_at" {{ $sortBy === 'created_at' ? 'selected' : '' }}>Created Date</option>
-                        </select>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="coordinatore">Coordinatore</label>
+                            <input type="text" name="coordinatore" id="coordinatore" class="form-control"
+                                   value="{{ request('coordinatore') }}"
+                                   placeholder="Search by coordinatore...">
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label for="sort_direction">Direction</label>
-                        <select name="sort_direction" id="sort_direction" class="form-control">
-                            <option value="asc" {{ $sortDirection === 'asc' ? 'selected' : '' }}>Ascending</option>
-                            <option value="desc" {{ $sortDirection === 'desc' ? 'selected' : '' }}>Descending</option>
-                        </select>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="sort_by">Sort by</label>
+                            <select name="sort_by" id="sort_by" class="form-control">
+                                <option value="name" {{ $sortBy === 'name' ? 'selected' : '' }}>Name</option>
+                                <option value="codice" {{ $sortBy === 'codice' ? 'selected' : '' }}>Codice</option>
+                                <option value="piva" {{ $sortBy === 'piva' ? 'selected' : '' }}>P.IVA</option>
+                                <option value="email" {{ $sortBy === 'email' ? 'selected' : '' }}>Email</option>
+                                <option value="anticipo" {{ $sortBy === 'anticipo' ? 'selected' : '' }}>Anticipo</option>
+                                <option value="contributo" {{ $sortBy === 'contributo' ? 'selected' : '' }}>Contributo</option>
+                                <option value="regione" {{ $sortBy === 'regione' ? 'selected' : '' }}>Regione</option>
+                                <option value="citta" {{ $sortBy === 'citta' ? 'selected' : '' }}>Città</option>
+                                <option value="coordinatore" {{ $sortBy === 'coordinatore' ? 'selected' : '' }}>Coordinatore</option>
+                                <option value="created_at" {{ $sortBy === 'created_at' ? 'selected' : '' }}>Created Date</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <div class="form-group mb-0">
-                        <button type="submit" class="btn btn-primary mr-2">
-                            <i class="fas fa-search"></i> Search & Sort
-                        </button>
-                        <a href="{{ route('fornitoris.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Clear
-                        </a>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="sort_direction">Direction</label>
+                            <select name="sort_direction" id="sort_direction" class="form-control">
+                                <option value="asc" {{ $sortDirection === 'asc' ? 'selected' : '' }}>Ascending</option>
+                                <option value="desc" {{ $sortDirection === 'desc' ? 'selected' : '' }}>Descending</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-            </form>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-group mb-0">
+                            <button type="submit" class="btn btn-primary mr-2">
+                                <i class="fas fa-search"></i> Search & Sort
+                            </button>
+                            <a href="{{ route('fornitoris.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -65,9 +79,6 @@
                 <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#importModal">
                     <i class="fas fa-upload"></i> Import CSV
                 </button>
-                <a href="{{ route('fornitoris.create') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus"></i> Add Fornitore
-                </a>
             </div>
         </div>
         <div class="card-body p-0">
@@ -131,17 +142,16 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'issubfornitore', 'sort_direction' => $sortBy === 'issubfornitore' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'contributo', 'sort_direction' => $sortBy === 'contributo' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
                                    class="text-dark text-decoration-none">
-                                    Is Subfornitore
-                                    @if($sortBy === 'issubfornitore')
+                                    Contributo
+                                    @if($sortBy === 'contributo')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @else
                                         <i class="fas fa-sort text-muted"></i>
                                     @endif
                                 </a>
                             </th>
-                            <th>Operatore</th>
                             <th>
                                 <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'regione', 'sort_direction' => $sortBy === 'regione' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
                                    class="text-dark text-decoration-none">
@@ -164,6 +174,17 @@
                                     @endif
                                 </a>
                             </th>
+                            <th>
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'coordinatore', 'sort_direction' => $sortBy === 'coordinatore' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                   class="text-dark text-decoration-none">
+                                    Coordinatore
+                                    @if($sortBy === 'coordinatore')
+                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="fas fa-sort text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -175,31 +196,17 @@
                                 <td>{{ $fornitore->piva }}</td>
                                 <td>{{ $fornitore->email }}</td>
                                 <td class="text-right">{{ $fornitore->anticipo ? '€ ' . number_format($fornitore->anticipo, 2, ',', '.') : '-' }}</td>
-                                <td class="text-center">
-                                    @if($fornitore->issubfornitore)
-                                        <span class="badge badge-success">Yes</span>
-                                    @else
-                                        <span class="badge badge-secondary">No</span>
-                                    @endif
-                                </td>
-                                <td>{{ $fornitore->operatore }}</td>
+                                <td class="text-right">{{ $fornitore->contributo ? '€ ' . number_format($fornitore->contributo, 2, ',', '.') : '-' }}</td>
                                 <td>{{ $fornitore->regione }}</td>
                                 <td>{{ $fornitore->citta }}</td>
+                                <td>{{ $fornitore->coordinatore }}</td>
                                 <td>
-                                    <a href="{{ route('fornitoris.show', $fornitore) }}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
                                     <a href="{{ route('fornitoris.edit', $fornitore) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
-                                    <form action="{{ route('fornitoris.destroy', $fornitore) }}" method="POST" style="display:inline-block;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center">No fornitori found.</td>
+                                <td colspan="9" class="text-center">No fornitori found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -218,7 +225,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="importModalLabel">
-                    <i class="fas fa-upload"></i> Import Fornitori from CSV
+                    <i class="fas fa-upload"></i> Import Fornitori from File
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -228,16 +235,16 @@
                 @csrf
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="file">Select CSV File</label>
-                        <input type="file" class="form-control-file" id="file" name="file" accept=".csv,.xlsx,.xls" required>
+                        <label for="file">Select File</label>
+                        <input type="file" class="form-control-file" id="file" name="file" accept=".csv,.tsv,.xlsx,.xls" required>
                         <small class="form-text text-muted">
-                            Supported formats: CSV, XLSX, XLS. Maximum file size: 2MB.
+                            Supported formats: CSV (comma-delimited), TSV (tab-delimited), XLSX, XLS. Maximum file size: 2MB.
                         </small>
                     </div>
 
                     <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle"></i> CSV Format Requirements:</h6>
-                        <p class="mb-1">Your CSV file should have the following columns:</p>
+                        <h6><i class="fas fa-info-circle"></i> File Format Requirements:</h6>
+                        <p class="mb-1">Your file should have the following columns (comma or tab-delimited):</p>
                         <ul class="mb-0 small">
                             <li><strong>codice</strong> - Supplier code</li>
                             <li><strong>denominazione</strong> - Company/Supplier name</li>

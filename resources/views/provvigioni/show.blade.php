@@ -1,152 +1,176 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <h2>Provvigione Details</h2>
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Provvigione Details</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('provvigioni.index') }}">Provvigioni</a></li>
+                        <li class="breadcrumb-item active">Details</li>
+                    </ol>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6 text-right">
-            <a href="{{ route('provvigioni.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
-            <a href="{{ route('provvigioni.edit', $provvigione->id) }}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Edit
-            </a>
-        </div>
-    </div>
+    </section>
 
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Record Details</h3>
-        </div>
-        <div class="card-body">
+    <section class="content">
+        <div class="container-fluid">
             <div class="row">
                 <div class="col-md-6">
-                    <table class="table table-borderless">
-                        <tr>
-                            <th width="200">ID:</th>
-                            <td>{{ $provvigione->id }}</td>
-                        </tr>
-                        <tr>
-                            <th>Legacy ID:</th>
-                            <td>{{ $provvigione->legacy_id }}</td>
-                        </tr>
-                        <tr>
-                            <th>Data Inserimento Compenso:</th>
-                            <td>{{ $provvigione->data_inserimento_compenso }}</td>
-                        </tr>
-                        <tr>
-                            <th>Descrizione:</th>
-                            <td>{{ $provvigione->descrizione }}</td>
-                        </tr>
-                        <tr>
-                            <th>Tipo:</th>
-                            <td>{{ $provvigione->tipo }}</td>
-                        </tr>
-                        <tr>
-                            <th>Importo:</th>
-                            <td class="font-weight-bold">€ {{ number_format($provvigione->importo, 2, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <th>Importo Effettivo:</th>
-                            <td class="font-weight-bold">€ {{ number_format($provvigione->importo_effettivo, 2, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <th>Quota:</th>
-                            <td>{{ $provvigione->quota }}</td>
-                        </tr>
-                        <tr>
-                            <th>Stato:</th>
-                            <td>
-                                <span class="badge badge-{{ $provvigione->stato == 'Pagato' ? 'success' : ($provvigione->stato == 'Fatturato' ? 'info' : ($provvigione->stato == 'Proforma' ? 'warning' : ($provvigione->stato == 'Stornato' ? 'danger' : 'secondary'))) }}">
-                                    {{ $provvigione->stato }}
-                                </span>
-                            </td>
-                        </tr>
-                    </table>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Basic Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">ID</dt>
+                                <dd class="col-sm-8">{{ $provvigione->id }}</dd>
+
+                                <dt class="col-sm-4">Legacy ID</dt>
+                                <dd class="col-sm-8">{{ $provvigione->legacy_id ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Stato</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge badge-{{ $provvigione->stato == 'Pagato' ? 'success' : ($provvigione->stato == 'Fatturato' ? 'info' : ($provvigione->stato == 'Proforma' ? 'warning' : ($provvigione->stato == 'Stornato' ? 'danger' : 'secondary'))) }}">
+                                        {{ $provvigione->stato }}
+                                    </span>
+                                </dd>
+
+                                <dt class="col-sm-4">Descrizione</dt>
+                                <dd class="col-sm-8">{{ $provvigione->descrizione ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Tipo</dt>
+                                <dd class="col-sm-8">{{ $provvigione->tipo ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Importo</dt>
+                                <dd class="col-sm-8">
+                                    <strong class="text-success">€ {{ number_format($provvigione->importo, 2, ',', '.') }}</strong>
+                                </dd>
+
+                                <dt class="col-sm-4">Importo Effettivo</dt>
+                                <dd class="col-sm-8">
+                                    <strong class="text-info">€ {{ number_format($provvigione->importo_effettivo, 2, ',', '.') }}</strong>
+                                </dd>
+
+                                <dt class="col-sm-4">Quota</dt>
+                                <dd class="col-sm-8">{{ $provvigione->quota ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Data Inserimento</dt>
+                                <dd class="col-sm-8">{{ $provvigione->data_inserimento_compenso ?? '-' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="col-md-6">
-                    <table class="table table-borderless">
-                        <tr>
-                            <th width="200">Denominazione Riferimento:</th>
-                            <td>{{ $provvigione->denominazione_riferimento }}</td>
-                        </tr>
-                        <tr>
-                            <th>Entrata/Uscita:</th>
-                            <td>{{ $provvigione->entrata_uscita }}</td>
-                        </tr>
-                        <tr>
-                            <th>Cognome:</th>
-                            <td>{{ $provvigione->cognome }}</td>
-                        </tr>
-                        <tr>
-                            <th>Nome:</th>
-                            <td>{{ $provvigione->nome }}</td>
-                        </tr>
-                        <tr>
-                            <th>Segnalatore:</th>
-                            <td>{{ $provvigione->segnalatore }}</td>
-                        </tr>
-                        <tr>
-                            <th>Fonte:</th>
-                            <td>{{ $provvigione->fonte }}</td>
-                        </tr>
-                        <tr>
-                            <th>ID Pratica:</th>
-                            <td>{{ $provvigione->id_pratica }}</td>
-                        </tr>
-                        <tr>
-                            <th>Tipo Pratica:</th>
-                            <td>{{ $provvigione->tipo_pratica }}</td>
-                        </tr>
-                        <tr>
-                            <th>Data Inserimento Pratica:</th>
-                            <td>{{ $provvigione->data_inserimento_pratica }}</td>
-                        </tr>
-                        <tr>
-                            <th>Data Stipula:</th>
-                            <td>{{ $provvigione->data_stipula }}</td>
-                        </tr>
-                    </table>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Personal Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">Denominazione</dt>
+                                <dd class="col-sm-8">{{ $provvigione->denominazione_riferimento ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Nome Completo</dt>
+                                <dd class="col-sm-8">{{ $provvigione->cognome }} {{ $provvigione->nome }}</dd>
+
+                                <dt class="col-sm-4">Segnalatore</dt>
+                                <dd class="col-sm-8">{{ $provvigione->segnalatore ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Fonte</dt>
+                                <dd class="col-sm-8">{{ $provvigione->fonte ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Entrata/Uscita</dt>
+                                <dd class="col-sm-8">{{ $provvigione->entrata_uscita ?? '-' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="row mt-4">
-                <div class="col-md-12">
-                    <table class="table table-borderless">
-                        <tr>
-                            <th width="200">Istituto Finanziario:</th>
-                            <td>{{ $provvigione->istituto_finanziario }}</td>
-                        </tr>
-                        <tr>
-                            <th>Prodotto:</th>
-                            <td>{{ $provvigione->prodotto }}</td>
-                        </tr>
-                        <tr>
-                            <th>Macrostatus:</th>
-                            <td>{{ $provvigione->macrostatus }}</td>
-                        </tr>
-                        <tr>
-                            <th>Status Pratica:</th>
-                            <td>{{ $provvigione->status_pratica }}</td>
-                        </tr>
-                        <tr>
-                            <th>Data Status Pratica:</th>
-                            <td>{{ $provvigione->data_status_pratica }}</td>
-                        </tr>
-                        <tr>
-                            <th>Montante:</th>
-                            <td class="font-weight-bold">€ {{ number_format($provvigione->montante, 2, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <th>Importo Erogato:</th>
-                            <td class="font-weight-bold">€ {{ number_format($provvigione->importo_erogato, 2, ',', '.') }}</td>
-                        </tr>
-                    </table>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Practice Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">ID Pratica</dt>
+                                <dd class="col-sm-8">{{ $provvigione->id_pratica ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Tipo Pratica</dt>
+                                <dd class="col-sm-8">{{ $provvigione->tipo_pratica ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Data Inserimento</dt>
+                                <dd class="col-sm-8">{{ $provvigione->data_inserimento_pratica ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Data Stipula</dt>
+                                <dd class="col-sm-8">{{ $provvigione->data_stipula ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Status Pratica</dt>
+                                <dd class="col-sm-8">{{ $provvigione->status_pratica ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Data Status</dt>
+                                <dd class="col-sm-8">{{ $provvigione->data_status_pratica ?? '-' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Financial Details</h3>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">Istituto</dt>
+                                <dd class="col-sm-8">{{ $provvigione->istituto_finanziario ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Prodotto</dt>
+                                <dd class="col-sm-8">{{ $provvigione->prodotto ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Macrostatus</dt>
+                                <dd class="col-sm-8">{{ $provvigione->macrostatus ?? '-' }}</dd>
+
+                                <dt class="col-sm-4">Montante</dt>
+                                <dd class="col-sm-8">
+                                    <strong class="text-primary">€ {{ number_format($provvigione->montante, 2, ',', '.') }}</strong>
+                                </dd>
+
+                                <dt class="col-sm-4">Importo Erogato</dt>
+                                <dd class="col-sm-8">
+                                    <strong class="text-warning">€ {{ number_format($provvigione->importo_erogato, 2, ',', '.') }}</strong>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-footer">
+                            <a href="{{ route('provvigioni.edit', $provvigione->id) }}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a href="{{ route('provvigioni.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 </div>
 @endsection

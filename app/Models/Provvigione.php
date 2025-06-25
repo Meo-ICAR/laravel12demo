@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Models\Fornitori;
 use App\Models\Clienti;
+use App\Models\Proforma;
 
 class Provvigione extends Model
 {
@@ -175,5 +176,10 @@ class Provvigione extends Model
                 ]);
             }
         }
+    }
+
+    public function proformas()
+    {
+        return $this->belongsToMany(Proforma::class, 'proforma_provvigione', 'provvigione_id', 'proforma_id');
     }
 }

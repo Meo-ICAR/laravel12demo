@@ -29,83 +29,83 @@
             </button>
         </div>
         <div class="collapse" id="filterCollapse">
-            <div class="card-body">
-                <form action="{{ route('calls.index') }}" method="GET" class="row" id="filterForm">
-                    <div class="col-md-2">
-                        <label for="numero_chiamato">Numero Chiamato:</label>
-                        <input type="text" name="numero_chiamato" id="numero_chiamato" class="form-control"
-                               value="{{ request('numero_chiamato') }}" placeholder="Search...">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="stato_chiamata">Stato Chiamata:</label>
-                        <select name="stato_chiamata" id="stato_chiamata" class="form-control">
-                            <option value="">All Stati</option>
-                            @foreach($statoChiamataOptions as $option)
-                                <option value="{{ $option }}" {{ request('stato_chiamata') == $option ? 'selected' : '' }}>
-                                    {{ $option }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="esito">Esito:</label>
-                        <select name="esito" id="esito" class="form-control">
-                            <option value="">All Esiti</option>
-                            @foreach($esitoOptions as $option)
-                                <option value="{{ $option }}" {{ request('esito') == $option ? 'selected' : '' }}>
-                                    {{ $option }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="utente">Utente:</label>
-                        <select name="utente" id="utente" class="form-control">
-                            <option value="">All Utenti</option>
-                            @foreach($utenteOptions as $option)
-                                <option value="{{ $option }}" {{ request('utente') == $option ? 'selected' : '' }}>
-                                    {{ $option }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="data_from">Data From:</label>
-                        <input type="date" name="data_from" id="data_from" class="form-control"
-                               value="{{ request('data_from') }}">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="data_to">Data To:</label>
-                        <input type="date" name="data_to" id="data_to" class="form-control"
-                               value="{{ request('data_to') }}">
-                    </div>
-                    <div class="col-md-12 mt-3">
-                        <div class="d-flex align-items-end">
-                            <button type="submit" class="btn btn-info mr-2">
-                                <i class="fas fa-search"></i> Filter
-                            </button>
-                            <button type="button" class="btn btn-secondary ml-2" onclick="clearFilters()">
-                                <i class="fas fa-times"></i> Clear
-                            </button>
-                            <div class="ml-auto">
-                                <label for="sort_by">Sort by:</label>
-                                <select name="sort_by" id="sort_by" class="form-control d-inline-block" style="width: auto;">
-                                    <option value="data_inizio" {{ $sortBy === 'data_inizio' ? 'selected' : '' }}>Data Inizio</option>
-                                    <option value="numero_chiamato" {{ $sortBy === 'numero_chiamato' ? 'selected' : '' }}>Numero Chiamato</option>
-                                    <option value="durata" {{ $sortBy === 'durata' ? 'selected' : '' }}>Durata</option>
-                                    <option value="stato_chiamata" {{ $sortBy === 'stato_chiamata' ? 'selected' : '' }}>Stato Chiamata</option>
-                                    <option value="esito" {{ $sortBy === 'esito' ? 'selected' : '' }}>Esito</option>
-                                    <option value="utente" {{ $sortBy === 'utente' ? 'selected' : '' }}>Utente</option>
-                                    <option value="created_at" {{ $sortBy === 'created_at' ? 'selected' : '' }}>Created Date</option>
-                                </select>
-                                <select name="sort_direction" id="sort_direction" class="form-control d-inline-block ml-2" style="width: auto;">
-                                    <option value="desc" {{ $sortDirection === 'desc' ? 'selected' : '' }}>Desc</option>
-                                    <option value="asc" {{ $sortDirection === 'asc' ? 'selected' : '' }}>Asc</option>
-                                </select>
-                            </div>
+        <div class="card-body">
+            <form action="{{ route('calls.index') }}" method="GET" class="row" id="filterForm">
+                <div class="col-md-2">
+                    <label for="numero_chiamato">Numero Chiamato:</label>
+                    <input type="text" name="numero_chiamato" id="numero_chiamato" class="form-control"
+                           value="{{ request('numero_chiamato') }}" placeholder="Search...">
+                </div>
+                <div class="col-md-2">
+                    <label for="stato_chiamata">Stato Chiamata:</label>
+                    <select name="stato_chiamata" id="stato_chiamata" class="form-control">
+                        <option value="">All Stati</option>
+                        @foreach($statoChiamataOptions as $option)
+                            <option value="{{ $option }}" {{ request('stato_chiamata') == $option ? 'selected' : '' }}>
+                                {{ $option }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="esito">Esito:</label>
+                    <select name="esito" id="esito" class="form-control">
+                        <option value="">All Esiti</option>
+                        @foreach($esitoOptions as $option)
+                            <option value="{{ $option }}" {{ request('esito') == $option ? 'selected' : '' }}>
+                                {{ $option }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="utente">Utente:</label>
+                    <select name="utente" id="utente" class="form-control">
+                        <option value="">All Utenti</option>
+                        @foreach($utenteOptions as $option)
+                            <option value="{{ $option }}" {{ request('utente') == $option ? 'selected' : '' }}>
+                                {{ $option }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="data_from">Data From:</label>
+                    <input type="date" name="data_from" id="data_from" class="form-control"
+                           value="{{ request('data_from') }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="data_to">Data To:</label>
+                    <input type="date" name="data_to" id="data_to" class="form-control"
+                           value="{{ request('data_to') }}">
+                </div>
+                <div class="col-md-12 mt-3">
+                    <div class="d-flex align-items-end">
+                        <button type="submit" class="btn btn-info mr-2">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                        <button type="button" class="btn btn-secondary ml-2" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                        <div class="ml-auto">
+                            <label for="sort_by">Sort by:</label>
+                            <select name="sort_by" id="sort_by" class="form-control d-inline-block" style="width: auto;">
+                                <option value="data_inizio" {{ $sortBy === 'data_inizio' ? 'selected' : '' }}>Data Inizio</option>
+                                <option value="numero_chiamato" {{ $sortBy === 'numero_chiamato' ? 'selected' : '' }}>Numero Chiamato</option>
+                                <option value="durata" {{ $sortBy === 'durata' ? 'selected' : '' }}>Durata</option>
+                                <option value="stato_chiamata" {{ $sortBy === 'stato_chiamata' ? 'selected' : '' }}>Stato Chiamata</option>
+                                <option value="esito" {{ $sortBy === 'esito' ? 'selected' : '' }}>Esito</option>
+                                <option value="utente" {{ $sortBy === 'utente' ? 'selected' : '' }}>Utente</option>
+                                <option value="created_at" {{ $sortBy === 'created_at' ? 'selected' : '' }}>Created Date</option>
+                            </select>
+                            <select name="sort_direction" id="sort_direction" class="form-control d-inline-block ml-2" style="width: auto;">
+                                <option value="desc" {{ $sortDirection === 'desc' ? 'selected' : '' }}>Desc</option>
+                                <option value="asc" {{ $sortDirection === 'asc' ? 'selected' : '' }}>Asc</option>
+                            </select>
                         </div>
                     </div>
-                </form>
+                </div>
+            </form>
             </div>
         </div>
     </div>

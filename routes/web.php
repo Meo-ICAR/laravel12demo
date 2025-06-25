@@ -144,7 +144,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('provvigioni/bulk-update-to-proforma', [App\Http\Controllers\ProvvigioneController::class, 'bulkUpdateToProforma'])->name('provvigioni.bulkUpdateToProforma');
     Route::get('provvigioni/dashboard', [App\Http\Controllers\ProvvigioneController::class, 'dashboard'])->name('provvigioni.dashboard');
     Route::put('provvigioni/{id}/stato', [App\Http\Controllers\ProvvigioneController::class, 'updateStato'])->name('provvigioni.updateStato');
+    Route::put('provvigioni/{id}/toggle-stato', [App\Http\Controllers\ProvvigioneController::class, 'toggleStato'])->name('provvigioni.toggleStato');
     Route::resource('provvigioni', App\Http\Controllers\ProvvigioneController::class);
+    Route::post('provvigioni/create-proforma-from-summary', [App\Http\Controllers\ProvvigioneController::class, 'createProformaFromSummary'])->name('provvigioni.createProformaFromSummary');
 
     // Calls routes
     Route::get('calls/import', [App\Http\Controllers\CallController::class, 'showImportForm'])->name('calls.import.form');
@@ -204,6 +206,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
         return response()->json(['success' => true]);
     })->name('test.upload');
+
+    // Proformas routes
+    Route::resource('proformas', App\Http\Controllers\ProformaController::class);
 });
 
 require __DIR__.'/auth.php';

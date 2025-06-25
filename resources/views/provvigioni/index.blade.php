@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container-fluid">
+    <div id="provvigioni-alert-container"></div>
     <!-- Filter Section - First and Collapsed -->
     <div class="card mb-3">
         <div class="card-header" id="filterHeader" style="cursor: pointer;" data-toggle="collapse" data-target="#filterBody" aria-expanded="false" aria-controls="filterBody">
@@ -185,6 +186,9 @@
                 <table class="table table-bordered table-striped mb-0">
                     <thead>
                         <tr>
+                            <th class="text-center align-middle">
+                                <input type="checkbox" id="provvigioni-toggle-all">
+                            </th>
                             <th>Denominazione Riferimento</th>
                             <th class="text-right">Importo</th>
                             <th>Stato</th>
@@ -201,6 +205,14 @@
                     <tbody>
                         @forelse($provvigioni as $item)
                             <tr>
+                                <td class="text-center align-middle">
+                                    <input type="checkbox"
+                                        class="provvigione-toggle-stato"
+                                        data-id="{{ $item->id }}"
+                                        @if($item->stato == 'Inserito') checked @endif
+                                        @if($item->stato != 'Inserito' && $item->stato != 'Sospeso') disabled @endif
+                                    >
+                                </td>
                                 <td>{{ Str::limit($item->denominazione_riferimento, 20) }}</td>
                                 <td class="text-right">{{ number_format($item->importo, 2, ',', '.') }}</td>
                                 <td>
@@ -393,21 +405,151 @@ document.addEventListener('DOMContentLoaded', function() {
         // Store original value when page loads
         select.setAttribute('data-original-value', select.value);
     });
+
+    // Handle stato toggle via checkbox
+    function updateStatoCheckbox(checkbox, newStato) {
+        // Also update the select if present in the same row
+        const row = checkbox.closest('tr');
+        if (row) {
+            const select = row.querySelector('.stato-select');
+            if (select) {
+                select.value = newStato;
+            }
+        }
+    }
+    document.querySelectorAll('.provvigione-toggle-stato').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const id = this.getAttribute('data-id');
+            const checked = this.checked;
+            const newStato = checked ? 'Inserito' : 'Sospeso';
+            this.disabled = true;
+            fetch(`/provvigioni/${id}/toggle-stato`, {
+                method: 'PUT',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ stato: newStato })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateStatoCheckbox(this, newStato);
+                    showProvvigioniAlert('success', 'Stato updated successfully!');
+                } else {
+                    alert('Error: ' + (data.message || 'Unknown error'));
+                    this.checked = !checked; // revert
+                }
+            })
+            .catch(() => {
+                showProvvigioniAlert('danger', 'Network error');
+                this.checked = !checked; // revert
+            })
+            .finally(() => {
+                this.disabled = false;
+            });
+        });
+    });
+
+    // Global toggle
+    const globalToggle = document.getElementById('provvigioni-toggle-all');
+    if (globalToggle) {
+        globalToggle.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.provvigione-toggle-stato');
+            let affected = 0;
+            let completed = 0;
+            let totalToAffect = 0;
+            let errors = 0;
+            // First, count how many will be affected
+            checkboxes.forEach(function(checkbox) {
+                if (!checkbox.disabled && checkbox.checked !== globalToggle.checked) {
+                    totalToAffect++;
+                }
+            });
+            if (totalToAffect === 0) {
+                showProvvigioniAlert('info', 'No records to update.');
+                return;
+            }
+            checkboxes.forEach(function(checkbox) {
+                if (!checkbox.disabled && checkbox.checked !== globalToggle.checked) {
+                    checkbox.checked = globalToggle.checked;
+                    // Wrap the AJAX logic to count completions
+                    const id = checkbox.getAttribute('data-id');
+                    const checked = checkbox.checked;
+                    const newStato = checked ? 'Inserito' : 'Sospeso';
+                    checkbox.disabled = true;
+                    fetch(`/provvigioni/${id}/toggle-stato`, {
+                        method: 'PUT',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ stato: newStato })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateStatoCheckbox(checkbox, newStato);
+                            affected++;
+                        } else {
+                            checkbox.checked = !checked;
+                            errors++;
+                        }
+                    })
+                    .catch(() => {
+                        checkbox.checked = !checked;
+                        errors++;
+                    })
+                    .finally(() => {
+                        checkbox.disabled = false;
+                        completed++;
+                        if (completed === totalToAffect) {
+                            if (affected > 0) {
+                                showProvvigioniAlert('success', `${affected} record${affected === 1 ? '' : 's'} updated successfully!`);
+                            }
+                            if (errors > 0) {
+                                showProvvigioniAlert('danger', `${errors} record${errors === 1 ? '' : 's'} failed to update.`);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    // Function to clear all filters and navigate to base URL
+    function clearFilters() {
+        // Clear all form fields
+        document.getElementById('stato').value = '';
+        document.getElementById('denominazione_riferimento').value = '';
+        document.getElementById('istituto_finanziario').value = '';
+        document.getElementById('cognome').value = '';
+        document.getElementById('fonte').value = '';
+        document.getElementById('data_status_pratica').value = '';
+        document.getElementById('sended_at').value = '';
+
+        // Navigate to base URL without any parameters
+        window.location.href = '{{ route("provvigioni.index") }}';
+    }
+
+    function showProvvigioniAlert(type, message) {
+        const container = document.getElementById('provvigioni-alert-container');
+        if (!container) return;
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+        `;
+        container.appendChild(alert);
+        setTimeout(() => {
+            if (alert.parentNode) alert.parentNode.removeChild(alert);
+        }, 3000);
+    }
 });
-
-// Function to clear all filters and navigate to base URL
-function clearFilters() {
-    // Clear all form fields
-    document.getElementById('stato').value = '';
-    document.getElementById('denominazione_riferimento').value = '';
-    document.getElementById('istituto_finanziario').value = '';
-    document.getElementById('cognome').value = '';
-    document.getElementById('fonte').value = '';
-    document.getElementById('data_status_pratica').value = '';
-    document.getElementById('sended_at').value = '';
-
-    // Navigate to base URL without any parameters
-    window.location.href = '{{ route("provvigioni.index") }}';
-}
 </script>
 @endsection

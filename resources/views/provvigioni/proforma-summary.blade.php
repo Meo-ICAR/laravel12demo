@@ -72,9 +72,8 @@
                             <th>Email</th>
                             <th class="text-right">N</th>
                             <th class="text-right">Total</th>
-                            <th>Sent</th>
-                            <th>Received</th>
-                            <th>Paid</th>
+                            <th class="text-right">Contributo</th>
+                            <th class="text-right">Anticipo</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -105,57 +104,25 @@
                                         € {{ number_format($item->totale, 2, ',', '.') }}
                                     </span>
                                 </td>
-                                <td>
-                                    @if($item->sended_at)
-                                        <span class="badge badge-success">
-                                            <i class="fas fa-check"></i> {{ $item->sended_at->format('d/m/Y H:i') }}
-                                        </span>
-                                    @else
-                                        <span class="badge badge-secondary">Not Sent</span>
-                                    @endif
+                                <td class="text-right">
+                                    <span>{{ $item->contributo !== null ? number_format($item->contributo, 2, ',', '.') : '-' }}</span>
+                                </td>
+                                <td class="text-right">
+                                    <span>{{ $item->anticipo !== null ? number_format($item->anticipo, 2, ',', '.') : '-' }}</span>
                                 </td>
                                 <td>
-                                    @if($item->received_at)
-                                        <span class="badge badge-info">
-                                            <i class="fas fa-check"></i> {{ $item->received_at->format('d/m/Y H:i') }}
-                                        </span>
-                                    @else
-                                        <span class="badge badge-warning">Not Received</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($item->paided_at)
-                                        <span class="badge badge-success">
-                                            <i class="fas fa-check"></i> {{ $item->paided_at->format('d/m/Y H:i') }}
-                                        </span>
-                                    @else
-                                        <span class="badge badge-danger">Not Paid</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        @if($item->sended_at)
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="fas fa-envelope"></i> Email Sent
-                                            </button>
-                                        @elseif(!$item->email)
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="fas fa-envelope"></i> No Email
-                                            </button>
-                                        @else
-                                            <button class="btn btn-sm btn-primary send-email-btn"
-                                                    data-denominazione="{{ $item->denominazione_riferimento }}">
-                                                <i class="fas fa-envelope"></i> Email
-                                            </button>
-                                        @endif
-
-
-                                    </div>
+                                    <form action="{{ route('provvigioni.createProformaFromSummary') }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <input type="hidden" name="denominazione_riferimento" value="{{ $item->denominazione_riferimento }}">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-file-invoice"></i> Proforma
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center">
+                                <td colspan="8" class="text-center">
                                     <div class="py-4">
                                         <i class="fas fa-info-circle text-muted fa-2x mb-3"></i>
                                         <p class="text-muted">No Inserito records found.</p>

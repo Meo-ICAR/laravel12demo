@@ -48,6 +48,27 @@
                             @enderror
                         </div>
                         <div class="form-group">
+                            <label for="anticipo_description">Anticipo Description</label>
+                            <input type="text" name="anticipo_description" class="form-control" value="{{ old('anticipo_description', $fornitori->anticipo_description) }}">
+                            @error('anticipo_description')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="contributo">Contributo</label>
+                            <input type="number" name="contributo" class="form-control" value="{{ old('contributo', $fornitori->contributo) }}" step="0.01" min="0" max="999999999.99">
+                            @error('contributo')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="contributo_description">Contributo Description</label>
+                            <input type="text" name="contributo_description" class="form-control" value="{{ old('contributo_description', $fornitori->contributo_description) }}">
+                            @error('contributo_description')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label for="operatore">Operatore</label>
                             <input type="text" name="operatore" class="form-control" value="{{ old('operatore', $fornitori->operatore) }}">
                             @error('operatore')
@@ -86,6 +107,15 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information Section -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h5 class="mb-3">Location Information</h5>
+                    </div>
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label for="regione">Regione</label>
                             <input type="text" name="regione" class="form-control" value="{{ old('regione', $fornitori->regione) }}">
@@ -93,6 +123,8 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label for="citta">Città</label>
                             <input type="text" name="citta" class="form-control" value="{{ old('citta', $fornitori->citta) }}">
@@ -100,6 +132,17 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="coordinatore">Coordinatore</label>
+                            <input type="text" name="coordinatore" class="form-control" value="{{ old('coordinatore', $fornitori->coordinatore) }}">
+                            @error('coordinatore')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label for="company_id">Company</label>
                             <select name="company_id" class="form-control">
@@ -120,6 +163,13 @@
             <div class="card-footer">
                 <button type="submit" class="btn btn-primary">Update</button>
                 <a href="{{ route('fornitoris.index') }}" class="btn btn-secondary">Cancel</a>
+                <form action="{{ route('fornitoris.destroy', $fornitori) }}" method="POST" style="display:inline-block;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this fornitore?')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </form>
             </div>
         </form>
     </div>
