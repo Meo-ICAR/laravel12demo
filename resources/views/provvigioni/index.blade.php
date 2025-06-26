@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="container-fluid">
     <div id="provvigioni-alert-container"></div>
     <!-- Filter Section - First and Collapsed -->
@@ -27,10 +28,10 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label for="denominazione_riferimento">Denominazione Riferimento:</label>
+                        <label for="denominazione_riferimento">Fornitore Name:</label>
                         <input type="text" name="denominazione_riferimento" id="denominazione_riferimento"
                                class="form-control" value="{{ request('denominazione_riferimento') }}"
-                               placeholder="Search...">
+                               placeholder="Search fornitore name...">
                     </div>
                     <div class="col-md-2">
                         <label for="istituto_finanziario">Istituto Finanziario:</label>
@@ -45,16 +46,14 @@
                                placeholder="Search...">
                     </div>
                     <div class="col-md-2">
-                        <label for="fonte">Fonte:</label>
-                        <input type="text" name="fonte" id="fonte"
-                               class="form-control" value="{{ request('fonte') }}"
-                               placeholder="Search...">
+                        <label for="data_status_pratica_from">Data Status Pratica From:</label>
+                        <input type="date" name="data_status_pratica_from" id="data_status_pratica_from"
+                               class="form-control" value="{{ request('data_status_pratica_from') }}">
                     </div>
                     <div class="col-md-2">
-                        <label for="data_status_pratica">Data Status Pratica:</label>
-                        <input type="text" name="data_status_pratica" id="data_status_pratica"
-                               class="form-control" value="{{ request('data_status_pratica') }}"
-                               placeholder="Search...">
+                        <label for="data_status_pratica_to">Data Status Pratica To:</label>
+                        <input type="date" name="data_status_pratica_to" id="data_status_pratica_to"
+                               class="form-control" value="{{ request('data_status_pratica_to') }}">
                     </div>
                     <div class="col-md-2">
                         <label for="sended_at">Sended At Date:</label>
@@ -64,6 +63,9 @@
                     <div class="col-md-12 mt-3">
                         <button type="submit" class="btn btn-info mr-2">Filter</button>
                         <button type="button" class="btn btn-secondary ml-2" onclick="clearFilters()">Clear</button>
+                        <a href="{{ route('provvigioni.index') }}" class="btn btn-outline-secondary ml-2">
+                            <i class="fas fa-times mr-1"></i> Clear All
+                        </a>
                     </div>
                 </form>
             </div>
@@ -117,7 +119,7 @@
                 <div class="col-md-6">
                     <h5 class="card-title">
                         Summary
-                        @if(request()->has('stato') || request()->has('denominazione_riferimento') || request()->has('istituto_finanziario') || request()->has('cognome') || request()->has('fonte') || request()->has('data_status_pratica') || request()->has('sended_at'))
+                        @if(request()->has('stato') || request()->has('denominazione_riferimento') || request()->has('istituto_finanziario') || request()->has('cognome') || request()->has('data_status_pratica_from') || request()->has('data_status_pratica_to') || request()->has('sended_at'))
                             <span class="badge badge-info ml-2">Filtered Results</span>
                         @endif
                     </h5>
@@ -125,17 +127,17 @@
                         <strong>Total Records:</strong> {{ number_format($totalCount) }} |
                         <strong>Total Importo:</strong> € {{ number_format($totalImporto, 2, ',', '.') }}
                     </p>
-                    @if(request()->has('stato') || request()->has('denominazione_riferimento') || request()->has('istituto_finanziario') || request()->has('cognome') || request()->has('fonte') || request()->has('data_status_pratica') || request()->has('sended_at'))
+                    @if(request()->has('stato') || request()->has('denominazione_riferimento') || request()->has('istituto_finanziario') || request()->has('cognome') || request()->has('data_status_pratica_from') || request()->has('data_status_pratica_to') || request()->has('sended_at'))
                         <p class="card-text">
                             <small class="text-muted">
                                 <i class="fas fa-filter mr-1"></i>
                                 Active filters:
                                 @if(request('stato')) <span class="badge badge-secondary">Stato: {{ request('stato') }}</span> @endif
-                                @if(request('denominazione_riferimento')) <span class="badge badge-secondary">Denominazione: {{ request('denominazione_riferimento') }}</span> @endif
+                                @if(request('denominazione_riferimento')) <span class="badge badge-secondary">Fornitore: {{ request('denominazione_riferimento') }}</span> @endif
                                 @if(request('istituto_finanziario')) <span class="badge badge-secondary">Istituto: {{ request('istituto_finanziario') }}</span> @endif
                                 @if(request('cognome')) <span class="badge badge-secondary">Cognome: {{ request('cognome') }}</span> @endif
-                                @if(request('fonte')) <span class="badge badge-secondary">Fonte: {{ request('fonte') }}</span> @endif
-                                @if(request('data_status_pratica')) <span class="badge badge-secondary">Data Status: {{ request('data_status_pratica') }}</span> @endif
+                                @if(request('data_status_pratica_from')) <span class="badge badge-secondary">Data Status From: {{ request('data_status_pratica_from') }}</span> @endif
+                                @if(request('data_status_pratica_to')) <span class="badge badge-secondary">Data Status To: {{ request('data_status_pratica_to') }}</span> @endif
                                 @if(request('sended_at')) <span class="badge badge-secondary">Sended At: {{ request('sended_at') }}</span> @endif
                             </small>
                         </p>
@@ -189,15 +191,96 @@
                             <th class="text-center align-middle">
                                 <input type="checkbox" id="provvigioni-toggle-all">
                             </th>
-                            <th>Denominazione Riferimento</th>
-                            <th class="text-right">Importo</th>
-                            <th>Stato</th>
-                            <th>Cognome</th>
-                            <th>Nome</th>
-                            <th>Tipo</th>
-                            <th>Istituto Finanziario</th>
-                            <th>Fonte</th>
-                            <th>Sended At</th>
+                            <th>
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'denominazione_riferimento', 'order' => request('sort') == 'denominazione_riferimento' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Fornitore
+                                    @if(request('sort') == 'denominazione_riferimento')
+                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                    @else
+                                        <i class="fas fa-sort ml-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th class="text-right">
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'importo', 'order' => request('sort') == 'importo' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Importo
+                                    @if(request('sort') == 'importo')
+                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                    @else
+                                        <i class="fas fa-sort ml-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'stato', 'order' => request('sort') == 'stato' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Stato
+                                    @if(request('sort') == 'stato')
+                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                    @else
+                                        <i class="fas fa-sort ml-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'cognome', 'order' => request('sort') == 'cognome' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Cognome
+                                    @if(request('sort') == 'cognome')
+                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                    @else
+                                        <i class="fas fa-sort ml-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'nome', 'order' => request('sort') == 'nome' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Nome
+                                    @if(request('sort') == 'nome')
+                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                    @else
+                                        <i class="fas fa-sort ml-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'tipo', 'order' => request('sort') == 'tipo' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Tipo
+                                    @if(request('sort') == 'tipo')
+                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                    @else
+                                        <i class="fas fa-sort ml-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'istituto_finanziario', 'order' => request('sort') == 'istituto_finanziario' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Istituto Finanziario
+                                    @if(request('sort') == 'istituto_finanziario')
+                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                    @else
+                                        <i class="fas fa-sort ml-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'data_status_pratica', 'order' => request('sort') == 'data_status_pratica' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Data Status Pratica
+                                    @if(request('sort') == 'data_status_pratica')
+                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                    @else
+                                        <i class="fas fa-sort ml-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'sended_at', 'order' => request('sort') == 'sended_at' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Sended At
+                                    @if(request('sort') == 'sended_at')
+                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
+                                    @else
+                                        <i class="fas fa-sort ml-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
                             <th>Invoice</th>
                             <th>Actions</th>
                         </tr>
@@ -214,10 +297,12 @@
                                     >
                                 </td>
                                 <td>
-                                    @if($item->denominazione_riferimento)
-                                        <a href="{{ route('fornitoris.index', ['name' => $item->denominazione_riferimento]) }}">
-                                            {{ $item->denominazione_riferimento }}
+                                    @if($item->fornitore_name)
+                                        <a href="{{ route('fornitoris.index', ['name' => $item->fornitore_name]) }}">
+                                            {{ $item->fornitore_name }}
                                         </a>
+                                    @elseif($item->denominazione_riferimento)
+                                        <span class="text-muted">{{ $item->denominazione_riferimento }} (COGE)</span>
                                     @else
                                         -
                                     @endif
@@ -249,7 +334,13 @@
                                         -
                                     @endif
                                 </td>
-                                <td>{{ Str::limit($item->fonte, 6) }}</td>
+                                <td>
+                                    @if($item->data_status_pratica)
+                                        {{ \Carbon\Carbon::parse($item->data_status_pratica)->format('d/m/Y') }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td>{{ $item->sended_at ? \Carbon\Carbon::parse($item->sended_at)->format('d/m/Y') : 'N/A' }}</td>
                                 <td>{{ Str::limit($item->invoice_number, 6) ?: 'N/A' }}</td>
                                 <td>
@@ -539,17 +630,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to clear all filters and navigate to base URL
     function clearFilters() {
-        // Clear all form fields
-        document.getElementById('stato').value = '';
-        document.getElementById('denominazione_riferimento').value = '';
-        document.getElementById('istituto_finanziario').value = '';
-        document.getElementById('cognome').value = '';
-        document.getElementById('fonte').value = '';
-        document.getElementById('data_status_pratica').value = '';
-        document.getElementById('sended_at').value = '';
+        try {
+            console.log('clearFilters function called');
 
-        // Navigate to base URL without any parameters
-        window.location.href = '{{ route("provvigioni.index") }}';
+            // Clear all form fields with error handling
+            const fields = [
+                'stato',
+                'denominazione_riferimento',
+                'istituto_finanziario',
+                'cognome',
+                'data_status_pratica_from',
+                'data_status_pratica_to',
+                'sended_at'
+            ];
+
+            fields.forEach(fieldId => {
+                const element = document.getElementById(fieldId);
+                if (element) {
+                    if (element.tagName === 'SELECT') {
+                        element.selectedIndex = 0; // Reset select to first option
+                    } else {
+                        element.value = ''; // Clear input fields
+                    }
+                    console.log(`Cleared field: ${fieldId}`);
+                } else {
+                    console.warn(`Field not found: ${fieldId}`);
+                }
+            });
+
+            // Navigate to base URL without any parameters
+            const baseUrl = '{{ route("provvigioni.index") }}';
+            console.log('Navigating to:', baseUrl);
+            window.location.href = baseUrl;
+
+        } catch (error) {
+            console.error('Error in clearFilters:', error);
+            // Fallback: just navigate to base URL
+            window.location.href = '{{ route("provvigioni.index") }}';
+        }
     }
 
     function showProvvigioniAlert(type, message) {
@@ -566,6 +684,188 @@ document.addEventListener('DOMContentLoaded', function() {
             if (alert.parentNode) alert.parentNode.removeChild(alert);
         }, 3000);
     }
+
+    // Function to change checked provvigioni from Sospeso to Inserito
+    function changeSospesoToInserito() {
+        try {
+            alert('Function called!'); // Test if function is being called
+            console.log('changeSospesoToInserito function called');
+
+            // Get all provvigioni with "Sospeso" status (not just checked ones)
+            const allRows = document.querySelectorAll('tbody tr');
+            console.log('Total rows found:', allRows.length);
+
+            const sospesoRows = Array.from(allRows).filter(row => {
+                const select = row.querySelector('.stato-select');
+                const isSospeso = select && select.value === 'Sospeso';
+                if (isSospeso) {
+                    console.log('Found Sospeso row:', row);
+                }
+                return isSospeso;
+            });
+
+            console.log('Sospeso rows found:', sospesoRows.length);
+
+            if (sospesoRows.length === 0) {
+                console.log('No Sospeso rows found, showing alert');
+                showProvvigioniAlert('info', 'No provvigioni found with "Sospeso" status.');
+                return;
+            }
+
+            const confirmMessage = `Are you sure you want to change ALL ${sospesoRows.length} provvigioni from "Sospeso" to "Inserito"?`;
+            console.log('Showing confirmation:', confirmMessage);
+
+            if (!confirm(confirmMessage)) {
+                console.log('User cancelled the operation');
+                return;
+            }
+
+            console.log('User confirmed, starting update process');
+
+            // Show loading state
+            const changeStatusBtn = document.getElementById('changeStatusBtn');
+            const originalText = changeStatusBtn.innerHTML;
+            changeStatusBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Updating...';
+            changeStatusBtn.disabled = true;
+
+            let completed = 0;
+            let successCount = 0;
+            let errorCount = 0;
+
+            sospesoRows.forEach((row, index) => {
+                const checkbox = row.querySelector('.provvigione-toggle-stato');
+                const id = checkbox.getAttribute('data-id');
+
+                console.log(`Processing row ${index + 1}/${sospesoRows.length}, ID: ${id}`);
+
+                // Disable the checkbox during update
+                if (checkbox) {
+                    checkbox.disabled = true;
+                }
+
+                fetch(`/provvigioni/${id}/toggle-stato`, {
+                    method: 'PUT',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ stato: 'Inserito' })
+                })
+                .then(response => {
+                    console.log(`Response for ID ${id}:`, response);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`Data for ID ${id}:`, data);
+                    if (data.success) {
+                        // Update the checkbox and select
+                        if (checkbox) {
+                            checkbox.checked = true;
+                        }
+                        const select = row.querySelector('.stato-select');
+                        if (select) {
+                            select.value = 'Inserito';
+                        }
+                        successCount++;
+                        console.log(`Success for ID ${id}, total success: ${successCount}`);
+                    } else {
+                        errorCount++;
+                        console.log(`Error for ID ${id}, total errors: ${errorCount}`);
+                    }
+                })
+                .catch((error) => {
+                    console.error(`Fetch error for ID ${id}:`, error);
+                    errorCount++;
+                })
+                .finally(() => {
+                    // Re-enable the checkbox
+                    if (checkbox) {
+                        checkbox.disabled = false;
+                    }
+                    completed++;
+                    console.log(`Completed ${completed}/${sospesoRows.length}`);
+
+                    if (completed === sospesoRows.length) {
+                        console.log('All operations completed. Success:', successCount, 'Errors:', errorCount);
+                        // Show final results
+                        if (successCount > 0) {
+                            showProvvigioniAlert('success', `${successCount} provvigioni successfully changed from "Sospeso" to "Inserito"!`);
+                        }
+                        if (errorCount > 0) {
+                            showProvvigioniAlert('danger', `${errorCount} provvigioni failed to update.`);
+                        }
+
+                        // Restore button state
+                        changeStatusBtn.innerHTML = originalText;
+                        changeStatusBtn.disabled = false;
+                        updateChangeStatusButton();
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Error in changeSospesoToInserito:', error);
+            alert('Error: ' + error.message);
+        }
+    }
+
+    // Function to update the change status button state
+    function updateChangeStatusButton() {
+        const changeStatusBtn = document.getElementById('changeStatusBtn');
+
+        if (!changeStatusBtn) return;
+
+        // Count all items with "Sospeso" status (not just checked ones)
+        const allRows = document.querySelectorAll('tbody tr');
+        let sospesoCount = 0;
+        allRows.forEach(row => {
+            const select = row.querySelector('.stato-select');
+            if (select && select.value === 'Sospeso') {
+                sospesoCount++;
+            }
+        });
+
+        if (sospesoCount > 0) {
+            changeStatusBtn.disabled = false;
+            changeStatusBtn.innerHTML = `<i class="fas fa-exchange-alt mr-1"></i> All Sospeso → Inserito (${sospesoCount})`;
+        } else {
+            changeStatusBtn.disabled = true;
+            changeStatusBtn.innerHTML = '<i class="fas fa-exchange-alt mr-1"></i> All Sospeso → Inserito';
+        }
+    }
+
+    // Initialize button state on page load
+    updateChangeStatusButton();
 });
 </script>
+
+@section('css')
+<style>
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+        transition: color 0.2s ease;
+    }
+
+    .sortable-header:hover {
+        color: #007bff !important;
+        text-decoration: none !important;
+    }
+
+    .sortable-header i {
+        transition: transform 0.2s ease;
+    }
+
+    .sortable-header:hover i {
+        transform: scale(1.1);
+    }
+
+    .table th a {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+@endsection
 @endsection

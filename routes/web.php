@@ -218,6 +218,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Proformas routes
     Route::post('proformas/{proforma}/send-email', [App\Http\Controllers\ProformaController::class, 'sendEmail'])->name('proformas.sendEmail');
+    Route::post('proformas/{proforma}/send-proforma-email', [App\Http\Controllers\ProformaController::class, 'sendProformaEmail'])->name('proformas.sendProformaEmail');
+    Route::post('proformas/send-bulk-emails', [App\Http\Controllers\ProformaController::class, 'sendBulkEmails'])->name('proformas.sendBulkEmails');
     Route::resource('proformas', App\Http\Controllers\ProformaController::class);
 
     // Invoiceins routes

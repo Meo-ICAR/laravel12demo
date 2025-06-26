@@ -16,51 +16,92 @@ class ProvvigioneController extends Controller
     {
         $query = Provvigione::query();
 
+        // Always join with fornitori to get the fornitore name
+        $query->leftJoin('fornitoris', 'provvigioni.denominazione_riferimento', '=', 'fornitoris.coge')
+              ->select('provvigioni.*', 'fornitoris.name as fornitore_name');
+
         // Filter by stato_include if provided
         if ($request->has('stato_include') && $request->stato_include !== '') {
             $stati = array_map('trim', explode(',', $request->stato_include));
-            $query->whereIn('stato', $stati);
+            $query->whereIn('provvigioni.stato', $stati);
         } else if ($request->has('stato') && $request->stato !== '') {
-            $query->where('stato', $request->stato);
+            $query->where('provvigioni.stato', $request->stato);
         }
 
-        // Filter by denominazione_riferimento if provided
+        // Filter by denominazione_riferimento if provided (now filters by fornitore name or original denominazione_riferimento)
+        // The parameter name is kept as 'denominazione_riferimento' for backward compatibility
+        // but it now filters by joining with fornitori table on COGE and matching fornitore name
+        // Also includes fallback to original denominazione_riferimento field for records without matching fornitori
         if ($request->has('denominazione_riferimento') && $request->denominazione_riferimento !== '') {
-            $query->where('denominazione_riferimento', 'like', '%' . $request->denominazione_riferimento . '%');
+            $searchTerm = $request->denominazione_riferimento;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('fornitoris.name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('provvigioni.denominazione_riferimento', 'like', '%' . $searchTerm . '%');
+            });
         }
 
         // Filter by istituto_finanziario if provided
         if ($request->has('istituto_finanziario') && $request->istituto_finanziario !== '') {
-            $query->where('istituto_finanziario', 'like', '%' . $request->istituto_finanziario . '%');
+            $query->where('provvigioni.istituto_finanziario', 'like', '%' . $request->istituto_finanziario . '%');
         }
 
         // Filter by cognome if provided
         if ($request->has('cognome') && $request->cognome !== '') {
-            $query->where('cognome', 'like', '%' . $request->cognome . '%');
+            $query->where('provvigioni.cognome', 'like', '%' . $request->cognome . '%');
         }
 
         // Filter by fonte if provided
         if ($request->has('fonte') && $request->fonte !== '') {
-            $query->where('fonte', 'like', '%' . $request->fonte . '%');
+            $query->where('provvigioni.fonte', 'like', '%' . $request->fonte . '%');
         }
 
         // Filter by data_status_pratica if provided
         if ($request->has('data_status_pratica') && $request->data_status_pratica !== '') {
-            $query->where('data_status_pratica', 'like', '%' . $request->data_status_pratica . '%');
+            $query->where('provvigioni.data_status_pratica', 'like', '%' . $request->data_status_pratica . '%');
+        }
+
+        // Filter by data_status_pratica_from if provided
+        if ($request->has('data_status_pratica_from') && $request->data_status_pratica_from !== '') {
+            $query->whereDate('provvigioni.data_status_pratica', '>=', $request->data_status_pratica_from);
+        }
+
+        // Filter by data_status_pratica_to if provided
+        if ($request->has('data_status_pratica_to') && $request->data_status_pratica_to !== '') {
+            $query->whereDate('provvigioni.data_status_pratica', '<=', $request->data_status_pratica_to);
         }
 
         // Filter by sended_at if provided
         if ($request->has('sended_at') && $request->sended_at !== '') {
-            $query->whereDate('sended_at', $request->sended_at);
+            $query->whereDate('provvigioni.sended_at', $request->sended_at);
         }
 
         // Get total count and total importo before pagination
         $totalCount = $query->count();
-        $totalImporto = $query->sum('importo');
+        $totalImporto = $query->sum('provvigioni.importo');
 
         // Get total unfiltered values for comparison
         $totalUnfilteredCount = Provvigione::count();
         $totalUnfilteredImporto = Provvigione::sum('importo');
+
+        // Apply sorting
+        $sortField = $request->get('sort', 'id');
+        $sortOrder = $request->get('order', 'desc');
+
+        // Validate sort field to prevent SQL injection
+        $allowedSortFields = ['id', 'denominazione_riferimento', 'importo', 'stato', 'cognome', 'nome', 'tipo', 'istituto_finanziario', 'data_status_pratica', 'sended_at', 'created_at', 'updated_at'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'id';
+        }
+
+        // Validate sort order
+        $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
+
+        // Add table prefix for sorting to avoid ambiguity
+        if ($sortField !== 'id') {
+            $sortField = 'provvigioni.' . $sortField;
+        }
+
+        $query->orderBy($sortField, $sortOrder);
 
         $provvigioni = $query->paginate(15);
         $statoOptions = ['Inserito', 'Proforma', 'Fatturato', 'Pagato', 'Stornato','Sospeso'];
@@ -727,19 +768,14 @@ class ProvvigioneController extends Controller
 
     public function dashboard()
     {
-        $totalProvvigioni = \App\Models\Provvigione::count();
-        $totalImporto = \App\Models\Provvigione::sum('importo');
-        $totalByStato = \App\Models\Provvigione::select('stato', \DB::raw('COUNT(*) as count'), \DB::raw('SUM(importo) as total_importo'))
+        $totalCount = Provvigione::count();
+        $totalImporto = Provvigione::sum('importo');
+        $statoCounts = Provvigione::selectRaw('stato, count(*) as count')
             ->groupBy('stato')
-            ->orderByDesc('count')
-            ->get();
-        $topDenominazioni = \App\Models\Provvigione::select('denominazione_riferimento', \DB::raw('SUM(importo) as total_importo'))
-            ->whereNotNull('denominazione_riferimento')
-            ->groupBy('denominazione_riferimento')
-            ->orderByDesc('total_importo')
-            ->limit(5)
-            ->get();
-        return view('provvigioni.dashboard', compact('totalProvvigioni', 'totalImporto', 'totalByStato', 'topDenominazioni'));
+            ->pluck('count', 'stato')
+            ->toArray();
+
+        return view('provvigioni.dashboard', compact('totalCount', 'totalImporto', 'statoCounts'));
     }
 
     public function toggleStato(Request $request, $id)

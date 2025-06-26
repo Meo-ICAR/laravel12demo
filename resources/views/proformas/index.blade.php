@@ -86,11 +86,19 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Proformas List</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-success btn-sm" onclick="sendBulkEmails()" id="bulkEmailBtn" disabled>
+                            <i class="fas fa-envelope"></i> Send Bulk Emails
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body table-responsive p-0">
                     <table class="table table-hover text-nowrap">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                </th>
                                 <th>ID</th>
                                 <th>Fornitore</th>
                                 <th>Stato</th>
@@ -108,6 +116,9 @@
                         <tbody>
                             @forelse($proformas as $proforma)
                                 <tr>
+                                    <td>
+                                        <input type="checkbox" class="select-proforma" data-id="{{ $proforma->id }}">
+                                    </td>
                                     <td>{{ $proforma->id }}</td>
                                     <td>
                                         @if($proforma->fornitore)
@@ -236,6 +247,9 @@
                                                 </div>
                                               </div>
                                               <div class="modal-footer">
+                                                <button type="button" class="btn btn-primary" onclick="copyEmailContent('{{ $proforma->id }}')">
+                                                    <i class="fas fa-copy mr-1"></i> Copy Email Content
+                                                </button>
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                               </div>
                                             </div>
@@ -317,7 +331,7 @@ function saveCompensoDescrizione(proformaId) {
 function sendProformaEmail(proformaId) {
     const feedback = document.getElementById('modal-feedback-' + proformaId);
     feedback.innerHTML = '';
-    fetch('/proformas/' + proformaId + '/send-email', {
+    fetch('/proformas/' + proformaId + '/send-proforma-email', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -391,6 +405,191 @@ document.addEventListener('DOMContentLoaded', function() {
             styleAnticipoAmounts(modal.id);
         }
     });
+
+    // Add event listeners for individual checkboxes
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('select-proforma')) {
+            updateBulkEmailButton();
+        }
+    });
 });
+
+// Function to toggle select all checkboxes
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const proformaCheckboxes = document.querySelectorAll('.select-proforma');
+
+    proformaCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+
+    updateBulkEmailButton();
+}
+
+// Function to update bulk email button state
+function updateBulkEmailButton() {
+    const selectedCheckboxes = document.querySelectorAll('.select-proforma:checked');
+    const bulkEmailBtn = document.getElementById('bulkEmailBtn');
+
+    if (selectedCheckboxes.length > 0) {
+        bulkEmailBtn.disabled = false;
+        bulkEmailBtn.textContent = `Send Bulk Emails (${selectedCheckboxes.length})`;
+    } else {
+        bulkEmailBtn.disabled = true;
+        bulkEmailBtn.innerHTML = '<i class="fas fa-envelope"></i> Send Bulk Emails';
+    }
+}
+
+// Function to send bulk emails
+function sendBulkEmails() {
+    const selectedCheckboxes = document.querySelectorAll('.select-proforma:checked');
+
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one proforma to send emails.');
+        return;
+    }
+
+    const proformaIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.id);
+
+    if (!confirm(`Are you sure you want to send emails to ${proformaIds.length} proforma(s)?`)) {
+        return;
+    }
+
+    // Show loading state
+    const bulkEmailBtn = document.getElementById('bulkEmailBtn');
+    const originalText = bulkEmailBtn.innerHTML;
+    bulkEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    bulkEmailBtn.disabled = true;
+
+    fetch('/proformas/send-bulk-emails', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            proforma_ids: proformaIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message with details
+            let message = data.message + '\n\n';
+            if (data.results) {
+                data.results.forEach(result => {
+                    const status = result.success ? '✅' : '❌';
+                    message += `${status} Proforma #${result.proforma_id}: ${result.message}\n`;
+                });
+            }
+            alert(message);
+
+            // Refresh the page to show updated sended_at timestamps
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while sending bulk emails.');
+    })
+    .finally(() => {
+        // Restore button state
+        bulkEmailBtn.innerHTML = originalText;
+        bulkEmailBtn.disabled = false;
+        updateBulkEmailButton();
+    });
+}
+
+// Function to copy email content to clipboard
+function copyEmailContent(proformaId) {
+    const modal = document.getElementById('emailSimModal-' + proformaId);
+    if (!modal) {
+        console.error('Modal not found');
+        return;
+    }
+
+    // Get the email content elements
+    const toElement = modal.querySelector('.modal-body div:first-child');
+    const subjectElement = modal.querySelector('.modal-body div:nth-child(2)');
+    const emailBodyElement = modal.querySelector('.email-body');
+
+    if (!toElement || !subjectElement || !emailBodyElement) {
+        console.error('Email content elements not found');
+        return;
+    }
+
+    // Create a formatted text version of the email
+    let emailText = '';
+
+    // Add To field
+    emailText += toElement.textContent.trim() + '\n';
+
+    // Add Subject field
+    emailText += subjectElement.textContent.trim() + '\n';
+
+    // Add separator
+    emailText += '─'.repeat(50) + '\n\n';
+
+    // Add email body content
+    const emailBodyClone = emailBodyElement.cloneNode(true);
+
+    // Remove any script tags and style tags for clean text
+    const scripts = emailBodyClone.querySelectorAll('script, style');
+    scripts.forEach(script => script.remove());
+
+    // Convert HTML table to plain text
+    const tables = emailBodyClone.querySelectorAll('table');
+    tables.forEach(table => {
+        const rows = table.querySelectorAll('tr');
+        let tableText = '';
+
+        rows.forEach((row, index) => {
+            const cells = row.querySelectorAll('th, td');
+            const rowText = Array.from(cells).map(cell => {
+                let cellText = cell.textContent.trim();
+                // Add padding for better formatting
+                return cellText.padEnd(20);
+            }).join(' | ');
+            tableText += rowText + '\n';
+
+            // Add separator after header row
+            if (index === 0) {
+                tableText += '─'.repeat(rowText.length) + '\n';
+            }
+        });
+
+        // Replace table with text version
+        const tableWrapper = document.createElement('div');
+        tableWrapper.textContent = tableText;
+        table.parentNode.replaceChild(tableWrapper, table);
+    });
+
+    // Get the final text content
+    emailText += emailBodyClone.textContent.trim();
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(emailText).then(function() {
+        // Show success feedback
+        const copyButton = modal.querySelector('button[onclick*="copyEmailContent"]');
+        if (copyButton) {
+            const originalText = copyButton.innerHTML;
+            copyButton.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+            copyButton.classList.remove('btn-primary');
+            copyButton.classList.add('btn-success');
+
+            setTimeout(function() {
+                copyButton.innerHTML = originalText;
+                copyButton.classList.remove('btn-success');
+                copyButton.classList.add('btn-primary');
+            }, 2000);
+        }
+    }).catch(function(err) {
+        console.error('Failed to copy email content: ', err);
+        alert('Failed to copy email content to clipboard');
+    });
+}
 </script>
 @endsection

@@ -208,7 +208,7 @@
                             <thead>
                                 <tr>
                                     <th>Fornitore</th>
-                                    <th>Fornitore PIVA</th>
+                                    <th>COGE</th>
                                     {{-- <th>Cliente</th> --}}
                                     {{-- <th>Cliente PIVA</th> --}}
                                     <th>Invoice Number</th>
@@ -221,8 +221,23 @@
                             <tbody>
                                 @forelse($invoices as $invoice)
                                 <tr>
-                                    <td>{{ $invoice->fornitore }}</td>
-                                    <td>{{ $invoice->fornitore_piva }}</td>
+                                    <td>
+                                        @if($invoice->coge)
+                                            <a href="{{ route('provvigioni.index', [
+                                                'denominazione_riferimento' => $invoice->fornitore,
+                                                'data_status_pratica_from' => $invoice->invoice_date ? \Carbon\Carbon::parse($invoice->invoice_date)->subMonths(2)->format('Y-m-d') : '',
+                                                'data_status_pratica_to' => $invoice->invoice_date ? \Carbon\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : '',
+                                                'sort' => 'data_status_pratica',
+                                                'order' => 'desc'
+                                            ]) }}" class="text-primary" style="text-decoration: underline;">
+                                                {{ $invoice->fornitore }}
+                                                <i class="fas fa-external-link-alt ml-1"></i>
+                                            </a>
+                                        @else
+                                            {{ $invoice->fornitore }}
+                                        @endif
+                                    </td>
+                                    <td>{{ $invoice->coge }}</td>
                                     {{-- <td>{{ $invoice->cliente }}</td> --}}
                                     {{-- <td>{{ $invoice->cliente_piva }}</td> --}}
                                     <td>

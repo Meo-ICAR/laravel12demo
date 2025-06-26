@@ -203,26 +203,242 @@ class ProformaController extends Controller
             $body = $proforma->emailbody ?: $this->generateDefaultEmailContent($proforma);
             $from = $proforma->emailfrom ?: config('mail.from.address');
 
-            // Send email
-            \Mail::send([], [], function ($message) use ($proforma, $subject, $body, $from, $recipientEmail) {
-                $message->from($from)
-                        ->to($recipientEmail)
-                        ->subject($subject)
-                        ->html($body);
-            });
+            // DEBUG MODE: Log email details instead of sending
+            \Log::info('DEBUG MODE: Original email method would be sent', [
+                'proforma_id' => $proforma->id,
+                'from' => $from,
+                'to' => $recipientEmail,
+                'subject' => $subject,
+                'body_length' => strlen($body),
+                'timestamp' => now()->toDateTimeString()
+            ]);
 
-            // Update sended_at timestamp
+            // In debug mode, we skip the actual email sending
+            // \Mail::send([], [], function ($message) use ($proforma, $subject, $body, $from, $recipientEmail) {
+            //     $message->from($from)
+            //             ->to($recipientEmail)
+            //             ->subject($subject)
+            //             ->html($body);
+            // });
+
+            // Update sended_at timestamp (even in debug mode to simulate success)
             $proforma->update(['sended_at' => now()]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Email sent successfully to ' . $recipientEmail
+                'message' => 'DEBUG MODE: Email simulation successful to ' . $recipientEmail . ' (not actually sent)'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send email: ' . $e->getMessage()
+                'message' => 'Failed to process email: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send email using proforma fields directly
+     */
+    public function sendProformaEmail(Request $request, Proforma $proforma)
+    {
+        try {
+            // Validate required fields
+            if (empty($proforma->emailto)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email recipient (emailto) is required'
+                ]);
+            }
+
+            if (empty($proforma->emailsubject)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email subject (emailsubject) is required'
+                ]);
+            }
+
+            if (empty($proforma->emailbody)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email body (emailbody) is required'
+                ]);
+            }
+
+            // Use proforma fields for email
+            $from = $proforma->emailfrom ?: config('mail.from.address');
+            $to = $proforma->emailto;
+            $subject = $proforma->emailsubject;
+            $body = $proforma->emailbody;
+
+            // DEBUG MODE: Log email details instead of sending
+            \Log::info('DEBUG MODE: Email would be sent', [
+                'proforma_id' => $proforma->id,
+                'from' => $from,
+                'to' => $to,
+                'subject' => $subject,
+                'body_length' => strlen($body),
+                'timestamp' => now()->toDateTimeString()
+            ]);
+
+            // In debug mode, we skip the actual email sending
+            // \Mail::send([], [], function ($message) use ($from, $to, $subject, $body) {
+            //     $message->from($from)
+            //             ->to($to)
+            //             ->subject($subject)
+            //             ->html($body);
+            // });
+
+            // Update sended_at timestamp (even in debug mode to simulate success)
+            $proforma->update(['sended_at' => now()]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'DEBUG MODE: Email simulation successful to ' . $to . ' (not actually sent)'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process email: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send emails to multiple proformas
+     */
+    public function sendBulkEmails(Request $request)
+    {
+        try {
+            $proformaIds = $request->input('proforma_ids', []);
+
+            if (empty($proformaIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No proformas selected'
+                ]);
+            }
+
+            $results = [];
+            $successCount = 0;
+            $errorCount = 0;
+
+            foreach ($proformaIds as $proformaId) {
+                $proforma = Proforma::find($proformaId);
+
+                if (!$proforma) {
+                    $results[] = [
+                        'proforma_id' => $proformaId,
+                        'success' => false,
+                        'message' => 'Proforma not found'
+                    ];
+                    $errorCount++;
+                    continue;
+                }
+
+                // Check if email was already sent
+                if ($proforma->sended_at) {
+                    $results[] = [
+                        'proforma_id' => $proformaId,
+                        'success' => false,
+                        'message' => 'Email already sent on ' . $proforma->sended_at->format('d/m/Y H:i')
+                    ];
+                    $errorCount++;
+                    continue;
+                }
+
+                // Validate required fields
+                if (empty($proforma->emailto)) {
+                    $results[] = [
+                        'proforma_id' => $proformaId,
+                        'success' => false,
+                        'message' => 'Email recipient (emailto) is required'
+                    ];
+                    $errorCount++;
+                    continue;
+                }
+
+                if (empty($proforma->emailsubject)) {
+                    $results[] = [
+                        'proforma_id' => $proformaId,
+                        'success' => false,
+                        'message' => 'Email subject (emailsubject) is required'
+                    ];
+                    $errorCount++;
+                    continue;
+                }
+
+                if (empty($proforma->emailbody)) {
+                    $results[] = [
+                        'proforma_id' => $proformaId,
+                        'success' => false,
+                        'message' => 'Email body (emailbody) is required'
+                    ];
+                    $errorCount++;
+                    continue;
+                }
+
+                try {
+                    // Send email using proforma fields
+                    $from = $proforma->emailfrom ?: config('mail.from.address');
+                    $to = $proforma->emailto;
+                    $subject = $proforma->emailsubject;
+                    $body = $proforma->emailbody;
+
+                    // DEBUG MODE: Log email details instead of sending
+                    \Log::info('DEBUG MODE: Bulk email would be sent', [
+                        'proforma_id' => $proformaId,
+                        'from' => $from,
+                        'to' => $to,
+                        'subject' => $subject,
+                        'body_length' => strlen($body),
+                        'timestamp' => now()->toDateTimeString()
+                    ]);
+
+                    // In debug mode, we skip the actual email sending
+                    // \Mail::send([], [], function ($message) use ($from, $to, $subject, $body) {
+                    //     $message->from($from)
+                    //             ->to($to)
+                    //             ->subject($subject)
+                    //             ->html($body);
+                    // });
+
+                    // Update sended_at timestamp (even in debug mode to simulate success)
+                    $proforma->update(['sended_at' => now()]);
+
+                    $results[] = [
+                        'proforma_id' => $proformaId,
+                        'success' => true,
+                        'message' => 'DEBUG MODE: Email simulation successful to ' . $to . ' (not actually sent)'
+                    ];
+                    $successCount++;
+
+                } catch (\Exception $e) {
+                    $results[] = [
+                        'proforma_id' => $proformaId,
+                        'success' => false,
+                        'message' => 'Failed to process email: ' . $e->getMessage()
+                    ];
+                    $errorCount++;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Bulk email operation completed. Success: {$successCount}, Errors: {$errorCount}",
+                'results' => $results,
+                'summary' => [
+                    'total' => count($proformaIds),
+                    'success' => $successCount,
+                    'errors' => $errorCount
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process bulk emails: ' . $e->getMessage()
             ]);
         }
     }
