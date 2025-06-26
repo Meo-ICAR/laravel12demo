@@ -38,6 +38,7 @@ class CompanyController extends Controller
             'piva' => 'nullable|string|max:255',
             'crm' => 'nullable|string|max:255',
             'callcenter' => 'nullable|string|max:255',
+            'emailsubject' => 'nullable|string|max:255',
         ]);
 
         $company = Company::create($validated + [
@@ -74,6 +75,7 @@ class CompanyController extends Controller
             'piva' => 'nullable|string|max:255',
             'crm' => 'nullable|string|max:255',
             'callcenter' => 'nullable|string|max:255',
+            'emailsubject' => 'nullable|string|max:255',
         ]);
 
         $company->update($validated + [

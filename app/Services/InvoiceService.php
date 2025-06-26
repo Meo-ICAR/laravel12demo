@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\Fornitori;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class InvoiceService
 {
@@ -23,23 +24,51 @@ class InvoiceService
                 ->select('invoiceins.*')
                 ->get();
 
+            Log::info("Starting transfer of invoiceins to invoices", [
+                'total_eligible_invoiceins' => $invoiceins->count()
+            ]);
+
             foreach ($invoiceins as $invoicein) {
                 try {
                     $result = $this->createInvoiceFromInvoicein($invoicein);
                     if ($result['success']) {
                         $invoicesImported++;
+                        Log::info("Successfully created invoice from invoicein", [
+                            'invoicein_id' => $invoicein->id,
+                            'invoice_number' => $invoicein->nr_documento
+                        ]);
                     } else {
                         $invoicesSkipped++;
+                        Log::info("Skipped invoicein", [
+                            'invoicein_id' => $invoicein->id,
+                            'invoice_number' => $invoicein->nr_documento,
+                            'reason' => $result['reason']
+                        ]);
                         if ($result['reason']) {
                             $errors[] = $result['reason'];
                         }
                     }
                 } catch (\Exception $e) {
                     $errors[] = "Error processing invoicein {$invoicein->nr_documento}: " . $e->getMessage();
+                    Log::error("Error processing invoicein", [
+                        'invoicein_id' => $invoicein->id,
+                        'invoice_number' => $invoicein->nr_documento,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
+
+            Log::info("Transfer completed", [
+                'imported' => $invoicesImported,
+                'skipped' => $invoicesSkipped,
+                'errors_count' => count($errors)
+            ]);
+
         } catch (\Exception $e) {
             $errors[] = "Error importing to invoices: " . $e->getMessage();
+            Log::error("Error in transferInvoiceinsToInvoices", [
+                'error' => $e->getMessage()
+            ]);
         }
 
         return [
@@ -316,5 +345,84 @@ class InvoiceService
 
         // Fallback to CSV if Excel not available
         return $this->exportToCsv($invoices);
+    }
+
+    /**
+     * Update existing invoices with missing coge values
+     */
+    public function updateInvoicesWithMissingCoge()
+    {
+        $updatedCount = 0;
+        $errors = [];
+
+        try {
+            // Use transaction to ensure data consistency
+            DB::transaction(function() use (&$updatedCount, &$errors) {
+                // Find invoices with NULL coge that have matching invoiceins
+                $invoicesToUpdate = Invoice::whereNull('coge')
+                    ->whereExists(function($query) {
+                        $query->select(\DB::raw(1))
+                              ->from('invoiceins')
+                              ->whereRaw('invoiceins.nr_documento = invoices.invoice_number');
+                    })
+                    ->get();
+
+                Log::info("Found invoices with missing coge values", [
+                    'count' => $invoicesToUpdate->count()
+                ]);
+
+                foreach ($invoicesToUpdate as $invoice) {
+                    try {
+                        // Find the matching invoicein
+                        $invoicein = \App\Models\Invoicein::where('nr_documento', $invoice->invoice_number)->first();
+
+                        if ($invoicein && $invoicein->nr_cliente_fornitore) {
+                            // Update the invoice with the correct coge
+                            $oldCoge = $invoice->coge;
+                            $newCoge = $invoicein->nr_cliente_fornitore;
+
+                            $invoice->coge = $newCoge;
+                            $invoice->fornitore_piva = $invoicein->partita_iva;
+                            $invoice->fornitore = $invoicein->nome_fornitore;
+                            $invoice->save();
+
+                            $updatedCount++;
+
+                            Log::info("Updated invoice with coge", [
+                                'invoice_number' => $invoice->invoice_number,
+                                'old_coge' => $oldCoge,
+                                'new_coge' => $newCoge
+                            ]);
+                        } else {
+                            Log::warning("No matching invoicein found for invoice", [
+                                'invoice_number' => $invoice->invoice_number
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        $errors[] = "Error updating invoice {$invoice->invoice_number}: " . $e->getMessage();
+                        Log::error("Error updating invoice", [
+                            'invoice_number' => $invoice->invoice_number,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            });
+
+            Log::info("Update completed", [
+                'updated' => $updatedCount,
+                'errors_count' => count($errors)
+            ]);
+
+        } catch (\Exception $e) {
+            $errors[] = "Error updating invoices: " . $e->getMessage();
+            Log::error("Error in updateInvoicesWithMissingCoge", [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return [
+            'updated' => $updatedCount,
+            'errors' => $errors
+        ];
     }
 }

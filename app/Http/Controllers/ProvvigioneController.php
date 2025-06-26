@@ -16,8 +16,11 @@ class ProvvigioneController extends Controller
     {
         $query = Provvigione::query();
 
-        // Filter by stato if provided
-        if ($request->has('stato') && $request->stato !== '') {
+        // Filter by stato_include if provided
+        if ($request->has('stato_include') && $request->stato_include !== '') {
+            $stati = array_map('trim', explode(',', $request->stato_include));
+            $query->whereIn('stato', $stati);
+        } else if ($request->has('stato') && $request->stato !== '') {
             $query->where('stato', $request->stato);
         }
 
@@ -331,6 +334,59 @@ class ProvvigioneController extends Controller
         });
 
         return view('provvigioni.proforma-summary', compact('proformaSummary', 'orderBy', 'orderDirection'));
+    }
+
+    public function createProformaFromSummary(Request $request)
+    {
+        // Support both single and multiple denominazioni
+        $denominazioni = $request->input('denominazioni', []);
+        if (empty($denominazioni)) {
+            $request->validate([
+                'denominazione_riferimento' => 'required|string',
+            ]);
+            $denominazioni = [$request->input('denominazione_riferimento')];
+        }
+
+        $results = [];
+        foreach ($denominazioni as $denominazione) {
+            $fornitore = \App\Models\Fornitori::where('name', $denominazione)->first();
+            if (!$fornitore) {
+                $results[] = "Fornitore not found for '$denominazione'";
+                continue;
+            }
+            $company = $fornitore->company;
+            if (!$company) {
+                $results[] = "Company not found for fornitore '$denominazione'";
+                continue;
+            }
+            $proforma = \App\Models\Proforma::create([
+                'company_id' => $company->id,
+                'fornitori_id' => $fornitore->id,
+                'stato' => 'Inserito',
+                'anticipo' => $fornitore->anticipo,
+                'contributo' => $fornitore->contributo,
+                'emailto' => $fornitore->email,
+                'anticipo_descrizione' => $fornitore->anticipo_description,
+                'contributo_descrizione' => $fornitore->contributo_description,
+                'emailfrom' => $company->email,
+                'emailsubject' => $company->emailsubject ?? 'Proforma compensi provvigionali',
+            ]);
+            $provvigioni = \App\Models\Provvigione::where('denominazione_riferimento', $denominazione)->where('stato', 'Inserito')->get();
+            if ($provvigioni->isNotEmpty()) {
+                $pivotData = [];
+                foreach ($provvigioni as $provvigione) {
+                    $pivotData[$provvigione->id] = [
+                        'created_at' => $proforma->created_at,
+                        'updated_at' => $proforma->updated_at,
+                    ];
+                }
+                $proforma->provvigioni()->attach($pivotData);
+                \App\Models\Provvigione::whereIn('id', $provvigioni->pluck('id')->toArray())
+                    ->update(['stato' => 'Proforma']);
+            }
+            $results[] = "Proforma created for '$denominazione' and provvigioni linked.";
+        }
+        return redirect()->route('proformas.index')->with('success', implode(' ', $results));
     }
 
     public function show($id)
@@ -695,119 +751,6 @@ class ProvvigioneController extends Controller
         $provvigione->stato = $new;
         $provvigione->save();
         return response()->json(['success' => true, 'message' => 'Stato updated.', 'stato' => $new]);
-    }
-
-    public function createProformaFromSummary(Request $request)
-    {
-        \Log::info('createProformaFromSummary called with data: ' . json_encode($request->all()));
-
-        $request->validate([
-            'denominazione_riferimento' => 'required|string',
-        ]);
-        $denominazione = $request->input('denominazione_riferimento');
-
-        \Log::info('Looking for fornitore with name: ' . $denominazione);
-
-        // Trova il fornitore
-        $fornitore = Fornitori::where('name', $denominazione)->first();
-        if (!$fornitore) {
-            \Log::error('Fornitore not found for: ' . $denominazione);
-            return redirect()->back()->with('error', 'Fornitore non trovato per "' . $denominazione . '"');
-        }
-
-        \Log::info('Fornitore found: ' . $fornitore->id);
-
-        // Trova tutte le provvigioni con questa denominazione
-        $provvigioni = \App\Models\Provvigione::where('denominazione_riferimento', $denominazione)->get();
-        if ($provvigioni->isEmpty()) {
-            \Log::error('No provvigioni found for: ' . $denominazione);
-            return redirect()->back()->with('error', 'Nessuna provvigione trovata per "' . $denominazione . '"');
-        }
-
-        \Log::info('Found ' . $provvigioni->count() . ' provvigioni');
-
-        try {
-            // Crea la proforma
-            $proforma = Proforma::create([
-                'company_id' => $fornitore->company_id,
-                'fornitori_id' => $fornitore->id,
-                'emailto' => $fornitore->email,
-                'anticipo' => $fornitore->anticipo,
-                'contributo' => $fornitore->contributo,
-                'anticipo_descrizione' => $fornitore->anticipo_description,
-                'compenso_descrizione' => $fornitore->contributo_description, // o altro campo se serve
-                'stato' => 'Inserito',
-            ]);
-
-            // Associa tutte le provvigioni alla proforma
-            $proforma->provvigioni()->sync($provvigioni->pluck('id')->toArray());
-
-            // Aggiorna lo stato delle provvigioni associate
-            \App\Models\Provvigione::whereIn('id', $provvigioni->pluck('id')->toArray())
-                ->where('stato', 'Inserito')
-                ->update(['stato' => 'Proforma']);
-
-            // --- AGGIORNAMENTO CAMPI EMAIL ---
-            $company = $fornitore->company;
-            $proforma->emailfrom = $company ? $company->email : null;
-            $proforma->emailsubject = 'Proforma provvigioni # ' . $proforma->id;
-
-            // Costruzione emailbody HTML
-            $emailbody = '<h3>Proforma # ' . $proforma->id . '</h3>';
-            $emailbody .= '<table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse;">';
-            $emailbody .= '<thead><tr>';
-            $emailbody .= '<th>Nome</th><th>Pratica</th><th>Prodotto</th><th>Descrizione</th><th style="text-align:right;">Importo</th>';
-            $emailbody .= '</tr></thead><tbody>';
-            foreach ($proforma->provvigioni as $provvigione) {
-                $emailbody .= '<tr>';
-                $emailbody .= '<td>' . htmlspecialchars($provvigione->cognome . ' ' . $provvigione->nome) . '</td>';
-                $emailbody .= '<td>' . htmlspecialchars($provvigione->legacy_id ?? '-') . '</td>';
-                $emailbody .= '<td>' . htmlspecialchars($provvigione->prodotto ?? '-') . '</td>';
-                $emailbody .= '<td>' . htmlspecialchars($provvigione->descrizione ?? '-') . '</td>';
-                $emailbody .= '<td style="text-align:right;">€ ' . number_format($provvigione->importo, 2, ',', '.') . '</td>';
-                $emailbody .= '</tr>';
-            }
-            $emailbody .= '</tbody>';
-            $emailbody .= '<tfoot><tr style="background-color:#f8f9fa; font-weight:bold;">';
-            $emailbody .= '<td colspan="4">Totale provvigioni</td>';
-            $emailbody .= '<td style="text-align:right;">€ ' . number_format($proforma->provvigioni->sum('importo'), 2, ',', '.') . '</td>';
-            $emailbody .= '</tr>';
-
-            // Riga contributo
-            if ($fornitore->contributo > 0) {
-                $emailbody .= '<tr>';
-                $emailbody .= '<td colspan="3">' . htmlspecialchars($fornitore->contributo_description ?? 'Contributo') . '</td>';
-                $emailbody .= '<td>Contributo</td>';
-                $emailbody .= '<td style="text-align:right;">€ ' . number_format($fornitore->contributo, 2, ',', '.') . '</td>';
-                $emailbody .= '</tr>';
-            }
-            // Riga anticipo
-            if ($fornitore->anticipo > 0) {
-                $emailbody .= '<tr>';
-                $emailbody .= '<td colspan="3">' . htmlspecialchars($fornitore->anticipo_description ?? 'Anticipo') . '</td>';
-                $emailbody .= '<td>Anticipo</td>';
-                $emailbody .= '<td style="text-align:right; color:#dc3545;"><strong>- € ' . number_format($fornitore->anticipo, 2, ',', '.') . '</strong></td>';
-                $emailbody .= '</tr>';
-            }
-            // Riga totale finale
-            $totale = $proforma->provvigioni->sum('importo') + ($fornitore->contributo ?? 0) - ($fornitore->anticipo ?? 0);
-            if (($fornitore->contributo ?? 0) + ($fornitore->anticipo ?? 0) > 0) {
-                $emailbody .= '<tr style="background-color:#343a40; color:white; font-weight:bold;">';
-                $emailbody .= '<td colspan="4">TOTALE</td>';
-                $emailbody .= '<td style="text-align:right;">€ ' . number_format($totale, 2, ',', '.') . '</td>';
-                $emailbody .= '</tr>';
-            }
-            $emailbody .= '</tfoot></table>';
-            $proforma->emailbody = $emailbody;
-            $proforma->save();
-
-            \Log::info('Proforma creata con successo per ' . $denominazione);
-            return redirect()->route('proformas.index')->with('success', 'Proforma creata con successo per "' . $denominazione . '".');
-        } catch (\Exception $e) {
-            \Log::error('Errore creazione proforma: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            return redirect()->back()->with('error', 'Errore durante la creazione della proforma: ' . $e->getMessage());
-        }
     }
 
     // ... other CRUD methods ...

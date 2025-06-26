@@ -103,6 +103,10 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+                        <div class="form-group">
+                            <label for="anticipo_residuo">Anticipo Residuo</label>
+                            <input type="number" step="0.01" class="form-control" id="anticipo_residuo" name="anticipo_residuo" value="{{ old('anticipo_residuo', $fornitori->anticipo_residuo) }}">
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
@@ -191,14 +195,14 @@
             <div class="card-footer">
                 <button type="submit" class="btn btn-primary">Update</button>
                 <a href="{{ route('fornitoris.index') }}" class="btn btn-secondary">Cancel</a>
-                <form action="{{ route('fornitoris.destroy', $fornitori) }}" method="POST" style="display:inline-block;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this fornitore?')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </form>
             </div>
+        </form>
+        <form action="{{ route('fornitoris.destroy', $fornitori) }}" method="POST" style="display:inline-block; margin-left: 10px;">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this fornitore?')">
+                <i class="fas fa-trash"></i> Delete
+            </button>
         </form>
     </div>
 </div>

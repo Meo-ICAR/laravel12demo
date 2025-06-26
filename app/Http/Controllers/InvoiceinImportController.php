@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\ToArray;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use App\Services\InvoiceService;
 
 class InvoiceinImportController extends Controller
 {
@@ -112,41 +113,11 @@ class InvoiceinImportController extends Controller
         }
 
         // Step 2: Import to invoices table
-        $invoicesImported = 0;
-        $invoicesSkipped = 0;
-
-        try {
-            // Get invoiceins that have matching fornitoris
-            $invoiceins = Invoicein::join('fornitoris', 'fornitoris.coge', '=', 'invoiceins.nr_cliente_fornitore')
-                ->select('invoiceins.*')
-                ->get();
-
-            foreach ($invoiceins as $invoicein) {
-                // Check if invoice with same nr_documento already exists
-                if (\App\Models\Invoice::where('invoice_number', $invoicein->nr_documento)->exists()) {
-                    $invoicesSkipped++;
-                    continue;
-                }
-
-                // Create new invoice
-                $invoice = new \App\Models\Invoice([
-                    'fornitore_piva' => $invoicein->partita_iva,
-                    'fornitore' => $invoicein->nome_fornitore,
-                    'invoice_number' => $invoicein->nr_documento,
-                    'invoice_date' => $invoicein->data_ricezione_fatt,
-                    'total_amount' => $invoicein->importo_totale_fornitore,
-                    'tax_amount' => $invoicein->importo_iva,
-                    'coge' => $invoicein->nr_cliente_fornitore,
-                    'status' => 'imported',
-                    'currency' => 'EUR',
-                ]);
-
-                $invoice->save();
-                $invoicesImported++;
-            }
-        } catch (\Exception $e) {
-            $errors[] = "Error importing to invoices: " . $e->getMessage();
-        }
+        $invoiceService = new InvoiceService();
+        $result = $invoiceService->transferInvoiceinsToInvoices();
+        $invoicesImported = $result['imported'];
+        $invoicesSkipped = $result['skipped'];
+        $errors = array_merge($errors, $result['errors']);
 
         // Prepare success message
         $message = "Successfully imported {$importedCount} invoiceins.";

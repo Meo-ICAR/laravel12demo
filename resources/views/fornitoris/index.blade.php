@@ -80,6 +80,12 @@
                 <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#importModal">
                     <i class="fas fa-upload"></i> Import CSV
                 </button>
+                <form method="POST" action="{{ route('fornitoris.importInvoiceinsToInvoices') }}" class="d-inline" onsubmit="return confirm('Are you sure you want to transfer all eligible invoiceins to invoices?');">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-random"></i> Import Invoiceins to Invoices
+                    </button>
+                </form>
             </div>
         </div>
         <div class="card-body p-0">
@@ -88,43 +94,10 @@
                     <thead>
                         <tr>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'codice', 'sort_direction' => $sortBy === 'codice' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
-                                   class="text-dark text-decoration-none">
-                                    Codice
-                                    @if($sortBy === 'codice')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="fas fa-sort text-muted"></i>
-                                    @endif
-                                </a>
-                            </th>
-                            <th>
                                 <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'name', 'sort_direction' => $sortBy === 'name' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Name
                                     @if($sortBy === 'name')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="fas fa-sort text-muted"></i>
-                                    @endif
-                                </a>
-                            </th>
-                            <th>
-                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'coge', 'sort_direction' => $sortBy === 'coge' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
-                                   class="text-dark text-decoration-none">
-                                    COGE
-                                    @if($sortBy === 'coge')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="fas fa-sort text-muted"></i>
-                                    @endif
-                                </a>
-                            </th>
-                            <th>
-                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'piva', 'sort_direction' => $sortBy === 'piva' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
-                                   class="text-dark text-decoration-none">
-                                    P.IVA
-                                    @if($sortBy === 'piva')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @else
                                         <i class="fas fa-sort text-muted"></i>
@@ -143,17 +116,6 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'anticipo', 'sort_direction' => $sortBy === 'anticipo' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
-                                   class="text-dark text-decoration-none">
-                                    Anticipo
-                                    @if($sortBy === 'anticipo')
-                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="fas fa-sort text-muted"></i>
-                                    @endif
-                                </a>
-                            </th>
-                            <th>
                                 <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'contributo', 'sort_direction' => $sortBy === 'contributo' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Contributo
@@ -165,10 +127,10 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'regione', 'sort_direction' => $sortBy === 'regione' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'anticipo', 'sort_direction' => $sortBy === 'anticipo' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
-                                    Regione
-                                    @if($sortBy === 'regione')
+                                    Anticipo
+                                    @if($sortBy === 'anticipo')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @else
                                         <i class="fas fa-sort text-muted"></i>
@@ -176,20 +138,21 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'citta', 'sort_direction' => $sortBy === 'citta' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'coge', 'sort_direction' => $sortBy === 'coge' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
-                                    Città
-                                    @if($sortBy === 'citta')
+                                    COGE
+                                    @if($sortBy === 'coge')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @else
                                         <i class="fas fa-sort text-muted"></i>
                                     @endif
                                 </a>
                             </th>
+                            <th>Coordinatore</th>
                             <th>
                                 <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'coordinatore', 'sort_direction' => $sortBy === 'coordinatore' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
-                                    Coordinatore
+                                    Invoice
                                     @if($sortBy === 'coordinatore')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @else
@@ -197,28 +160,47 @@
                                     @endif
                                 </a>
                             </th>
-                            <th>Coge</th>
+                            <th>Proforma</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($fornitoris as $fornitore)
                             <tr>
-                                <td>{{ $fornitore->codice }}</td>
                                 <td>{{ $fornitore->name }}</td>
-                                <td>{{ $fornitore->coge }}</td>
-                                <td>{{ $fornitore->piva }}</td>
                                 <td>{{ $fornitore->email }}</td>
-                                <td class="text-right">{{ $fornitore->anticipo ? '€ ' . number_format($fornitore->anticipo, 2, ',', '.') : '-' }}</td>
                                 <td class="text-right">{{ $fornitore->contributo ? '€ ' . number_format($fornitore->contributo, 2, ',', '.') : '-' }}</td>
-                                <td>{{ $fornitore->regione }}</td>
-                                <td>{{ $fornitore->citta }}</td>
-                                <td>{{ $fornitore->coordinatore }}</td>
+                                <td class="text-right text-danger">{{ $fornitore->anticipo ? '€ ' . number_format($fornitore->anticipo, 2, ',', '.') : '-' }}</td>
                                 <td>
                                     @if($fornitore->coge)
                                         <a href="{{ route('fornitoris.invoices.show', $fornitore->id) }}">{{ $fornitore->coge }}</a>
                                     @else
                                         -
+                                    @endif
+                                </td>
+                                <td>{{ $fornitore->coordinatore }}</td>
+                                <td>
+                                    @if($fornitore->invoices->isNotEmpty())
+                                        @php
+                                            $recentInvoice = $fornitore->invoices->first();
+                                        @endphp
+                                        <div class="small">
+                                            {{ $recentInvoice->invoice_date ? $recentInvoice->invoice_date->format('d/m/Y') : '-' }}
+                                        </div>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($fornitore->proformas->isNotEmpty())
+                                        @php
+                                            $lastProforma = $fornitore->proformas->first();
+                                        @endphp
+                                        <div class="small">
+                                            {{ $lastProforma->sended_at ? $lastProforma->sended_at->format('d/m/Y') : '-' }}
+                                        </div>
+                                    @else
+                                        <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 <td>

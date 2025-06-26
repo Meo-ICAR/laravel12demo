@@ -19,6 +19,7 @@ class Company extends Model
         'updated_by',
         'deleted_by',
         'email',
+        'emailsubject',
     ];
 
     protected $casts = [

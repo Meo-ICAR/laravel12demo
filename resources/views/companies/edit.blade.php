@@ -87,6 +87,13 @@
                             @enderror
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="emailsubject">Email Subject</label>
+                        <input type="text" class="form-control @error('emailsubject') is-invalid @enderror" id="emailsubject" name="emailsubject" value="{{ old('emailsubject', $company->emailsubject) }}" placeholder="Proforma compensi provvigionali">
+                        @error('emailsubject')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary">

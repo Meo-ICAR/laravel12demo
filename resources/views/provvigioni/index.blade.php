@@ -213,7 +213,15 @@
                                         @if($item->stato != 'Inserito' && $item->stato != 'Sospeso') disabled @endif
                                     >
                                 </td>
-                                <td>{{ Str::limit($item->denominazione_riferimento, 20) }}</td>
+                                <td>
+                                    @if($item->denominazione_riferimento)
+                                        <a href="{{ route('fornitoris.index', ['name' => $item->denominazione_riferimento]) }}">
+                                            {{ $item->denominazione_riferimento }}
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td class="text-right">{{ number_format($item->importo, 2, ',', '.') }}</td>
                                 <td>
                                     <select class="form-control form-control-sm stato-select"
@@ -232,7 +240,15 @@
                                 <td>{{ $item->cognome }}</td>
                                 <td>{{ $item->nome }}</td>
                                 <td>{{ Str::limit($item->tipo, 20) }}</td>
-                                <td>{{ $item->istituto_finanziario }}</td>
+                                <td>
+                                    @if($item->istituto_finanziario)
+                                        <a href="{{ route('clientis.index', ['name' => $item->istituto_finanziario]) }}">
+                                            {{ $item->istituto_finanziario }}
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td>{{ Str::limit($item->fonte, 6) }}</td>
                                 <td>{{ $item->sended_at ? \Carbon\Carbon::parse($item->sended_at)->format('d/m/Y') : 'N/A' }}</td>
                                 <td>{{ Str::limit($item->invoice_number, 6) ?: 'N/A' }}</td>

@@ -27,6 +27,7 @@ class Invoice extends Model
         'sended2_at',
         'xml_data',
         'delta',
+        'coge',
     ];
 
     protected $casts = [

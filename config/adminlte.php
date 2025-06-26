@@ -324,11 +324,15 @@ return [
                     'text' => 'Provvigioni',
                     'url' => 'provvigioni',
                     'icon' => 'fas fa-money-bill-wave',
-
+                ],
+                [
+                    'text' => 'Summary',
+                    'url' => 'provvigioni/proforma-summary',
+                    'icon' => 'fas fa-table',
                 ],
                 [
                     'text' => 'Proforma',
-                    'url' => 'proforma',
+                    'url' => 'proformas',
                     'icon' => 'fas fa-file-alt',
                 ],
                 [
@@ -462,6 +466,11 @@ return [
                     'icon' => 'fas fa-money-bill-wave',
                 ],
                 [
+                    'text' => 'Summary',
+                    'url' => 'provvigioni/proforma-summary',
+                    'icon' => 'fas fa-table',
+                ],
+                [
                     'text' => 'Proforma',
                     'url' => 'proformas',
                     'icon' => 'fas fa-file-alt',
@@ -577,7 +586,7 @@ return [
         ],
         [
             'text' => 'Pratiche',
-            'url' => 'pratiches-crud',
+            'url' => 'pratiches',
             'icon' => 'fas fa-folder-open',
         ],
         [

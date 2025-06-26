@@ -18,6 +18,7 @@
                 <dd class="col-sm-9">{{ $fornitori->email }}</dd>
                 <dt class="col-sm-3">Anticipo</dt>
                 <dd class="col-sm-9">{{ $fornitori->anticipo ? '€ ' . number_format($fornitori->anticipo, 2, ',', '.') : '-' }}</dd>
+                <dt class="col-sm-3">Anticipo Residuo</dt>
                 <dt class="col-sm-3">Operatore</dt>
                 <dd class="col-sm-9">{{ $fornitori->operatore }}</dd>
                 <dt class="col-sm-3">Is Collaboratore</dt>

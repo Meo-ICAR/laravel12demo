@@ -129,6 +129,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Fornitori routes
     Route::middleware(['permission:fornitori_management'])->group(function () {
         Route::post('fornitoris/import', [FornitoriController::class, 'import'])->name('fornitoris.import');
+        Route::post('fornitoris/import-invoiceins-to-invoices', [FornitoriController::class, 'importInvoiceinsToInvoices'])->name('fornitoris.importInvoiceinsToInvoices');
         Route::resource('fornitoris', FornitoriController::class);
     });
 

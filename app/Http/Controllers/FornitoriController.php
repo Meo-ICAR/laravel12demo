@@ -7,12 +7,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Imports\FornitoriImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\InvoiceService;
 
 class FornitoriController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Fornitori::query();
+        $query = Fornitori::with(['invoices' => function($query) {
+            $query->orderBy('invoice_date', 'desc')->limit(1);
+        }, 'proformas' => function($query) {
+            $query->whereNotNull('sended_at')->orderBy('sended_at', 'desc')->limit(1);
+        }]);
 
         // Filter by search term if provided - search across multiple fields case-insensitively
         if ($request->filled('name')) {
@@ -142,6 +147,7 @@ class FornitoriController extends Controller
             'citta' => 'nullable|string|max:255',
             'coordinatore' => 'nullable|string|max:255',
             'company_id' => 'nullable|string|max:36|exists:companies,id',
+            'anticipo_residuo' => 'nullable|numeric',
         ]);
         $data['id'] = (string) Str::uuid();
         Fornitori::create($data);
@@ -178,6 +184,7 @@ class FornitoriController extends Controller
             'citta' => 'nullable|string|max:255',
             'coordinatore' => 'nullable|string|max:255',
             'company_id' => 'nullable|string|max:36|exists:companies,id',
+            'anticipo_residuo' => 'nullable|numeric',
         ]);
         $fornitori->update($data);
         return redirect()->route('fornitoris.index')->with('success', 'Fornitore updated successfully.');
@@ -187,5 +194,49 @@ class FornitoriController extends Controller
     {
         $fornitori->delete();
         return redirect()->route('fornitoris.index')->with('success', 'Fornitore deleted successfully.');
+    }
+
+    public function importInvoiceinsToInvoices()
+    {
+        try {
+            $service = new InvoiceService();
+
+            // First, update existing invoices with missing coge values
+            $updateResult = $service->updateInvoicesWithMissingCoge();
+
+            // Get statistics after the update
+            $totalInvoiceins = \App\Models\Invoicein::count();
+            $eligibleInvoiceins = \App\Models\Invoicein::join('fornitoris', 'fornitoris.coge', '=', 'invoiceins.nr_cliente_fornitore')->count();
+            $existingInvoices = \App\Models\Invoice::count();
+
+            // Count how many invoiceins would create new invoices (don't exist yet)
+            $newInvoiceinsCount = \App\Models\Invoicein::join('fornitoris', 'fornitoris.coge', '=', 'invoiceins.nr_cliente_fornitore')
+                ->whereNotExists(function($query) {
+                    $query->select(\DB::raw(1))
+                          ->from('invoices')
+                          ->whereRaw('invoices.invoice_number = invoiceins.nr_documento');
+                })
+                ->count();
+
+            $result = $service->transferInvoiceinsToInvoices();
+
+            $message = "Transfer completed! ";
+            $message .= "Total invoiceins: {$totalInvoiceins}, ";
+            $message .= "Eligible for transfer: {$eligibleInvoiceins}, ";
+            $message .= "New invoices created: {$result['imported']}, ";
+            $message .= "Skipped (already exist): {$result['skipped']}, ";
+            $message .= "Invoices with missing coge updated: {$updateResult['updated']}.";
+
+            if (!empty($result['errors'])) {
+                $message .= " Errors: " . implode('; ', $result['errors']);
+            }
+            if (!empty($updateResult['errors'])) {
+                $message .= " Update errors: " . implode('; ', $updateResult['errors']);
+            }
+
+            return redirect()->route('fornitoris.index')->with('success', $message);
+        } catch (\Exception $e) {
+            return redirect()->route('fornitoris.index')->with('error', 'Error during transfer: ' . $e->getMessage());
+        }
     }
 }

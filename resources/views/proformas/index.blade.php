@@ -109,7 +109,19 @@
                             @forelse($proformas as $proforma)
                                 <tr>
                                     <td>{{ $proforma->id }}</td>
-                                    <td>{{ $proforma->fornitore->name ?? '-' }}</td>
+                                    <td>
+                                        @if($proforma->fornitore)
+                                            <a href="{{ route('provvigioni.index', [
+                                                'denominazione_riferimento' => $proforma->fornitore->name,
+                                                'sended_at' => $proforma->sended_at ? \Carbon\Carbon::parse($proforma->sended_at)->format('Y-m-d') : null,
+                                                'stato_include' => 'Proforma,Fatturato,Pagato',
+                                            ]) }}">
+                                                {{ $proforma->fornitore->name }}
+                                            </a>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td>
                                         <span class="badge badge-{{ $proforma->stato == 'Inserito' ? 'secondary' : ($proforma->stato == 'Proforma' ? 'info' : ($proforma->stato == 'Fatturato' ? 'warning' : ($proforma->stato == 'Pagato' ? 'success' : 'danger'))) }}">
                                             {{ $proforma->stato }}

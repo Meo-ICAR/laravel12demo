@@ -175,6 +175,52 @@
                     </div>
                 </div>
             </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">
+                                Linked Provvigioni
+                            </h4>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Cognome</th>
+                                            <th>Nome</th>
+                                            <th>Descrizione</th>
+                                            <th>Prodotto</th>
+                                            <th class="text-right">Importo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php $totalImporto = 0; @endphp
+                                        @foreach($proforma->provvigioni as $provvigione)
+                                            <tr>
+                                                <td>{{ $provvigione->cognome }}</td>
+                                                <td>{{ $provvigione->nome }}</td>
+                                                <td>{{ $provvigione->descrizione }}</td>
+                                                <td>{{ $provvigione->prodotto }}</td>
+                                                <td class="text-right">€ {{ number_format($provvigione->importo, 2, ',', '.') }}</td>
+                                            </tr>
+                                            @php $totalImporto += $provvigione->importo; @endphp
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th colspan="4" class="text-right">Total</th>
+                                            <th class="text-right">€ {{ number_format($totalImporto, 2, ',', '.') }}</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 </div>
