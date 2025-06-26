@@ -953,21 +953,130 @@ class InvoiceController extends Controller
         }
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $totalInvoices = \App\Models\Invoice::count();
-        $totalAmount = \App\Models\Invoice::sum('total_amount');
-        $totalByStatus = \App\Models\Invoice::select('status', \DB::raw('COUNT(*) as count'), \DB::raw('SUM(total_amount) as total_amount'))
+        // Get fornitori for dropdown
+        $fornitoriList = Invoice::distinct()->pluck('fornitore')->filter()->sort()->values();
+
+        // Filters
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        $fornitore = $request->input('fornitore');
+
+        $query = Invoice::query();
+        if ($dateFrom) {
+            $query->whereDate('invoice_date', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $query->whereDate('invoice_date', '<=', $dateTo);
+        }
+        if ($fornitore) {
+            $query->where('fornitore', 'like', "%$fornitore%");
+        }
+
+        // Basic counts
+        $totalInvoices = $query->count();
+        $totalAmount = $query->sum('total_amount');
+        // $totalTaxAmount = $query->sum('tax_amount'); // removed
+
+        // Counts by status
+        $totalByStatus = (clone $query)->select('status', \DB::raw('COUNT(*) as count'), \DB::raw('SUM(total_amount) as total_amount'))
             ->groupBy('status')
             ->orderByDesc('count')
             ->get();
-        $topFornitori = \App\Models\Invoice::select('fornitore', \DB::raw('SUM(total_amount) as total_amount'))
+
+        // Reconciliation status
+        $reconciledCount = (clone $query)->where('isreconiled', true)->count();
+        $unreconciledCount = (clone $query)->where(function($q){ $q->where('isreconiled', false)->orWhereNull('isreconiled'); })->count();
+
+        // Top fornitori by amount
+        $topFornitori = (clone $query)->select('fornitore', \DB::raw('COUNT(*) as count'), \DB::raw('SUM(total_amount) as total_amount'))
             ->whereNotNull('fornitore')
             ->groupBy('fornitore')
             ->orderByDesc('total_amount')
-            ->limit(5)
+            ->limit(10)
             ->get();
-        return view('invoices.dashboard', compact('totalInvoices', 'totalAmount', 'totalByStatus', 'topFornitori'));
+
+        // Top clienti by amount
+        $topClienti = (clone $query)->select('cliente', \DB::raw('COUNT(*) as count'), \DB::raw('SUM(total_amount) as total_amount'))
+            ->whereNotNull('cliente')
+            ->groupBy('cliente')
+            ->orderByDesc('total_amount')
+            ->limit(10)
+            ->get();
+
+        // Monthly statistics (current year)
+        $currentYear = now()->year;
+        $monthlyStats = (clone $query)->selectRaw('
+                MONTH(invoice_date) as month,
+                COUNT(*) as count,
+                SUM(total_amount) as total_amount,
+                SUM(tax_amount) as total_tax
+            ')
+            ->whereYear('invoice_date', $currentYear)
+            ->whereNotNull('invoice_date')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        // Recent invoices (last 30 days)
+        $recentInvoices = (clone $query)->where('created_at', '>=', now()->subDays(30))
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Payment status analysis
+        $paidInvoices = (clone $query)->whereNotNull('paid_at')->count();
+        $unpaidInvoices = (clone $query)->whereNull('paid_at')->count();
+
+        // Average amounts
+        $averageAmount = (clone $query)->whereNotNull('total_amount')->avg('total_amount');
+        // $averageTaxAmount = (clone $query)->whereNotNull('tax_amount')->avg('tax_amount'); // removed
+
+        // This month vs last month comparison
+        $thisMonth = (clone $query)->whereMonth('invoice_date', now()->month)
+            ->whereYear('invoice_date', now()->year)
+            ->whereNotNull('invoice_date');
+
+        $lastMonth = (clone $query)->whereMonth('invoice_date', now()->subMonth()->month)
+            ->whereYear('invoice_date', now()->subMonth()->year)
+            ->whereNotNull('invoice_date');
+
+        $thisMonthCount = $thisMonth->count();
+        $thisMonthAmount = $thisMonth->sum('total_amount');
+        $lastMonthCount = $lastMonth->count();
+        $lastMonthAmount = $lastMonth->sum('total_amount');
+
+        // Calculate percentage changes
+        $countChange = $lastMonthCount > 0 ? (($thisMonthCount - $lastMonthCount) / $lastMonthCount) * 100 : 0;
+        $amountChange = $lastMonthAmount > 0 ? (($thisMonthAmount - $lastMonthAmount) / $lastMonthAmount) * 100 : 0;
+
+        // Removed currencyStats and paymentMethodStats
+
+        return view('invoices.dashboard', compact(
+            'totalInvoices',
+            'totalAmount',
+            'totalByStatus',
+            'reconciledCount',
+            'unreconciledCount',
+            'topFornitori',
+            'topClienti',
+            'monthlyStats',
+            'recentInvoices',
+            'paidInvoices',
+            'unpaidInvoices',
+            'averageAmount',
+            'thisMonthCount',
+            'thisMonthAmount',
+            'lastMonthCount',
+            'lastMonthAmount',
+            'countChange',
+            'amountChange',
+            'fornitoriList',
+            'dateFrom',
+            'dateTo',
+            'fornitore'
+        ));
     }
 
     public function destroy($id)

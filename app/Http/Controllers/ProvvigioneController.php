@@ -768,14 +768,120 @@ class ProvvigioneController extends Controller
 
     public function dashboard()
     {
+        // Basic counts
         $totalCount = Provvigione::count();
         $totalImporto = Provvigione::sum('importo');
+
+        // Counts by stato
         $statoCounts = Provvigione::selectRaw('stato, count(*) as count')
             ->groupBy('stato')
-            ->pluck('count', 'stato')
-            ->toArray();
+            ->orderBy('count', 'desc')
+            ->get();
 
-        return view('provvigioni.dashboard', compact('totalCount', 'totalImporto', 'statoCounts'));
+        // Total importo by stato
+        $statoImporto = Provvigione::selectRaw('stato, sum(importo) as total_importo')
+            ->groupBy('stato')
+            ->orderBy('total_importo', 'desc')
+            ->get();
+
+        // Monthly statistics (current year)
+        $currentYear = now()->year;
+        $monthlyStats = Provvigione::selectRaw('
+                MONTH(sended_at) as month,
+                COUNT(*) as count,
+                SUM(importo) as total_importo
+            ')
+            ->whereYear('sended_at', $currentYear)
+            ->whereNotNull('sended_at')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        // Top 10 denominazioni by importo
+        $topDenominazioni = Provvigione::selectRaw('
+                denominazione_riferimento,
+                COUNT(*) as count,
+                SUM(importo) as total_importo
+            ')
+            ->whereNotNull('denominazione_riferimento')
+            ->groupBy('denominazione_riferimento')
+            ->orderBy('total_importo', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Top 10 istituti finanziari by importo
+        $topIstituti = Provvigione::selectRaw('
+                istituto_finanziario,
+                COUNT(*) as count,
+                SUM(importo) as total_importo
+            ')
+            ->whereNotNull('istituto_finanziario')
+            ->groupBy('istituto_finanziario')
+            ->orderBy('total_importo', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Recent activity (last 30 days)
+        $recentActivity = Provvigione::where('created_at', '>=', now()->subDays(30))
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Pending proforma records
+        $pendingProforma = Provvigione::where('stato', 'Inserito')
+            ->count();
+
+        // Sent proforma records
+        $sentProforma = Provvigione::where('stato', 'Proforma')
+            ->whereNotNull('sended_at')
+            ->count();
+
+        // Paid records
+        $paidRecords = Provvigione::where('stato', 'Pagato')
+            ->count();
+
+        // Average importo
+        $averageImporto = Provvigione::whereNotNull('importo')
+            ->avg('importo');
+
+        // This month vs last month comparison
+        $thisMonth = Provvigione::whereMonth('sended_at', now()->month)
+            ->whereYear('sended_at', now()->year)
+            ->whereNotNull('sended_at');
+
+        $lastMonth = Provvigione::whereMonth('sended_at', now()->subMonth()->month)
+            ->whereYear('sended_at', now()->subMonth()->year)
+            ->whereNotNull('sended_at');
+
+        $thisMonthCount = $thisMonth->count();
+        $thisMonthImporto = $thisMonth->sum('importo');
+        $lastMonthCount = $lastMonth->count();
+        $lastMonthImporto = $lastMonth->sum('importo');
+
+        // Calculate percentage changes
+        $countChange = $lastMonthCount > 0 ? (($thisMonthCount - $lastMonthCount) / $lastMonthCount) * 100 : 0;
+        $importoChange = $lastMonthImporto > 0 ? (($thisMonthImporto - $lastMonthImporto) / $lastMonthImporto) * 100 : 0;
+
+        return view('provvigioni.dashboard', compact(
+            'totalCount',
+            'totalImporto',
+            'statoCounts',
+            'statoImporto',
+            'monthlyStats',
+            'topDenominazioni',
+            'topIstituti',
+            'recentActivity',
+            'pendingProforma',
+            'sentProforma',
+            'paidRecords',
+            'averageImporto',
+            'thisMonthCount',
+            'thisMonthImporto',
+            'lastMonthCount',
+            'lastMonthImporto',
+            'countChange',
+            'importoChange'
+        ));
     }
 
     public function toggleStato(Request $request, $id)
