@@ -167,38 +167,75 @@
                                             <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#emailBodyModal-{{ $proforma->id }}">
                                                 <i class="fas fa-envelope-open-text"></i>
                                             </button>
+                                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#emailSimModal-{{ $proforma->id }}">
+                                                <i class="fas fa-at"></i>
+                                            </button>
                                         </div>
-                                        <!-- Modal -->
-                                        <div class="modal fade" id="emailBodyModal-{{ $proforma->id }}" tabindex="-1" role="dialog" aria-labelledby="emailBodyModalLabel-{{ $proforma->id }}" aria-hidden="true">
+                                        <!-- Email Simulation Modal -->
+                                        <div class="modal fade" id="emailSimModal-{{ $proforma->id }}" tabindex="-1" role="dialog" aria-labelledby="emailSimModalLabel-{{ $proforma->id }}" aria-hidden="true">
                                           <div class="modal-dialog modal-xl" role="document">
                                             <div class="modal-content">
                                               <div class="modal-header">
-                                                <h5 class="modal-title" id="emailBodyModalLabel-{{ $proforma->id }}">Email Body - Proforma #{{ $proforma->id }}</h5>
+                                                <h5 class="modal-title" id="emailSimModalLabel-{{ $proforma->id }}">Simulated Email - Proforma #{{ $proforma->id }}</h5>
                                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                   <span aria-hidden="true">&times;</span>
                                                 </button>
                                               </div>
                                               <div class="modal-body">
-                                                <label for="emailsubject_{{ $proforma->id }}"><strong>Email Subject:</strong></label>
-                                                <input type="text" id="emailsubject_{{ $proforma->id }}" class="form-control mb-3" value="{{ $proforma->emailsubject ?? '' }}" placeholder="Enter email subject">
-
-                                                <label for="compenso_descrizione_{{ $proforma->id }}"><strong>Compenso Descrizione (HTML):</strong></label>
-                                                <textarea id="compenso_descrizione_{{ $proforma->id }}" class="form-control mb-3" rows="3">{!! $proforma->compenso_descrizione !!}</textarea>
-                                                <button type="button" class="btn btn-primary mb-3" onclick="saveCompensoDescrizione('{{ $proforma->id }}')">
-                                                    <i class="fas fa-save"></i> Salva Dati
-                                                </button>
-                                                <div id="modal-feedback-{{ $proforma->id }}" class="mt-2"></div>
-                                                {!! $proforma->emailbody !!}
-
-                                                <div class="mt-4">
-                                                    <label for="annotation_{{ $proforma->id }}"><strong>Annotazioni interne non inviate:</strong></label>
-                                                    <textarea id="annotation_{{ $proforma->id }}" class="form-control" rows="3" placeholder="Enter internal annotations">{{ $proforma->annotation ?? '' }}</textarea>
+                                                <div class="mb-2"><strong>To:</strong> {{ $proforma->emailto }}</div>
+                                                <div class="mb-2"><strong>Subject:</strong> {{ $proforma->emailsubject }}</div>
+                                                <hr>
+                                                <div class="email-body">
+                                                    @if($proforma->compenso_descrizione)
+                                                        <div class="mb-2">{!! $proforma->compenso_descrizione !!}</div>
+                                                    @endif
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered table-striped mb-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Cognome</th>
+                                                                    <th>Nome</th>
+                                                                    <th>Descrizione</th>
+                                                                    <th>Prodotto</th>
+                                                                    <th class="text-right">Importo</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @php $totalImporto = 0; @endphp
+                                                                @foreach($proforma->provvigioni as $provvigione)
+                                                                    <tr>
+                                                                        <td>{{ $provvigione->cognome }}</td>
+                                                                        <td>{{ $provvigione->nome }}</td>
+                                                                        <td>{{ $provvigione->descrizione }}</td>
+                                                                        <td>{{ $provvigione->prodotto }}</td>
+                                                                        <td class="text-right">€ {{ number_format($provvigione->importo, 2, ',', '.') }}</td>
+                                                                    </tr>
+                                                                    @php $totalImporto += $provvigione->importo; @endphp
+                                                                @endforeach
+                                                                @if($proforma->contributo > 0)
+                                                                    <tr>
+                                                                        <td colspan="4"><strong>{{ $proforma->contributo_descrizione ?? 'Contributo' }}</strong></td>
+                                                                        <td class="text-right">€ {{ number_format($proforma->contributo, 2, ',', '.') }}</td>
+                                                                    </tr>
+                                                                @endif
+                                                                @if($proforma->anticipo > 0)
+                                                                    <tr>
+                                                                        <td colspan="4"><strong>{{ $proforma->anticipo_descrizione ?? 'Anticipo' }}</strong></td>
+                                                                        <td class="text-right text-danger">€ {{ number_format($proforma->anticipo, 2, ',', '.') }}</td>
+                                                                    </tr>
+                                                                @endif
+                                                                @if(($proforma->anticipo + $proforma->contributo) > 0)
+                                                                    <tr class="table-info">
+                                                                        <td colspan="4" class="text-right"><strong>Totale</strong></td>
+                                                                        <td class="text-right"><strong>€ {{ number_format($proforma->compenso + $proforma->contributo - $proforma->anticipo, 2, ',', '.') }}</strong></td>
+                                                                    </tr>
+                                                                @endif
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
                                               </div>
                                               <div class="modal-footer">
-                                                <button type="button" class="btn btn-success" onclick="sendProformaEmail('{{ $proforma->id }}')">
-                                                    <i class="fas fa-paper-plane"></i> Invia Email
-                                                </button>
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                               </div>
                                             </div>

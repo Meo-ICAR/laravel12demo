@@ -152,12 +152,14 @@ class ProformaController extends Controller
             'provvigioni.*' => 'uuid|exists:provvigioni,id',
         ]);
 
-        $provvigioni = $data['provvigioni'] ?? [];
+        $provvigioni = $data['provvigioni'] ?? null;
         unset($data['provvigioni']);
 
         // Update the proforma
         $proforma->update($data);
-        $proforma->provvigioni()->sync($provvigioni);
+        if ($provvigioni !== null) {
+            $proforma->provvigioni()->sync($provvigioni);
+        }
 
         // Generate and update email body
         $this->updateEmailBody($proforma);
@@ -232,6 +234,13 @@ class ProformaController extends Controller
     {
         // Reload the proforma with relationships to get updated data
         $proforma->load(['fornitore', 'provvigioni']);
+
+        // Update emailsubject to include proforma number if not already present
+        $currentSubject = $proforma->emailsubject ?? '';
+        if (!str_contains($currentSubject, '#' . $proforma->id)) {
+            $newSubject = trim($currentSubject . ' #' . $proforma->id);
+            $proforma->update(['emailsubject' => $newSubject]);
+        }
 
         // Generate email body with updated values
         $emailBody = $this->generateDefaultEmailContent($proforma);

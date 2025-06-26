@@ -338,55 +338,60 @@ class ProvvigioneController extends Controller
 
     public function createProformaFromSummary(Request $request)
     {
-        // Support both single and multiple denominazioni
-        $denominazioni = $request->input('denominazioni', []);
-        if (empty($denominazioni)) {
-            $request->validate([
-                'denominazione_riferimento' => 'required|string',
-            ]);
-            $denominazioni = [$request->input('denominazione_riferimento')];
+        if ($request->has('denominazioni') && is_array($request->denominazioni)) {
+            $results = [];
+            foreach ($request->denominazioni as $denominazione) {
+                $result = $this->createSingleProformaFromSummary($denominazione);
+                $results[] = $result;
+            }
+            return redirect()->route('proformas.index')->with('success', 'Proforma created for selected denominazioni.');
         }
+        // Single case fallback
+        $request->validate([
+            'denominazione_riferimento' => 'required|string',
+        ]);
+        $denominazione = $request->input('denominazione_riferimento');
+        $this->createSingleProformaFromSummary($denominazione);
+        return redirect()->route('proformas.index')->with('success', 'Proforma created for "' . $denominazione . '" and provvigioni linked.');
+    }
 
-        $results = [];
-        foreach ($denominazioni as $denominazione) {
-            $fornitore = \App\Models\Fornitori::where('name', $denominazione)->first();
-            if (!$fornitore) {
-                $results[] = "Fornitore not found for '$denominazione'";
-                continue;
-            }
-            $company = $fornitore->company;
-            if (!$company) {
-                $results[] = "Company not found for fornitore '$denominazione'";
-                continue;
-            }
-            $proforma = \App\Models\Proforma::create([
-                'company_id' => $company->id,
-                'fornitori_id' => $fornitore->id,
-                'stato' => 'Inserito',
-                'anticipo' => $fornitore->anticipo,
-                'contributo' => $fornitore->contributo,
-                'emailto' => $fornitore->email,
-                'anticipo_descrizione' => $fornitore->anticipo_description,
-                'contributo_descrizione' => $fornitore->contributo_description,
-                'emailfrom' => $company->email,
-                'emailsubject' => $company->emailsubject ?? 'Proforma compensi provvigionali',
-            ]);
-            $provvigioni = \App\Models\Provvigione::where('denominazione_riferimento', $denominazione)->where('stato', 'Inserito')->get();
-            if ($provvigioni->isNotEmpty()) {
-                $pivotData = [];
-                foreach ($provvigioni as $provvigione) {
-                    $pivotData[$provvigione->id] = [
-                        'created_at' => $proforma->created_at,
-                        'updated_at' => $proforma->updated_at,
-                    ];
-                }
-                $proforma->provvigioni()->attach($pivotData);
-                \App\Models\Provvigione::whereIn('id', $provvigioni->pluck('id')->toArray())
-                    ->update(['stato' => 'Proforma']);
-            }
-            $results[] = "Proforma created for '$denominazione' and provvigioni linked.";
+    private function createSingleProformaFromSummary($denominazione)
+    {
+        $fornitore = \App\Models\Fornitori::where('name', $denominazione)->first();
+        if (!$fornitore) {
+            return false;
         }
-        return redirect()->route('proformas.index')->with('success', implode(' ', $results));
+        $company = $fornitore->company;
+        if (!$company) {
+            return false;
+        }
+        $proforma = \App\Models\Proforma::create([
+            'company_id' => $company->id,
+            'fornitori_id' => $fornitore->id,
+            'stato' => 'Inserito',
+            'anticipo' => $fornitore->anticipo,
+            'contributo' => $fornitore->contributo,
+            'emailto' => $fornitore->email,
+            'anticipo_descrizione' => $fornitore->anticipo_description,
+            'contributo_descrizione' => $fornitore->contributo_description,
+            'emailfrom' => $company->email,
+            'emailsubject' => $company->emailsubject ?? 'Proforma compensi provvigionali',
+            'compenso_descrizione' => $company->compenso_descrizione,
+        ]);
+        $provvigioni = \App\Models\Provvigione::where('denominazione_riferimento', $denominazione)->where('stato', 'Inserito')->get();
+        if ($provvigioni->isNotEmpty()) {
+            $pivotData = [];
+            foreach ($provvigioni as $provvigione) {
+                $pivotData[$provvigione->id] = [
+                    'created_at' => $proforma->created_at,
+                    'updated_at' => $proforma->updated_at,
+                ];
+            }
+            $proforma->provvigioni()->attach($pivotData);
+            \App\Models\Provvigione::whereIn('id', $provvigioni->pluck('id')->toArray())
+                ->update(['stato' => 'Proforma']);
+        }
+        return true;
     }
 
     public function show($id)

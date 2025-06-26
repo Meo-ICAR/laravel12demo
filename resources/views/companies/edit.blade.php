@@ -94,6 +94,10 @@
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
                     </div>
+                    <div class="form-group">
+                        <label for="compenso_descrizione">Compenso Descrizione</label>
+                        <textarea class="form-control" id="compenso_descrizione" name="compenso_descrizione" rows="3">{{ old('compenso_descrizione', $company->compenso_descrizione) }}</textarea>
+                    </div>
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary">

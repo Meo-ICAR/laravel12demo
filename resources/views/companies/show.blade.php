@@ -117,6 +117,9 @@
                         </div>
                     </div>
                 </div>
+
+                <dt class="col-sm-4">Compenso Descrizione</dt>
+                <dd class="col-sm-8">{!! $company->compenso_descrizione ? nl2br(e($company->compenso_descrizione)) : '-' !!}</dd>
             </div>
         </div>
     </div>

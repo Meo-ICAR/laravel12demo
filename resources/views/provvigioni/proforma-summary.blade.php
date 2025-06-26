@@ -52,104 +52,104 @@
         </div>
     </div>
 
-    <form id="proforma-all-form" action="{{ route('provvigioni.createProformaFromSummary') }}" method="POST">
-        @csrf
-        <div class="mb-2">
-            <button type="submit" class="btn btn-primary" id="proforma-all-btn" disabled>
-                <i class="fas fa-file-invoice"></i> Proforma All
-            </button>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title">Inserito Records Summary</h3>
+            <form id="proformaAllForm" action="{{ route('provvigioni.createProformaFromSummary') }}" method="POST" style="margin:0;">
+                @csrf
+                <input type="hidden" name="bulk" value="1">
+                <button type="submit" class="btn btn-primary btn-sm" id="proformaAllBtn" disabled>
+                    <i class="fas fa-file-invoice"></i> Proforma All
+                </button>
+            </form>
         </div>
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Inserito Records Summary</h3>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped mb-0">
-                        <thead>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll"></th>
+                            <th>Denominazione Riferimento</th>
+                            <th>Email</th>
+                            <th class="text-right">N</th>
+                            <th class="text-right">Total</th>
+                            <th class="text-right">Contributo</th>
+                            <th class="text-right">Anticipo</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($proformaSummary as $index => $item)
                             <tr>
-                                <th><input type="checkbox" id="check-all"></th>
-                                <th>Denominazione Riferimento</th>
-                                <th>Email</th>
-                                <th class="text-right">N</th>
-                                <th class="text-right">Total</th>
-                                <th class="text-right">Contributo</th>
-                                <th class="text-right">Anticipo</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($proformaSummary as $index => $item)
-                                <tr>
-                                    <td>
-                                        <input type="checkbox" class="row-checkbox" name="denominazioni[]" value="{{ $item->denominazione_riferimento }}">
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('provvigioni.index', ['stato' => 'Inserito', 'denominazione_riferimento' => $item->denominazione_riferimento]) }}"
-                                           class="text-primary font-weight-bold">
-                                            {{ $item->denominazione_riferimento ?: 'N/A' }}
+                                <td>
+                                    <input type="checkbox" class="row-checkbox" name="denominazioni[]" value="{{ $item->denominazione_riferimento }}" form="proformaAllForm"
+                                        @if(empty($item->email) || $item->totale == 0) disabled @endif>
+                                </td>
+                                <td>
+                                    <a href="{{ route('provvigioni.index', ['stato' => 'Inserito', 'denominazione_riferimento' => $item->denominazione_riferimento]) }}"
+                                       class="text-primary font-weight-bold">
+                                        {{ $item->denominazione_riferimento ?: 'N/A' }}
+                                    </a>
+                                </td>
+                                <td>
+                                    @if($item->email)
+                                        <a href="mailto:{{ $item->email }}" class="text-info">
+                                            <i class="fas fa-envelope"></i> {{ $item->email }}
                                         </a>
-                                    </td>
-                                    <td>
-                                        @if($item->email)
-                                            <a href="mailto:{{ $item->email }}" class="text-info">
-                                                <i class="fas fa-envelope"></i> {{ $item->email }}
-                                            </a>
-                                        @else
-                                            <span class="text-muted">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-right">
-                                        <span class="badge badge-info">{{ $item->n }}</span>
-                                    </td>
-                                    <td class="text-right">
-                                        <span class="text-success font-weight-bold">
-                                            € {{ number_format($item->totale, 2, ',', '.') }}
-                                        </span>
-                                    </td>
-                                    <td class="text-right">
-                                        <span>{{ $item->contributo !== null ? number_format($item->contributo, 2, ',', '.') : '-' }}</span>
-                                    </td>
-                                    <td class="text-right">
-                                        <span>{{ $item->anticipo !== null ? number_format($item->anticipo, 2, ',', '.') : '-' }}</span>
-                                    </td>
-                                    <td>
-                                        <form action="{{ route('provvigioni.createProformaFromSummary') }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            <input type="hidden" name="denominazione_riferimento" value="{{ $item->denominazione_riferimento }}">
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="fas fa-file-invoice"></i> Proforma
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="text-center">
-                                        <div class="py-4">
-                                            <i class="fas fa-info-circle text-muted fa-2x mb-3"></i>
-                                            <p class="text-muted">No Inserito records found.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                        @if($proformaSummary->count() > 0)
-                            <tfoot>
-                                <tr class="table-dark">
-                                    <td colspan="4"><strong>TOTALS</strong></td>
-                                    <td class="text-right">
-                                        <strong>€ {{ number_format($proformaSummary->sum('totale'), 2, ',', '.') }}</strong>
-                                    </td>
-                                    <td colspan="4"></td>
-                                </tr>
-                            </tfoot>
-                        @endif
-                    </table>
-                </div>
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </td>
+                                <td class="text-right">
+                                    <span class="badge badge-info">{{ $item->n }}</span>
+                                </td>
+                                <td class="text-right">
+                                    <span class="text-success font-weight-bold">
+                                        € {{ number_format($item->totale, 2, ',', '.') }}
+                                    </span>
+                                </td>
+                                <td class="text-right">
+                                    <span>{{ $item->contributo !== null ? number_format($item->contributo, 2, ',', '.') : '-' }}</span>
+                                </td>
+                                <td class="text-right">
+                                    <span>{{ $item->anticipo !== null ? number_format($item->anticipo, 2, ',', '.') : '-' }}</span>
+                                </td>
+                                <td>
+                                    <form action="{{ route('provvigioni.createProformaFromSummary') }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <input type="hidden" name="denominazione_riferimento" value="{{ $item->denominazione_riferimento }}">
+                                        <button type="submit" class="btn btn-sm btn-success" @if(empty($item->email) || $item->totale == 0) disabled @endif>
+                                            <i class="fas fa-file-invoice"></i> Proforma
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="text-center">
+                                    <div class="py-4">
+                                        <i class="fas fa-info-circle text-muted fa-2x mb-3"></i>
+                                        <p class="text-muted">No Inserito records found.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                    @if($proformaSummary->count() > 0)
+                        <tfoot>
+                            <tr class="table-dark">
+                                <td colspan="4"><strong>TOTALS</strong></td>
+                                <td class="text-right">
+                                    <strong>€ {{ number_format($proformaSummary->sum('totale'), 2, ',', '.') }}</strong>
+                                </td>
+                                <td colspan="4"></td>
+                            </tr>
+                        </tfoot>
+                    @endif
+                </table>
             </div>
         </div>
-    </form>
+    </div>
 
     @if($proformaSummary->count() > 0)
         <div class="row mt-4">
@@ -219,20 +219,23 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('orderDirection').addEventListener('change', function() {
         document.getElementById('applySort').click();
     });
-    const checkAll = document.getElementById('check-all');
-    const checkboxes = document.querySelectorAll('.row-checkbox');
-    const proformaAllBtn = document.getElementById('proforma-all-btn');
-
-    checkAll.addEventListener('change', function() {
-        checkboxes.forEach(cb => cb.checked = checkAll.checked);
-        proformaAllBtn.disabled = !Array.from(checkboxes).some(cb => cb.checked);
-    });
-    checkboxes.forEach(cb => {
-        cb.addEventListener('change', function() {
-            proformaAllBtn.disabled = !Array.from(checkboxes).some(cb => cb.checked);
-            if (!cb.checked) checkAll.checked = false;
+    // Select all checkboxes
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checked = this.checked;
+        document.querySelectorAll('.row-checkbox:not(:disabled)').forEach(cb => {
+            cb.checked = checked;
         });
+        updateProformaAllBtn();
     });
+    // Enable/disable Proforma All button
+    document.querySelectorAll('.row-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateProformaAllBtn);
+    });
+    function updateProformaAllBtn() {
+        const anyChecked = Array.from(document.querySelectorAll('.row-checkbox:checked')).length > 0;
+        document.getElementById('proformaAllBtn').disabled = !anyChecked;
+    }
+    updateProformaAllBtn();
 });
 </script>
 @endsection
