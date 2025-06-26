@@ -572,6 +572,22 @@ return [
                 ],
             ],
         ],
+        [
+            'header' => 'PRATICHE',
+        ],
+        [
+            'text' => 'Pratiche',
+            'url' => 'pratiches-crud',
+            'icon' => 'fas fa-folder-open',
+        ],
+        [
+            'header' => 'INVOICEINS',
+        ],
+        [
+            'text' => 'Invoiceins',
+            'url' => 'invoiceins',
+            'icon' => 'fas fa-file-invoice',
+        ],
     ],
 
     /*

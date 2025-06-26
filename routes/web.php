@@ -149,6 +149,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('provvigioni', App\Http\Controllers\ProvvigioneController::class);
     Route::post('provvigioni/create-proforma-from-summary', [App\Http\Controllers\ProvvigioneController::class, 'createProformaFromSummary'])->name('provvigioni.createProformaFromSummary');
 
+    // Test route for debugging
+    Route::get('provvigioni/test-create-proforma/{denominazione}', function($denominazione) {
+        \Log::info('Test route called with denominazione: ' . $denominazione);
+        return response()->json(['success' => true, 'denominazione' => $denominazione]);
+    })->name('provvigioni.testCreateProforma');
+
     // Calls routes
     Route::get('calls/import', [App\Http\Controllers\CallController::class, 'showImportForm'])->name('calls.import.form');
     Route::post('calls/import', [App\Http\Controllers\CallController::class, 'import'])->name('calls.import');
@@ -217,6 +223,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('invoiceins/import', [InvoiceinImportController::class, 'index'])->name('invoiceins.import');
     Route::post('invoiceins/import', [InvoiceinImportController::class, 'import']);
     Route::resource('invoiceins', App\Http\Controllers\InvoiceinController::class);
+
+    // Pratiches routes
+    Route::post('pratiches/import', [App\Http\Controllers\PraticheController::class, 'import'])->name('pratiches.import');
+    Route::resource('pratiches', App\Http\Controllers\PraticheController::class);
+    Route::resource('pratiches-crud', App\Http\Controllers\PraticheCrudController::class);
 
     // FornitoriInvoice routes
     Route::get('fornitoris-invoices', [App\Http\Controllers\FornitoriInvoiceController::class, 'index'])->name('fornitoris.invoices.index');

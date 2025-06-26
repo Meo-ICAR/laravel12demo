@@ -20,7 +20,7 @@
                             <label for="name">Search</label>
                             <input type="text" name="name" id="name" class="form-control"
                                    value="{{ request('name') }}"
-                                   placeholder="Search by name, codice, P.IVA, email, regione, città...">
+                                   placeholder="Search by name, nome, codice, COGE, P.IVA, email...">
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -31,12 +31,13 @@
                                    placeholder="Search by coordinatore...">
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group">
                             <label for="sort_by">Sort by</label>
                             <select name="sort_by" id="sort_by" class="form-control">
                                 <option value="name" {{ $sortBy === 'name' ? 'selected' : '' }}>Name</option>
                                 <option value="codice" {{ $sortBy === 'codice' ? 'selected' : '' }}>Codice</option>
+                                <option value="coge" {{ $sortBy === 'coge' ? 'selected' : '' }}>COGE</option>
                                 <option value="piva" {{ $sortBy === 'piva' ? 'selected' : '' }}>P.IVA</option>
                                 <option value="email" {{ $sortBy === 'email' ? 'selected' : '' }}>Email</option>
                                 <option value="anticipo" {{ $sortBy === 'anticipo' ? 'selected' : '' }}>Anticipo</option>
@@ -57,10 +58,10 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4 d-flex align-items-end">
+                    <div class="col-md-2 d-flex align-items-end">
                         <div class="form-group mb-0">
                             <button type="submit" class="btn btn-primary mr-2">
-                                <i class="fas fa-search"></i> Search & Sort
+                                <i class="fas fa-search"></i> Search
                             </button>
                             <a href="{{ route('fornitoris.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> Clear
@@ -87,7 +88,7 @@
                     <thead>
                         <tr>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'codice', 'sort_direction' => $sortBy === 'codice' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'codice', 'sort_direction' => $sortBy === 'codice' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Codice
                                     @if($sortBy === 'codice')
@@ -98,7 +99,7 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'name', 'sort_direction' => $sortBy === 'name' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'name', 'sort_direction' => $sortBy === 'name' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Name
                                     @if($sortBy === 'name')
@@ -109,7 +110,18 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'piva', 'sort_direction' => $sortBy === 'piva' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'coge', 'sort_direction' => $sortBy === 'coge' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
+                                   class="text-dark text-decoration-none">
+                                    COGE
+                                    @if($sortBy === 'coge')
+                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="fas fa-sort text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'piva', 'sort_direction' => $sortBy === 'piva' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     P.IVA
                                     @if($sortBy === 'piva')
@@ -120,7 +132,7 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'email', 'sort_direction' => $sortBy === 'email' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'email', 'sort_direction' => $sortBy === 'email' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Email
                                     @if($sortBy === 'email')
@@ -131,7 +143,7 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'anticipo', 'sort_direction' => $sortBy === 'anticipo' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'anticipo', 'sort_direction' => $sortBy === 'anticipo' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Anticipo
                                     @if($sortBy === 'anticipo')
@@ -142,7 +154,7 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'contributo', 'sort_direction' => $sortBy === 'contributo' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'contributo', 'sort_direction' => $sortBy === 'contributo' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Contributo
                                     @if($sortBy === 'contributo')
@@ -153,7 +165,7 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'regione', 'sort_direction' => $sortBy === 'regione' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'regione', 'sort_direction' => $sortBy === 'regione' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Regione
                                     @if($sortBy === 'regione')
@@ -164,7 +176,7 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'citta', 'sort_direction' => $sortBy === 'citta' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'citta', 'sort_direction' => $sortBy === 'citta' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Città
                                     @if($sortBy === 'citta')
@@ -175,7 +187,7 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'coordinatore', 'sort_direction' => $sortBy === 'coordinatore' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}"
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'coordinatore', 'sort_direction' => $sortBy === 'coordinatore' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
                                     Coordinatore
                                     @if($sortBy === 'coordinatore')
@@ -194,6 +206,7 @@
                             <tr>
                                 <td>{{ $fornitore->codice }}</td>
                                 <td>{{ $fornitore->name }}</td>
+                                <td>{{ $fornitore->coge }}</td>
                                 <td>{{ $fornitore->piva }}</td>
                                 <td>{{ $fornitore->email }}</td>
                                 <td class="text-right">{{ $fornitore->anticipo ? '€ ' . number_format($fornitore->anticipo, 2, ',', '.') : '-' }}</td>

@@ -100,12 +100,8 @@ class ProformaController extends Controller
         $proforma = Proforma::create($data);
         $proforma->provvigioni()->sync($provvigioni);
 
-        // Reload the proforma with relationships to get updated data
-        $proforma->load(['fornitore', 'provvigioni']);
-
-        // Generate email body with the same logic as update
-        $data['emailbody'] = $this->generateDefaultEmailContent($proforma);
-        $proforma->update(['emailbody' => $data['emailbody']]);
+        // Generate and update email body
+        $this->updateEmailBody($proforma);
 
         return redirect()->route('proformas.index')->with('success', 'Proforma created successfully. Email body generated.');
     }
@@ -163,12 +159,8 @@ class ProformaController extends Controller
         $proforma->update($data);
         $proforma->provvigioni()->sync($provvigioni);
 
-        // Reload the proforma with relationships to get updated data
-        $proforma->load(['fornitore', 'provvigioni']);
-
-        // Regenerate email body with updated values
-        $data['emailbody'] = $this->generateDefaultEmailContent($proforma);
-        $proforma->update(['emailbody' => $data['emailbody']]);
+        // Generate and update email body
+        $this->updateEmailBody($proforma);
 
         return redirect()->route('proformas.index')->with('success', 'Proforma updated successfully. Email body regenerated with updated values.');
     }
@@ -231,6 +223,21 @@ class ProformaController extends Controller
                 'message' => 'Failed to send email: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Update email body for a proforma
+     */
+    private function updateEmailBody(Proforma $proforma)
+    {
+        // Reload the proforma with relationships to get updated data
+        $proforma->load(['fornitore', 'provvigioni']);
+
+        // Generate email body with updated values
+        $emailBody = $this->generateDefaultEmailContent($proforma);
+
+        // Update the proforma with the generated email body
+        $proforma->update(['emailbody' => $emailBody]);
     }
 
     private function generateDefaultEmailContent(Proforma $proforma)

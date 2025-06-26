@@ -105,10 +105,10 @@
                                     <span>{{ $item->anticipo !== null ? number_format($item->anticipo, 2, ',', '.') : '-' }}</span>
                                 </td>
                                 <td>
-                                    <form action="{{ route('provvigioni.createProformaFromSummary') }}" method="POST" style="display:inline;">
+                                    <form action="{{ route('provvigioni.createProformaFromSummary') }}" method="POST" style="display:inline;" onsubmit="try { alert('Form submitting for: {{ $item->denominazione_riferimento }}'); console.log('Form submitting for: {{ $item->denominazione_riferimento }}'); console.log('CSRF token: ' + document.querySelector('input[name=\"_token\"]').value); return true; } catch(e) { console.error('Error in form submission:', e); alert('Error: ' + e.message); return false; }">
                                         @csrf
                                         <input type="hidden" name="denominazione_riferimento" value="{{ $item->denominazione_riferimento }}">
-                                        <button type="submit" class="btn btn-sm btn-success">
+                                        <button type="submit" class="btn btn-sm btn-success" onclick="console.log('Proforma button clicked for: {{ $item->denominazione_riferimento }}')">
                                             <i class="fas fa-file-invoice"></i> Proforma
                                         </button>
                                     </form>

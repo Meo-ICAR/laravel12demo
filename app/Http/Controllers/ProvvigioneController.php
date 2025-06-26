@@ -699,22 +699,32 @@ class ProvvigioneController extends Controller
 
     public function createProformaFromSummary(Request $request)
     {
+        \Log::info('createProformaFromSummary called with data: ' . json_encode($request->all()));
+
         $request->validate([
             'denominazione_riferimento' => 'required|string',
         ]);
         $denominazione = $request->input('denominazione_riferimento');
 
+        \Log::info('Looking for fornitore with name: ' . $denominazione);
+
         // Trova il fornitore
         $fornitore = Fornitori::where('name', $denominazione)->first();
         if (!$fornitore) {
+            \Log::error('Fornitore not found for: ' . $denominazione);
             return redirect()->back()->with('error', 'Fornitore non trovato per "' . $denominazione . '"');
         }
+
+        \Log::info('Fornitore found: ' . $fornitore->id);
 
         // Trova tutte le provvigioni con questa denominazione
         $provvigioni = \App\Models\Provvigione::where('denominazione_riferimento', $denominazione)->get();
         if ($provvigioni->isEmpty()) {
+            \Log::error('No provvigioni found for: ' . $denominazione);
             return redirect()->back()->with('error', 'Nessuna provvigione trovata per "' . $denominazione . '"');
         }
+
+        \Log::info('Found ' . $provvigioni->count() . ' provvigioni');
 
         try {
             // Crea la proforma
@@ -795,6 +805,7 @@ class ProvvigioneController extends Controller
             return redirect()->route('proformas.index')->with('success', 'Proforma creata con successo per "' . $denominazione . '".');
         } catch (\Exception $e) {
             \Log::error('Errore creazione proforma: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Errore durante la creazione della proforma: ' . $e->getMessage());
         }
     }

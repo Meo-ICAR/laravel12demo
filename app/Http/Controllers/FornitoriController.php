@@ -15,21 +15,22 @@ class FornitoriController extends Controller
         $query = Fornitori::query();
 
         // Filter by search term if provided - search across multiple fields case-insensitively
-        if ($request->has('name') && $request->name !== '') {
+        if ($request->filled('name')) {
             $searchTerm = $request->name;
             $query->where(function($q) use ($searchTerm) {
                 $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                  ->orWhereRaw('LOWER(nome) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
                   ->orWhereRaw('LOWER(codice) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                  ->orWhereRaw('LOWER(coge) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
                   ->orWhereRaw('LOWER(piva) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
                   ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
                   ->orWhereRaw('LOWER(regione) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
-                  ->orWhereRaw('LOWER(citta) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
-                  ->orWhereRaw('LOWER(nome) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
+                  ->orWhereRaw('LOWER(citta) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
             });
         }
 
         // Filter by coordinatore if provided
-        if ($request->has('coordinatore') && $request->coordinatore !== '') {
+        if ($request->filled('coordinatore')) {
             $coordinatoreTerm = strtolower($request->coordinatore);
             $query->whereRaw('LOWER(coordinatore) LIKE ?', ['%' . $coordinatoreTerm . '%']);
         }
@@ -39,7 +40,7 @@ class FornitoriController extends Controller
         $sortDirection = $request->get('sort_direction', 'asc');
 
         // Validate sort parameters
-        $allowedSortBy = ['name', 'codice', 'piva', 'email', 'anticipo', 'contributo', 'regione', 'citta', 'coordinatore', 'created_at'];
+        $allowedSortBy = ['name', 'codice', 'coge', 'piva', 'email', 'anticipo', 'contributo', 'regione', 'citta', 'coordinatore', 'created_at'];
         $allowedDirections = ['asc', 'desc'];
 
         if (!in_array($sortBy, $allowedSortBy)) {
@@ -51,7 +52,22 @@ class FornitoriController extends Controller
 
         $query->orderBy($sortBy, $sortDirection);
 
-        $fornitoris = $query->paginate(10)->withQueryString();
+        // Build query parameters for pagination (only include non-empty values)
+        $queryParams = [];
+        if ($request->filled('name')) {
+            $queryParams['name'] = $request->name;
+        }
+        if ($request->filled('coordinatore')) {
+            $queryParams['coordinatore'] = $request->coordinatore;
+        }
+        if ($request->filled('sort_by')) {
+            $queryParams['sort_by'] = $request->sort_by;
+        }
+        if ($request->filled('sort_direction')) {
+            $queryParams['sort_direction'] = $request->sort_direction;
+        }
+
+        $fornitoris = $query->paginate(10)->appends($queryParams);
         return view('fornitoris.index', compact('fornitoris', 'sortBy', 'sortDirection'));
     }
 
