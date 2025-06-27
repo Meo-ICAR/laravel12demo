@@ -1,27 +1,21 @@
 <?php
 
-namespace App\Filament\Resources\InvoiceResource\Pages;
+namespace App\Filament\Pages;
 
-use App\Filament\Resources\InvoiceResource;
-use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Pages\Dashboard as BaseDashboard;
 use App\Filament\Widgets\InvoiceStatsWidget;
 use App\Filament\Widgets\InvoiceChartWidget;
 use App\Filament\Widgets\InvoiceStatusChartWidget;
+use App\Filament\Widgets\RecentInvoicesWidget;
 use App\Filament\Widgets\ReconciliationWidget;
 
-class ListInvoices extends ListRecords
+class Dashboard extends BaseDashboard
 {
-    protected static string $resource = InvoiceResource::class;
+    protected static ?string $navigationIcon = 'heroicon-o-home';
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\CreateAction::make()
-                ->icon('heroicon-m-plus')
-                ->label('New Invoice'),
-        ];
-    }
+    protected static string $view = 'filament.pages.dashboard';
+
+    protected static ?int $navigationSort = -2;
 
     protected function getHeaderWidgets(): array
     {
@@ -36,6 +30,7 @@ class ListInvoices extends ListRecords
         return [
             InvoiceChartWidget::class,
             InvoiceStatusChartWidget::class,
+            RecentInvoicesWidget::class,
         ];
     }
 }

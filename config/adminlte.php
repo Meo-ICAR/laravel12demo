@@ -300,6 +300,7 @@ return [
     */
 
     'menu' => [
+
         // Navbar items:
         [
             'type' => 'navbar-search',
@@ -320,7 +321,13 @@ return [
             'text' => 'FATTURAZIONE',
             'topnav' => true,
             'submenu' => [
+
                 [
+                    'text' => 'Provvigioni Import',
+                    'url' => 'provvigioni/import',
+                    'icon' => 'fas fa-file-import',
+                ],
+                   [
                     'text' => 'Provvigioni',
                     'url' => 'provvigioni',
                     'icon' => 'fas fa-money-bill-wave',
@@ -334,6 +341,11 @@ return [
                     'text' => 'Proforma',
                     'url' => 'proformas',
                     'icon' => 'fas fa-file-alt',
+                ],
+                [
+                    'text' => 'Invoiceins Import',
+                    'url' => 'invoiceins/import',
+                    'icon' => 'fas fa-file-import',
                 ],
                 [
                     'text' => 'Invoices',
@@ -451,6 +463,12 @@ return [
                     'url' => 'leads/dashboard',
                     'icon' => 'far fa-circle',
                 ],
+                  // Filament Admin Panel link
+        [
+            'text' => 'Filament Admin',
+            'url' => 'admin',
+            'icon' => 'fas fa-toolbox',
+        ],
             ],
         ],
          [
@@ -460,6 +478,12 @@ return [
             'text' => 'Fatturazione',
             'icon' => 'fas fa-file-invoice-dollar',
             'submenu' => [
+
+                [
+                    'text' => 'Provvigioni Import',
+                    'url' => 'provvigioni/import',
+                    'icon' => 'fas fa-file-import',
+                ],
                 [
                     'text' => 'Provvigioni',
                     'url' => 'provvigioni',
@@ -474,6 +498,11 @@ return [
                     'text' => 'Proforma',
                     'url' => 'proformas',
                     'icon' => 'fas fa-file-alt',
+                ],
+                [
+                    'text' => 'Invoiceins Import',
+                    'url' => 'invoiceins/import',
+                    'icon' => 'fas fa-file-import',
                 ],
                 [
                     'text' => 'Invoices',
@@ -567,16 +596,7 @@ return [
                             'url' => 'companies',
                             'icon' => 'fas fa-building',
                         ],
-                        [
-                            'text' => 'Roles',
-                            'url' => 'roles',
-                            'icon' => 'fas fa-user-tag',
-                        ],
-                        [
-                            'text' => 'Permissions',
-                            'url' => 'permissions',
-                            'icon' => 'fas fa-key',
-                        ],
+
                     ],
                 ],
             ],
@@ -589,9 +609,7 @@ return [
             'url' => 'pratiches',
             'icon' => 'fas fa-folder-open',
         ],
-        [
-            'header' => 'INVOICEINS',
-        ],
+
         [
             'text' => 'Invoiceins',
             'url' => 'invoiceins',

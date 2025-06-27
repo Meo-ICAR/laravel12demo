@@ -61,7 +61,7 @@
                 <h3 class="card-title">
                     <i class="fas fa-envelope mr-2"></i>
                     Sent Provvigioni (Proforma Status)
-                    <span class="badge badge-info ml-2">{{ $provvigioniSummary->count() }}</span>
+                    <span class="badge badge-info ml-2">{{ $provvigioni_summary->count() }}</span>
                 </h3>
                 <small class="text-muted">
                     <i class="fas fa-info-circle mr-1"></i>
@@ -69,7 +69,7 @@
                 </small>
             </div>
             <div class="card-body p-0">
-                @if($provvigioniSummary->isEmpty())
+                @if($provvigioni_summary->isEmpty())
                     <div class="p-3 text-center text-muted">
                         <i class="fas fa-inbox fa-2x mb-2"></i>
                         <p>No sent Provvigioni with Proforma status</p>
@@ -87,7 +87,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($provvigioniSummary as $summary)
+                                @foreach($provvigioni_summary as $summary)
                                     <tr>
                                         <td>
                                             <a href="{{ route('provvigioni.index', [
@@ -145,7 +145,7 @@
                 <h3 class="card-title">
                     <i class="fas fa-file-invoice mr-2"></i>
                     Unreconciled Invoices
-                    <span class="badge badge-warning ml-2">{{ $unreconciledInvoices->count() }}</span>
+                    <span class="badge badge-warning ml-2">{{ $unreconciled_invoices->count() }}</span>
                 </h3>
                 <small class="text-muted">
                     <i class="fas fa-info-circle mr-1"></i>
@@ -153,7 +153,7 @@
                 </small>
             </div>
             <div class="card-body p-0">
-                @if($unreconciledInvoices->isEmpty())
+                @if($unreconciled_invoices->isEmpty())
                     <div class="p-3 text-center text-muted">
                         <i class="fas fa-check-circle fa-2x mb-2"></i>
                         <p>All invoices are reconciled!</p>
@@ -172,7 +172,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($unreconciledInvoices as $invoice)
+                                @foreach($unreconciled_invoices as $invoice)
                                     <tr>
                                         <td>
                                             <button type="button" class="btn btn-sm btn-primary reconcile-btn"
@@ -249,12 +249,12 @@
                         Unreconciled Invoices
                     @endif
                 </span>
-                <span class="info-box-number">{{ $unreconciledInvoices->count() }}</span>
+                <span class="info-box-number">{{ $unreconciled_invoices->count() }}</span>
                 <span class="info-box-text">
                     @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
-                        Filtered: € {{ number_format($unreconciledInvoices->sum('total_amount'), 2, ',', '.') }}
+                        Filtered: € {{ number_format($unreconciled_invoices->sum('total_amount'), 2, ',', '.') }}
                     @else
-                        Total: € {{ number_format($unreconciledInvoices->sum('total_amount'), 2, ',', '.') }}
+                        Total: € {{ number_format($unreconciled_invoices->sum('total_amount'), 2, ',', '.') }}
                     @endif
                 </span>
             </div>
@@ -274,12 +274,12 @@
                         Sent Provvigioni
                     @endif
                 </span>
-                <span class="info-box-number">{{ $provvigioniSummary->count() }}</span>
+                <span class="info-box-number">{{ $provvigioni_summary->count() }}</span>
                 <span class="info-box-text">
                     @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
-                        Filtered: € {{ number_format($provvigioniSummary->sum('total_amount'), 2, ',', '.') }}
+                        Filtered: € {{ number_format($provvigioni_summary->sum('total_amount'), 2, ',', '.') }}
                     @else
-                        Total: € {{ number_format($provvigioniSummary->sum('total_amount'), 2, ',', '.') }}
+                        Total: € {{ number_format($provvigioni_summary->sum('total_amount'), 2, ',', '.') }}
                     @endif
                 </span>
             </div>
@@ -293,7 +293,7 @@
             </span>
             <div class="info-box-content">
                 <span class="info-box-text">Total Records</span>
-                <span class="info-box-number">{{ $provvigioniSummary->sum('total_records') }}</span>
+                <span class="info-box-number">{{ $provvigioni_summary->sum('total_records') }}</span>
             </div>
         </div>
     </div>
@@ -306,8 +306,8 @@
             <div class="info-box-content">
                 <span class="info-box-text">Difference</span>
                 @php
-                    $invoiceTotal = $unreconciledInvoices->sum('total_amount');
-                    $provvigioneTotal = $provvigioniSummary->sum('total_amount');
+                    $invoiceTotal = $unreconciled_invoices->sum('total_amount');
+                    $provvigioneTotal = $provvigioni_summary->sum('total_amount');
                     $difference = $invoiceTotal - $provvigioneTotal;
                 @endphp
                 <span class="info-box-number">

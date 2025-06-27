@@ -147,10 +147,10 @@
                         This Month ({{ now()->startOfMonth()->format('d/m/Y') }} - {{ now()->format('d/m/Y') }})
                     </h5>
                     <p class="card-text mb-1">
-                        <strong>Records:</strong> {{ number_format($currentMonthCount) }}
+                        <strong>Records:</strong> {{ number_format($current_month_count) }}
                     </p>
                     <p class="card-text">
-                        <strong>Total Amount:</strong> € {{ number_format($currentMonthTotal, 2, ',', '.') }}
+                        <strong>Total Amount:</strong> € {{ number_format($current_month_total, 2, ',', '.') }}
                     </p>
                 </div>
             </div>
@@ -163,10 +163,10 @@
                         Last Month ({{ now()->subMonth()->startOfMonth()->format('d/m/Y') }} - {{ now()->subMonth()->endOfMonth()->format('d/m/Y') }})
                     </h5>
                     <p class="card-text mb-1">
-                        <strong>Records:</strong> {{ number_format($lastMonthCount) }}
+                        <strong>Records:</strong> {{ number_format($last_month_count) }}
                     </p>
                     <p class="card-text">
-                        <strong>Total Amount:</strong> € {{ number_format($lastMonthTotal, 2, ',', '.') }}
+                        <strong>Total Amount:</strong> € {{ number_format($last_month_total, 2, ',', '.') }}
                     </p>
                 </div>
             </div>
@@ -182,7 +182,7 @@
                         <div class="d-flex align-items-center">
                             <div class="mr-3">
                                 <small class="text-muted">
-                                    <strong>Total Amount:</strong> <span class="text-success font-weight-bold">€ {{ number_format($filteredTotalAmount, 2, ',', '.') }}</span>
+                                    <strong>Total Amount:</strong> <span class="text-success font-weight-bold">€ {{ number_format($filtered_total_amount, 2, ',', '.') }}</span>
                                 </small>
                             </div>
                             @if(request()->hasAny(['stato', 'fornitore', 'date_from', 'date_to']))

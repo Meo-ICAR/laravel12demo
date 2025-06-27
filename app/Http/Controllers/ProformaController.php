@@ -161,6 +161,11 @@ class ProformaController extends Controller
             $proforma->provvigioni()->sync($provvigioni);
         }
 
+        // If sended_at is being updated, update all associated provvigioni
+        if (array_key_exists('sended_at', $data) && $data['sended_at']) {
+            $proforma->provvigioni()->update(['sended_at' => $data['sended_at']]);
+        }
+
         // Generate and update email body
         $this->updateEmailBody($proforma);
 
