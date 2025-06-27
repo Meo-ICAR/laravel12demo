@@ -42,4 +42,14 @@ class Invoicein extends Model
         'note_1',
         'note_2',
     ];
+
+    public function getImportoAttribute()
+    {
+        return $this->importo_totale_fornitore;
+    }
+
+    public function getDataDocumentoAttribute()
+    {
+        return $this->data_documento_fornitore;
+    }
 }

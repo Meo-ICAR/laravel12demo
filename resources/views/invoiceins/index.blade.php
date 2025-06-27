@@ -106,12 +106,9 @@
                         @endif
                     </h3>
                     <div class="card-tools">
-                        <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#importModal">
+                        <button type="button" class="btn btn-primary btn-sm mr-2" data-toggle="modal" data-target="#importModal">
                             <i class="fas fa-upload"></i> Import CSV/Excel
                         </button>
-                        <a href="{{ route('invoiceins.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus"></i> New Invoicein
-                        </a>
                     </div>
                 </div>
                 <div class="card-body p-0">

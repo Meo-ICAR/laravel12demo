@@ -267,15 +267,21 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn btn-sm btn-warning mr-1">
-                                            <i class="fas fa-edit mr-1"></i> Edit
-                                        </a>
-                                        {{-- <a href="{{ route('invoices.reconciliation', ['denominazione_riferimento' => $invoice->fornitore]) }}" class="btn btn-sm btn-primary mr-1">
-                                            <i class="fas fa-balance-scale mr-1"></i> Reconcile
-                                        </a> --}}
-                                        <a href="{{ route('invoices.check', $invoice->id) }}" class="btn btn-sm btn-info">
-                                            <i class="fas fa-search mr-1"></i> Check
-                                        </a>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn btn-warning btn-sm mr-1" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ route('invoices.check', $invoice->id) }}" class="btn btn-info btn-sm" title="Check">
+                                                <i class="fas fa-search"></i>
+                                            </a>
+                                            <form action="{{ route('invoices.destroy', $invoice->id) }}" method="POST" style="display:inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this invoice?')" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 @empty

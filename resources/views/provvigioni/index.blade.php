@@ -172,7 +172,7 @@
                 <h3 class="card-title">Provvigioni List</h3>
                 <div>
                     <a href="{{ route('provvigioni.import') }}" class="btn btn-primary btn-sm mr-2">
-                        <i class="fas fa-upload mr-1"></i> Import Provvigioni
+                        <i class="fas fa-upload"></i> Import Provvigioni
                     </a>
                     <a href="{{ route('provvigioni.dashboard') }}" class="btn btn-info btn-sm mr-2">
                         <i class="fas fa-chart-line mr-1"></i> Dashboard
@@ -344,9 +344,21 @@
                                 <td>{{ $item->sended_at ? \Carbon\Carbon::parse($item->sended_at)->format('d/m/Y') : 'N/A' }}</td>
                                 <td>{{ Str::limit($item->invoice_number, 6) ?: 'N/A' }}</td>
                                 <td>
-                                    <a href="{{ route('provvigioni.edit', $item->id) }}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('provvigioni.edit', $item->id) }}" class="btn btn-warning btn-sm" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{{ route('provvigioni.show', $item->id) }}" class="btn btn-info btn-sm" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <form action="{{ route('provvigioni.destroy', $item->id) }}" method="POST" style="display:inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this provvigione?')" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

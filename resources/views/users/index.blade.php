@@ -107,26 +107,20 @@
                                 </td>
                                 <td>{{ $user->created_at->format('M d, Y H:i') }}</td>
                                 <td>
-                                    <div class="btn-group">
-                                        @can('view users')
-                                        <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-info" data-toggle="tooltip" title="View">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('users.show', $user) }}" class="btn btn-info btn-sm" data-toggle="tooltip" title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        @endcan
-                                        @can('edit users')
-                                        <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-primary" data-toggle="tooltip" title="Edit">
+                                        <a href="{{ route('users.edit', $user) }}" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        @endcan
-                                        @can('delete users')
-                                        <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('users.destroy', $user) }}" method="POST" style="display:inline-block">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" data-toggle="tooltip" title="Delete" onclick="return confirm('Are you sure you want to delete this user?')">
+                                            <button type="submit" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Delete" onclick="return confirm('Are you sure you want to delete this user?')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
-                                        @endcan
                                     </div>
                                 </td>
                             </tr>

@@ -152,29 +152,20 @@
                                     <td>{{ $proforma->sended_at ? \Carbon\Carbon::parse($proforma->sended_at)->format('d/m/Y H:i') : '-' }}</td>
                                     <td>{{ $proforma->paid_at ? \Carbon\Carbon::parse($proforma->paid_at)->format('d/m/Y H:i') : '-' }}</td>
                                     <td>
-                                        <div class="btn-group">
-                                            <a href="{{ route('proformas.show', $proforma) }}" class="btn btn-info btn-sm">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ route('proformas.show', $proforma) }}" class="btn btn-info btn-sm" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            @if(!$proforma->sended_at)
-                                                <a href="{{ route('proformas.edit', $proforma) }}" class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form action="{{ route('proformas.destroy', $proforma) }}" method="POST" style="display:inline-block;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure? This will restore associated provvigioni to \'Inserito\' status.')">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            @else
-                                                <button class="btn btn-warning btn-sm" disabled title="Cannot edit - email already sent">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button class="btn btn-danger btn-sm" disabled title="Cannot delete - email already sent">
+                                            <a href="{{ route('proformas.edit', $proforma) }}" class="btn btn-warning btn-sm" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="{{ route('proformas.destroy', $proforma) }}" method="POST" style="display:inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure? This will restore associated provvigioni to \'Inserito\' status.')" title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                            @endif
+                                            </form>
                                             <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#emailBodyModal-{{ $proforma->id }}">
                                                 <i class="fas fa-envelope-open-text"></i>
                                             </button>

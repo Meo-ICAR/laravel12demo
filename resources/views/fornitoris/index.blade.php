@@ -77,7 +77,7 @@
         <div class="card-header">
             <h3 class="card-title">Fornitori List</h3>
             <div class="card-tools">
-                <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#importModal">
+                <button type="button" class="btn btn-primary btn-sm mr-2" data-toggle="modal" data-target="#importModal">
                     <i class="fas fa-upload"></i> Import CSV
                 </button>
                 <form method="POST" action="{{ route('fornitoris.importInvoiceinsToInvoices') }}" class="d-inline" onsubmit="return confirm('Are you sure you want to transfer all eligible invoiceins to invoices?');">
@@ -204,7 +204,21 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ route('fornitoris.edit', $fornitore) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('fornitoris.edit', $fornitore) }}" class="btn btn-warning btn-sm" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{{ route('fornitoris.show', $fornitore) }}" class="btn btn-info btn-sm" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <form action="{{ route('fornitoris.destroy', $fornitore) }}" method="POST" style="display:inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this fornitore?')" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
