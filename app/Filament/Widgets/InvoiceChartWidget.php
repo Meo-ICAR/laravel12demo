@@ -27,30 +27,19 @@ class InvoiceChartWidget extends ChartWidget
             $startOfMonth = $month->copy()->startOfMonth();
             $endOfMonth = $month->copy()->endOfMonth();
 
-            $count = Invoice::whereDate('invoice_date', '>=', $startOfMonth)
-                ->whereDate('invoice_date', '<=', $endOfMonth)
-                ->count();
-
-            $amount = Invoice::whereDate('invoice_date', '>=', $startOfMonth)
+            $amount = \App\Models\Invoice::whereDate('invoice_date', '>=', $startOfMonth)
                 ->whereDate('invoice_date', '<=', $endOfMonth)
                 ->sum('total_amount');
 
             return [
                 'month' => $month->format('M Y'),
-                'count' => $count,
+                'month_param' => $month->format('Y-m'),
                 'amount' => $amount,
             ];
         });
 
         return [
             'datasets' => [
-                [
-                    'label' => 'Invoice Count',
-                    'data' => $data->pluck('count')->toArray(),
-                    'borderColor' => '#3b82f6',
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                    'yAxisID' => 'y',
-                ],
                 [
                     'label' => 'Total Amount (€)',
                     'data' => $data->pluck('amount')->toArray(),
@@ -60,6 +49,7 @@ class InvoiceChartWidget extends ChartWidget
                 ],
             ],
             'labels' => $data->pluck('month')->toArray(),
+            'months_params' => $data->pluck('month_param')->toArray(),
         ];
     }
 
@@ -70,18 +60,16 @@ class InvoiceChartWidget extends ChartWidget
 
     protected function getOptions(): array
     {
+        $invoiceinsUrl = url('invoiceins');
         return [
             'responsive' => true,
+            'onClick' => "function(event, elements, chart) {
+                if (elements.length > 0) {
+                    var monthParam = chart.data.months_params[elements[0].index];
+                    window.open('{$invoiceinsUrl}?month=' + monthParam, '_blank');
+                }
+            }",
             'scales' => [
-                'y' => [
-                    'type' => 'linear',
-                    'display' => true,
-                    'position' => 'left',
-                    'title' => [
-                        'display' => true,
-                        'text' => 'Invoice Count',
-                    ],
-                ],
                 'y1' => [
                     'type' => 'linear',
                     'display' => true,

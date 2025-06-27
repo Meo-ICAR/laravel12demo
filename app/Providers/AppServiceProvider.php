@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Livewire\Livewire;
+use App\Filament\Pages\CaptureScreenshots;
 
 class AppServiceProvider extends ServiceProvider
 {
