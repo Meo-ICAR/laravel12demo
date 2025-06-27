@@ -474,6 +474,7 @@ return [
          [
             'header' => 'PROFORMA',
         ],
+
         [
             'text' => 'Fatturazione',
             'icon' => 'fas fa-file-invoice-dollar',
@@ -553,6 +554,12 @@ return [
                     'icon' => 'fas fa-users',
                 ],
             ],
+        ],
+           [
+            'text' => 'User Manual',
+            'url' => 'help/manual',
+            'icon' => 'fas fa-book',
+            'target' => '_blank',
         ],
         [
             'header' => 'USER SETTINGS',
