@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\Invoice;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
+use Filament\Support\RawJs;
 
 class InvoiceChartWidget extends ChartWidget
 {
@@ -58,31 +59,38 @@ class InvoiceChartWidget extends ChartWidget
         return 'line';
     }
 
-    protected function getOptions(): array
+    protected function getOptions(): RawJs
     {
-        $invoiceinsUrl = url('invoiceins');
-        return [
-            'responsive' => true,
-            'onClick' => "function(event, elements, chart) {
-                if (elements.length > 0) {
-                    var monthParam = chart.data.months_params[elements[0].index];
-                    window.open('{$invoiceinsUrl}?month=' + monthParam, '_blank');
-                }
-            }",
-            'scales' => [
-                'y1' => [
-                    'type' => 'linear',
-                    'display' => true,
-                    'position' => 'right',
-                    'title' => [
-                        'display' => true,
-                        'text' => 'Total Amount (€)',
-                    ],
-                    'grid' => [
-                        'drawOnChartArea' => false,
-                    ],
-                ],
-            ],
-        ];
+        $invoicesIndexUrl = route('invoices.index');
+        return RawJs::make(<<<JS
+            {
+                responsive: true,
+                onClick: function(event, elements, chart) {
+                    if (elements.length > 0) {
+                        var monthParam = chart.data.months_params[elements[0].index];
+                        var year = monthParam.split('-')[0];
+                        var month = monthParam.split('-')[1];
+                        var dateFrom = year + '-' + month + '-01';
+                        var dateTo = new Date(year, month, 0); // last day of month
+                        var dateToStr = dateTo.getFullYear() + '-' + String(dateTo.getMonth() + 1).padStart(2, '0') + '-' + String(dateTo.getDate()).padStart(2, '0');
+                        window.open('{$invoicesIndexUrl}?date_from=' + dateFrom + '&date_to=' + dateToStr, '_blank');
+                    }
+                },
+                scales: {
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Total Amount (€)',
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    },
+                },
+            }
+        JS);
     }
 }
