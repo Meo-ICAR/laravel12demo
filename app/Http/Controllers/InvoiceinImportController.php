@@ -52,20 +52,20 @@ class InvoiceinImportController extends Controller
                     // Debug: Log the first row to see headers
                     Log::info('Excel headers:', array_keys($data[0][0] ?? []));
 
+                    // Build header mapping for Excel
+                    $headerMap = $this->getInvoiceinHeaderMap(array_keys($data[0][0] ?? []));
                     foreach ($data[0] as $index => $row) {
+                        // Skip the first row if it matches the headers (header row)
+                        if ($index === 0) {
+                            continue;
+                        }
                         try {
-                            // Debug: Log first few rows
-                            if ($index < 3) {
-                                Log::info("Row $index:", $row);
-                            }
-
-                            // Check if this row should be skipped
-                            if (Invoicein::where('nr_documento', $row['nr_documento'] ?? null)->exists()) {
+                            $mappedRow = $this->mapInvoiceinRow($row, $headerMap);
+                            if (Invoicein::where('nome_file_doc_elettronico', $mappedRow['nome_file_doc_elettronico'] ?? null)->exists()) {
                                 $skippedCount++;
                                 continue;
                             }
-
-                            $this->importRow($row);
+                            $this->importRow($mappedRow);
                             $importedCount++;
                         } catch (\Exception $e) {
                             $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
@@ -80,28 +80,24 @@ class InvoiceinImportController extends Controller
             if (($handle = fopen($file->getRealPath(), 'r')) !== false) {
                 $header = null;
                 $rowIndex = 0;
+                $headerMap = null;
                 while (($row = fgetcsv($handle, 10000, ';')) !== false) {
                     if (!$header) {
                         $header = $row;
+                        $headerMap = $this->getInvoiceinHeaderMap($header);
                         Log::info('CSV headers:', $header);
                         $rowIndex++;
                         continue;
                     }
                     $data = array_combine($header, $row);
                     try {
-                        // Debug: Log first few rows
-                        if ($rowIndex < 3) {
-                            Log::info("CSV Row $rowIndex:", $data);
-                        }
-
-                        // Check if this row should be skipped
-                        if (Invoicein::where('nr_documento', $data['nr_documento'] ?? null)->exists()) {
+                        $mappedRow = $this->mapInvoiceinRow($data, $headerMap);
+                        if (Invoicein::where('nr_documento', $mappedRow['nr_documento'] ?? null)->exists()) {
                             $skippedCount++;
                             $rowIndex++;
                             continue;
                         }
-
-                        $this->importRow($data);
+                        $this->importRow($mappedRow);
                         $importedCount++;
                     } catch (\Exception $e) {
                         $errors[] = "Row " . ($rowIndex + 1) . ": " . $e->getMessage();
@@ -235,7 +231,7 @@ class InvoiceinImportController extends Controller
             'nr_nota_cr_acq_registrata' => $data['nr_nota_cr_acq_registrata'] ?? null,
             'data_ricezione_fatt' => $convertExcelDate($data['data_ricezione_fatt'] ?? null),
             'codice_td' => $data['codice_td'] ?? null,
-            'nr_cliente_fornitore' => $data['nr_clientefornitore'] ?? null, // Fixed column name
+            'nr_cliente_fornitore' => $data['nr_cliente_fornitore'] ?? null,
             'nome_fornitore' => $data['nome_fornitore'] ?? null,
             'partita_iva' => $data['partita_iva'] ?? null,
             'nr_documento_fornitore' => $data['nr_documento_fornitore'] ?? null,
@@ -262,5 +258,57 @@ class InvoiceinImportController extends Controller
 
         Log::info('Saving invoicein:', $invoicein->toArray());
         $invoicein->save();
+    }
+
+    /**
+     * Returns a mapping from possible CSV headers to model fields.
+     */
+    protected function getInvoiceinHeaderMap($headers)
+    {
+        // Lowercase and trim all headers for matching
+        $normalized = array_map(fn($h) => strtolower(trim($h)), $headers);
+        $map = [];
+        $fieldMap = [
+            // Standard fields
+            'tipo di documento' => 'tipo_di_documento',
+            'nr. documento' => 'nr_documento',
+            'codice td' => 'codice_td',
+            'data ricezione fatt.' => 'data_ricezione_fatt',
+            'nr. cliente/fornitore' => 'nr_cliente_fornitore',
+            'nome fornitore' => 'nome_fornitore',
+            'partita iva' => 'partita_iva',
+            'nome file doc. elettronico' => 'nome_file_doc_elettronico',
+            'data ora invio/ricezione' => 'data_ora_invio_ricezione',
+            'stato' => 'stato',
+            'id documento' => 'id_documento',
+            'id sdi' => 'id_sdi',
+            'cdc codice' => 'cdc_codice',
+            'cod. colleg. dimen. 2' => 'cod_colleg_dimen_2',
+            'note 1' => 'note_1',
+            'note 2' => 'note_2',
+            // IFE alternates
+            'nome cliente' => 'nome_fornitore',
+            'data registrazione documento' => 'data_ricezione_fatt',
+            'partita iva presente' => 'partita_iva',
+        ];
+        foreach ($headers as $i => $header) {
+            $key = strtolower(trim($header));
+            if (isset($fieldMap[$key])) {
+                $map[$header] = $fieldMap[$key];
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Maps a row using the header map to the expected model fields.
+     */
+    protected function mapInvoiceinRow($row, $headerMap)
+    {
+        $mapped = [];
+        foreach ($headerMap as $csvField => $modelField) {
+            $mapped[$modelField] = $row[$csvField] ?? null;
+        }
+        return $mapped;
     }
 }

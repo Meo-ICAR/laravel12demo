@@ -21,6 +21,10 @@ class ProvvigioniImport implements ToModel, WithHeadingRow
                 return null;
             }
         }
+        // Exclude if status_pratica is not 'PERFEZIONATA'
+        if (isset($row['status_pratica']) && $row['status_pratica'] !== 'PERFEZIONATA') {
+            return null;
+        }
         return new Provvigione([
             'legacy_id' => $legacyId,
             'data_inserimento_compenso' => $this->excelDateToDate($row['data_inserimento_compenso'] ?? null),

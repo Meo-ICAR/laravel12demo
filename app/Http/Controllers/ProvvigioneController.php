@@ -338,6 +338,7 @@ class ProvvigioneController extends Controller
         }
 
         $query = Provvigione::where('stato', 'Inserito')
+            ->where('status_pratica', 'PERFEZIONATA')
             ->leftJoin('fornitoris', 'provvigioni.denominazione_riferimento', '=', 'fornitoris.name')
             ->selectRaw('
                 provvigioni.denominazione_riferimento,
@@ -358,6 +359,11 @@ class ProvvigioneController extends Controller
             $query->orderBy('provvigioni.denominazione_riferimento', $orderDirection);
         }
 
+        $entrataUscita = $request->get('entrata_uscita');
+        if (in_array($entrataUscita, ['Entrata', 'Uscita'])) {
+            $query->where('provvigioni.entrata_uscita', $entrataUscita);
+        }
+
         $proformaSummary = $query->get();
 
         // Convert raw date strings to Carbon instances
@@ -374,7 +380,7 @@ class ProvvigioneController extends Controller
             return $item;
         });
 
-        return view('provvigioni.proforma-summary', compact('proformaSummary', 'orderBy', 'orderDirection'));
+        return view('provvigioni.proforma-summary', compact('proformaSummary', 'orderBy', 'orderDirection', 'entrataUscita'));
     }
 
     public function createProformaFromSummary(Request $request)

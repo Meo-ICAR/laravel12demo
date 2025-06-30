@@ -52,6 +52,22 @@
         </div>
     </div>
 
+    <!-- Filter Controls -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <form id="filterForm" method="GET" action="">
+                <label for="entrataUscita" class="mb-0"><strong>Entrata/Uscita:</strong></label>
+                <select id="entrataUscita" name="entrata_uscita" class="form-control form-control-sm" onchange="document.getElementById('filterForm').submit();">
+                    <option value="" {{ empty($entrataUscita) ? 'selected' : '' }}>Tutti</option>
+                    <option value="Entrata" {{ $entrataUscita === 'Entrata' ? 'selected' : '' }}>Entrata</option>
+                    <option value="Uscita" {{ $entrataUscita === 'Uscita' ? 'selected' : '' }}>Uscita</option>
+                </select>
+                <input type="hidden" name="order_by" value="{{ $orderBy }}">
+                <input type="hidden" name="order_direction" value="{{ $orderDirection }}">
+            </form>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title">Inserito Records Summary</h3>

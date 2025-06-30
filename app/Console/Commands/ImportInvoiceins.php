@@ -67,28 +67,34 @@ class ImportInvoiceins extends Command
 
     protected function importRow($data)
     {
-        // Helper to convert date formats
+        // Helper to convert date formats robustly
         $convertDate = function ($value, $withTime = false) {
             if (!$value) return null;
-            // Try to match dd/mm/yyyy or dd/mm/yy
-            if (preg_match('/^(\d{2})\/(\d{2})\/(\d{2,4})(?: (\d{2}):(\d{2}):(\d{2}))?$/', trim($value), $matches)) {
+            $value = trim($value);
+            // Try dd/mm/yyyy or dd/mm/yyyy HH:MM:SS
+            if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{2}):(\d{2})(?::(\d{2}))?)?$/', $value, $matches)) {
                 $day = $matches[1];
                 $month = $matches[2];
                 $year = $matches[3];
-                if (strlen($year) == 2) {
-                    $year = ($year > 50 ? '19' : '20') . $year;
-                }
                 if (isset($matches[4])) {
-                    // Has time
-                    return "$year-$month-$day {$matches[4]}:{$matches[5]}:{$matches[6]}";
+                    $hour = $matches[4];
+                    $min = $matches[5];
+                    $sec = $matches[6] ?? '00';
+                    return "$year-$month-$day $hour:$min:$sec";
                 }
                 return "$year-$month-$day";
             }
-            // Try to match yyyy-mm-dd or yyyy-mm-dd HH:MM:SS
-            if (preg_match('/^\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2}:\d{2})?$/', trim($value))) {
-                return trim($value);
+            // Try yyyy-mm-dd or yyyy-mm-dd HH:MM:SS
+            if (preg_match('/^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2})(?::(\d{2}))?)?$/', $value)) {
+                return $value;
             }
-            return $value; // fallback
+            // Try Carbon parse
+            try {
+                $dt = \Carbon\Carbon::parse($value);
+                return $withTime ? $dt->format('Y-m-d H:i:s') : $dt->format('Y-m-d');
+            } catch (\Exception $e) {
+                return null;
+            }
         };
 
         // Helper to parse decimal fields (replace comma with dot, remove thousands separator)
@@ -106,25 +112,38 @@ class ImportInvoiceins extends Command
         $importo_totale_fornitore = $parseDecimal($data['Importo Totale Fornitore'] ?? null);
         $importo_totale_collegato = $parseDecimal($data['Importo Totale Collegato'] ?? null);
 
+        $dataRegistrazione = $convertDate($data['Data Registrazione Documento'] ?? null);
+        // Skip row if Data Registrazione Documento is present and not valid
+        if ((isset($data['Data Registrazione Documento']) && $data['Data Registrazione Documento'] && !$dataRegistrazione)) {
+            throw new \Exception('Invalid Data Registrazione Documento date format in row');
+        }
+
+        // Check for duplicate by 'Nome File Doc. Elettronico'
+        $nomeFile = $data['Nome File Doc. Elettronico'] ?? null;
+        if ($nomeFile && Invoicein::where('nome_file_doc_elettronico', $nomeFile)->exists()) {
+            // Skip this row if duplicate
+            return;
+        }
+
         $invoicein = new Invoicein([
             'tipo_di_documento' => $data['Tipo di documento'] ?? null,
             'nr_documento' => $data['Nr. documento'] ?? null,
             'nr_fatt_acq_registrata' => $data['Nr. Fatt. Acq. Registrata'] ?? null,
             'nr_nota_cr_acq_registrata' => $data['Nr. Nota Cr. Acq. Registrata'] ?? null,
-            'data_ricezione_fatt' => $convertDate($data['Data Ricezione Fatt.'] ?? null),
+            'data_ricezione_fatt' => $dataRegistrazione,
             'codice_td' => $data['Codice TD'] ?? null,
             'nr_cliente_fornitore' => $data['Nr. cliente/fornitore'] ?? null,
             'nome_fornitore' => $data['Nome fornitore'] ?? null,
             'partita_iva' => $data['Partita IVA'] ?? null,
             'nr_documento_fornitore' => $data['Nr. Documento Fornitore'] ?? null,
             'allegato' => $data['Allegato'] ?? null,
-            'data_documento_fornitore' => $convertDate($data['Data Documento Fornitore'] ?? null),
-            'data_primo_pagamento_prev' => $convertDate($data['Data Primo Pagamento Prev.'] ?? null),
+            'data_documento_fornitore' => $data['Data Documento Fornitore'] ?? null,
+            'data_primo_pagamento_prev' => $data['Data Primo Pagamento Prev.'] ?? null,
             'imponibile_iva' => $imponibile_iva,
             'importo_iva' => $importo_iva,
             'importo_totale_fornitore' => $importo_totale_fornitore,
             'importo_totale_collegato' => $importo_totale_collegato,
-            'data_ora_invio_ricezione' => $convertDate($data['Data ora Invio/Ricezione'] ?? null, true),
+            'data_ora_invio_ricezione' => $data['Data ora Invio/Ricezione'] ?? null,
             'stato' => $data['Stato'] ?? null,
             'id_documento' => $data['ID documento'] ?? null,
             'id_sdi' => $data['Id SDI'] ?? null,
