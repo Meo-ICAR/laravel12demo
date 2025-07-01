@@ -131,6 +131,22 @@
         </div>
     </div>
 
+    <!-- Pie Chart: Provvigioni by Stato Pratica -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-pie mr-2"></i>Provvigioni by Stato Pratica
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="statoPraticaChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Monthly Trends -->
     <div class="row mb-4">
         <div class="col-md-12">
@@ -455,6 +471,63 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Stato Pratica Pie Chart
+    const statoPraticaLabels = {!! json_encode(array_keys($statoPraticaCounts->toArray())) !!};
+    const statoPraticaData = {!! json_encode(array_values($statoPraticaCounts->toArray())) !!};
+    const statoPraticaColors = [
+        'rgba(54, 162, 235, 0.8)',
+        'rgba(255, 99, 132, 0.8)',
+        'rgba(255, 206, 86, 0.8)',
+        'rgba(75, 192, 192, 0.8)',
+        'rgba(153, 102, 255, 0.8)',
+        'rgba(255, 159, 64, 0.8)',
+        'rgba(100, 181, 246, 0.8)',
+        'rgba(255, 138, 101, 0.8)',
+        'rgba(174, 213, 129, 0.8)',
+        'rgba(255, 241, 118, 0.8)',
+        'rgba(77, 182, 172, 0.8)',
+        'rgba(255, 202, 40, 0.8)',
+        'rgba(126, 87, 194, 0.8)',
+        'rgba(255, 112, 67, 0.8)',
+        'rgba(38, 166, 154, 0.8)',
+        'rgba(156, 204, 101, 0.8)',
+        'rgba(255, 238, 88, 0.8)',
+        'rgba(255, 171, 145, 0.8)'
+    ];
+    if (document.getElementById('statoPraticaChart')) {
+        const statoPraticaChart = new Chart(document.getElementById('statoPraticaChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: statoPraticaLabels,
+                datasets: [{
+                    data: statoPraticaData,
+                    backgroundColor: statoPraticaColors.slice(0, statoPraticaLabels.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                onClick: function(evt, elements) {
+                    if (elements.length > 0) {
+                        const chart = elements[0];
+                        const label = this.data.labels[chart.index];
+                        if (label) {
+                            // Redirect to provvigioni index with stato_pratica filter
+                            window.location.href = `/provvigioni?status_pratica=${encodeURIComponent(label)}`;
+                        }
+                    }
+                }
+            }
+        });
+    }
 });
 </script>
 @endsection
