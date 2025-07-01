@@ -19,52 +19,46 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-body py-2">
-                    <div class="row align-items-center">
-                        <div class="col-md-3">
-                            <label for="orderBy" class="mb-0"><strong>Sort by:</strong></label>
-                            <select id="orderBy" class="form-control form-control-sm">
-                                <option value="denominazione_riferimento" {{ $orderBy === 'denominazione_riferimento' ? 'selected' : '' }}>Denominazione Riferimento</option>
-                                <option value="totale" {{ $orderBy === 'totale' ? 'selected' : '' }}>Total Amount</option>
-                                <option value="n" {{ $orderBy === 'n' ? 'selected' : '' }}>Number of Records</option>
-                            </select>
+                    <form id="filterSortForm" method="GET" action="">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <label for="entrataUscita" class="mb-0"><strong>Entrata/Uscita:</strong></label>
+                                <select id="entrataUscita" name="entrata_uscita" class="form-control form-control-sm" onchange="document.getElementById('filterSortForm').submit();">
+                                    <option value="" {{ empty($entrataUscita) ? 'selected' : '' }}>Tutti</option>
+                                    <option value="Entrata" {{ $entrataUscita === 'Entrata' ? 'selected' : '' }}>Entrata</option>
+                                    <option value="Uscita" {{ $entrataUscita === 'Uscita' ? 'selected' : '' }}>Uscita</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="orderBy" class="mb-0"><strong>Sort by:</strong></label>
+                                <select id="orderBy" name="order_by" class="form-control form-control-sm">
+                                    <option value="denominazione_riferimento" {{ $orderBy === 'denominazione_riferimento' ? 'selected' : '' }}>Denominazione Riferimento</option>
+                                    <option value="totale" {{ $orderBy === 'totale' ? 'selected' : '' }}>Total Amount</option>
+                                    <option value="n" {{ $orderBy === 'n' ? 'selected' : '' }}>Number of Records</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="orderDirection" class="mb-0"><strong>Direction:</strong></label>
+                                <select id="orderDirection" name="order_direction" class="form-control form-control-sm">
+                                    <option value="asc" {{ $orderDirection === 'asc' ? 'selected' : '' }}>Ascending</option>
+                                    <option value="desc" {{ $orderDirection === 'desc' ? 'selected' : '' }}>Descending</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button id="applySort" class="btn btn-primary btn-sm mt-4" type="submit">
+                                    <i class="fas fa-sort"></i> Apply
+                                </button>
+                                <div class="mt-2 text-right">
+                                    <small class="text-muted">
+                                        Current: {{ ucfirst(str_replace('_', ' ', $orderBy)) }}
+                                        ({{ $orderDirection === 'asc' ? 'A-Z' : 'Z-A' }})
+                                    </small>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label for="orderDirection" class="mb-0"><strong>Direction:</strong></label>
-                            <select id="orderDirection" class="form-control form-control-sm">
-                                <option value="asc" {{ $orderDirection === 'asc' ? 'selected' : '' }}>Ascending</option>
-                                <option value="desc" {{ $orderDirection === 'desc' ? 'selected' : '' }}>Descending</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <button id="applySort" class="btn btn-primary btn-sm mt-4">
-                                <i class="fas fa-sort"></i> Apply Sort
-                            </button>
-                        </div>
-                        <div class="col-md-3 text-right">
-                            <small class="text-muted">
-                                Current: {{ ucfirst(str_replace('_', ' ', $orderBy)) }}
-                                ({{ $orderDirection === 'asc' ? 'A-Z' : 'Z-A' }})
-                            </small>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Filter Controls -->
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <form id="filterForm" method="GET" action="">
-                <label for="entrataUscita" class="mb-0"><strong>Entrata/Uscita:</strong></label>
-                <select id="entrataUscita" name="entrata_uscita" class="form-control form-control-sm" onchange="document.getElementById('filterForm').submit();">
-                    <option value="" {{ empty($entrataUscita) ? 'selected' : '' }}>Tutti</option>
-                    <option value="Entrata" {{ $entrataUscita === 'Entrata' ? 'selected' : '' }}>Entrata</option>
-                    <option value="Uscita" {{ $entrataUscita === 'Uscita' ? 'selected' : '' }}>Uscita</option>
-                </select>
-                <input type="hidden" name="order_by" value="{{ $orderBy }}">
-                <input type="hidden" name="order_direction" value="{{ $orderDirection }}">
-            </form>
         </div>
     </div>
 

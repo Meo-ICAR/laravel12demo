@@ -60,6 +60,50 @@
                         <input type="date" name="sended_at" id="sended_at"
                                class="form-control" value="{{ request('sended_at') }}">
                     </div>
+                    <div class="col-md-2">
+                        <label for="entrata_uscita">Entrata/Uscita:</label>
+                        <select name="entrata_uscita" id="entrata_uscita" class="form-control" onchange="document.getElementById('filterForm').submit();">
+                            <option value="" {{ request('entrata_uscita') == '' ? 'selected' : '' }}>All</option>
+                            <option value="Entrata" {{ request('entrata_uscita') == 'Entrata' ? 'selected' : '' }}>Entrata</option>
+                            <option value="Uscita" {{ request('entrata_uscita') == 'Uscita' ? 'selected' : '' }}>Uscita</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="status_pratica">Stato Pratica:</label>
+                        <select name="status_pratica" id="status_pratica" class="form-control">
+                            <option value="">All</option>
+                            <option value="PERFEZIONATA" {{ request('status_pratica', 'PERFEZIONATA') == 'PERFEZIONATA' ? 'selected' : '' }}>PERFEZIONATA</option>
+                            <option value="ALTRO" {{ request('status_pratica') == 'ALTRO' ? 'selected' : '' }}>ALTRO</option>
+                            @php
+                                $allStatusPratica = [
+                                    'PERFEZIONATA',
+                                    'CARICATA BANCA',
+                                    'Inserita',
+                                    'RICHIESTA EMISSIONE',
+                                    'PRATICA RESPINTA',
+                                    'DECLINATA',
+                                    'RINUNCIA CLIENTE',
+                                    'SOSPESA',
+                                    'Richiesta Polizza',
+                                    'NOTIFICA',
+                                    'ATTO FISSATO',
+                                    'PERIZIA KO',
+                                    'DELIBERATA',
+                                    'RIENTRO BENESTARE',
+                                    'RIENTRO POLIZZA',
+                                    'LIQUIDATA',
+                                    'PERIZIA OK',
+                                    'INVIO IN ISTRUTTORIA',
+                                ];
+                                $altroStatus = collect($allStatusPratica)->filter(function($v) {
+                                    return $v && $v !== 'PERFEZIONATA';
+                                });
+                            @endphp
+                            @foreach($altroStatus as $status)
+                                <option value="{{ $status }}" {{ request('status_pratica') == $status ? 'selected' : '' }}>&nbsp;&nbsp;{{ $status }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-12 mt-3">
                         <button type="submit" class="btn btn-info mr-2">Filter</button>
                         <button type="button" class="btn btn-secondary ml-2" onclick="clearFilters()">Clear</button>
@@ -110,6 +154,38 @@
                 </div>
             </div>
         </div>
+        <!-- Income (Entrata) Card -->
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5 class="card-title text-success">
+                        <i class="fas fa-arrow-down mr-2"></i> Income (Entrata)
+                    </h5>
+                    <p class="card-text mb-1">
+                        <strong>Records:</strong> {{ number_format($incomeCount) }}
+                    </p>
+                    <p class="card-text">
+                        <strong>Total Amount:</strong> € {{ number_format($incomeImporto, 2, ',', '.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- Costs (Uscita/Other) Card -->
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">
+                        <i class="fas fa-arrow-up mr-2"></i> Costs (Uscita/Other)
+                    </h5>
+                    <p class="card-text mb-1">
+                        <strong>Records:</strong> {{ number_format($costCount) }}
+                    </p>
+                    <p class="card-text">
+                        <strong>Total Amount:</strong> € {{ number_format($costImporto, 2, ',', '.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Summary Card -->
@@ -156,11 +232,7 @@
                     <p class="card-text">
                         <small class="text-muted">Showing {{ $provvigioni->firstItem() ?? 0 }} to {{ $provvigioni->lastItem() ?? 0 }} of {{ $totalCount }} entries</small>
                     </p>
-                    @if($provvigioni->hasPages())
-                        <p class="card-text">
-                            <small class="text-muted">Page {{ $provvigioni->currentPage() }} of {{ $provvigioni->lastPage() }}</small>
-                        </p>
-                    @endif
+
                 </div>
             </div>
         </div>

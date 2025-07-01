@@ -75,9 +75,35 @@ class ProvvigioneController extends Controller
             $query->whereDate('provvigioni.sended_at', $request->sended_at);
         }
 
+        // Filter by entrata_uscita if provided
+        if ($request->has('entrata_uscita') && in_array($request->entrata_uscita, ['Entrata', 'Uscita'])) {
+            $query->where('provvigioni.entrata_uscita', $request->entrata_uscita);
+        }
+
+        // Filter by status_pratica if provided, default to 'PERFEZIONATA'
+        if ($request->has('status_pratica')) {
+            if ($request->status_pratica !== '') {
+                $query->where('provvigioni.status_pratica', $request->status_pratica);
+            }
+        } else {
+            $query->where('provvigioni.status_pratica', 'PERFEZIONATA');
+        }
+
         // Get total count and total importo before pagination
         $totalCount = $query->count();
         $totalImporto = $query->sum('provvigioni.importo');
+
+        // Income (Entrata) - use fresh query
+        $incomeCount = Provvigione::where('entrata_uscita', 'Entrata')->count();
+        $incomeImporto = Provvigione::where('entrata_uscita', 'Entrata')->sum('importo');
+
+        // Costs (Uscita or others) - use fresh query
+        $costCount = Provvigione::where(function($q) {
+            $q->where('entrata_uscita', '!=', 'Entrata')->orWhereNull('entrata_uscita');
+        })->count();
+        $costImporto = Provvigione::where(function($q) {
+            $q->where('entrata_uscita', '!=', 'Entrata')->orWhereNull('entrata_uscita');
+        })->sum('importo');
 
         // Get total unfiltered values for comparison
         $totalUnfilteredCount = Provvigione::count();
@@ -137,7 +163,11 @@ class ProvvigioneController extends Controller
             'currentMonthCount',
             'currentMonthTotal',
             'lastMonthCount',
-            'lastMonthTotal'
+            'lastMonthTotal',
+            'incomeCount',
+            'incomeImporto',
+            'costCount',
+            'costImporto'
         ));
     }
 
@@ -778,6 +808,14 @@ class ProvvigioneController extends Controller
         $totalCount = Provvigione::count();
         $totalImporto = Provvigione::sum('importo');
 
+        // Income (Entrata)
+        $incomeCount = Provvigione::where('entrata_uscita', 'Entrata')->count();
+        $incomeImporto = Provvigione::where('entrata_uscita', 'Entrata')->sum('importo');
+
+        // Costs (Uscita or others)
+        $costCount = Provvigione::where('entrata_uscita', '!=', 'Entrata')->orWhereNull('entrata_uscita')->count();
+        $costImporto = Provvigione::where('entrata_uscita', '!=', 'Entrata')->orWhereNull('entrata_uscita')->sum('importo');
+
         // Counts by stato
         $statoCounts = Provvigione::selectRaw('stato, count(*) as count')
             ->groupBy('stato')
@@ -868,6 +906,11 @@ class ProvvigioneController extends Controller
         $countChange = $lastMonthCount > 0 ? (($thisMonthCount - $lastMonthCount) / $lastMonthCount) * 100 : 0;
         $importoChange = $lastMonthImporto > 0 ? (($thisMonthImporto - $lastMonthImporto) / $lastMonthImporto) * 100 : 0;
 
+        // Pie chart data: number of provvigioni for each status_pratica
+        $statoPraticaCounts = Provvigione::selectRaw('status_pratica, count(*) as count')
+            ->groupBy('status_pratica')
+            ->pluck('count', 'status_pratica');
+
         return view('provvigioni.dashboard', compact(
             'totalCount',
             'totalImporto',
@@ -886,7 +929,12 @@ class ProvvigioneController extends Controller
             'lastMonthCount',
             'lastMonthImporto',
             'countChange',
-            'importoChange'
+            'importoChange',
+            'incomeCount',
+            'incomeImporto',
+            'costCount',
+            'costImporto',
+            'statoPraticaCounts',
         ));
     }
 

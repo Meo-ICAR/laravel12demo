@@ -32,25 +32,29 @@
                 </div>
             </div>
         </div>
+        <!-- Income (Entrata) Card -->
         <div class="col-lg-3 col-6">
-            <div class="small-box bg-warning">
+            <div class="small-box bg-success">
                 <div class="inner">
-                    <h3>{{ number_format($pendingProforma) }}</h3>
-                    <p>Pending Proforma</p>
+                    <h3>€ {{ number_format($incomeImporto, 2, ',', '.') }}</h3>
+                    <p>Income (Entrata)</p>
+                    <small>{{ number_format($incomeCount) }} records</small>
                 </div>
                 <div class="icon">
-                    <i class="fas fa-clock"></i>
+                    <i class="fas fa-arrow-down"></i>
                 </div>
             </div>
         </div>
+        <!-- Costs (Uscita/Other) Card -->
         <div class="col-lg-3 col-6">
-            <div class="small-box bg-primary">
+            <div class="small-box bg-danger">
                 <div class="inner">
-                    <h3>{{ number_format($paidRecords) }}</h3>
-                    <p>Paid Records</p>
+                    <h3>€ {{ number_format($costImporto, 2, ',', '.') }}</h3>
+                    <p>Costs (Uscita/Other)</p>
+                    <small>{{ number_format($costCount) }} records</small>
                 </div>
                 <div class="icon">
-                    <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-arrow-up"></i>
                 </div>
             </div>
         </div>

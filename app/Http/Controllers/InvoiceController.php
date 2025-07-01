@@ -322,6 +322,10 @@ class InvoiceController extends Controller
     {
         $data = $this->filterService->getFilteredInvoices($request);
 
+        // Add dateFrom and dateTo for the view
+        $data['dateFrom'] = $request->input('date_from', '');
+        $data['dateTo'] = $request->input('date_to', '');
+
         // Add additional dashboard-specific data
         $data['total_invoices'] = Invoice::count();
         $data['total_amount'] = Invoice::sum('total_amount');
