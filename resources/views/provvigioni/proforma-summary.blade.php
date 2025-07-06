@@ -24,7 +24,7 @@
                             <div class="col-md-3">
                                 <label for="entrataUscita" class="mb-0"><strong>Entrata/Uscita:</strong></label>
                                 <select id="entrataUscita" name="entrata_uscita" class="form-control form-control-sm" onchange="document.getElementById('filterSortForm').submit();">
-                                    <option value="" {{ empty($entrataUscita) ? 'selected' : '' }}>Tutti</option>
+                                    <option value="" {{ empty($entrataUscita) ? 'selected' : '' }}>Uscita (default)</option>
                                     <option value="Entrata" {{ $entrataUscita === 'Entrata' ? 'selected' : '' }}>Entrata</option>
                                     <option value="Uscita" {{ $entrataUscita === 'Uscita' ? 'selected' : '' }}>Uscita</option>
                                 </select>

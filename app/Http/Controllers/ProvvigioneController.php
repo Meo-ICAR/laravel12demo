@@ -389,9 +389,12 @@ class ProvvigioneController extends Controller
             $query->orderBy('provvigioni.denominazione_riferimento', $orderDirection);
         }
 
-        $entrataUscita = $request->get('entrata_uscita');
+                $entrataUscita = $request->get('entrata_uscita');
         if (in_array($entrataUscita, ['Entrata', 'Uscita'])) {
             $query->where('provvigioni.entrata_uscita', $entrataUscita);
+        } else {
+            // Default filter: only show Uscita records
+            $query->where('provvigioni.entrata_uscita', 'Uscita');
         }
 
         $proformaSummary = $query->get();
