@@ -234,7 +234,7 @@
                                             <a href="{{ route('invoices.edit', $invoice->id) }}" class="btn btn-warning btn-sm">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-info btn-sm">
+                                            <a href="{{ route('invoices.index', ['coge' => $coge]) }}" class="btn btn-info btn-sm" title="View all invoices for this COGE">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                         </td>

@@ -11,9 +11,50 @@ class ClientiController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $clientis = Clienti::with('customertype')->get();
+        $query = Clienti::with('customertype');
+
+        // Filtering
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+        if ($request->filled('piva')) {
+            $query->where('piva', 'like', '%' . $request->piva . '%');
+        }
+        if ($request->filled('coge')) {
+            $query->where('coge', 'like', '%' . $request->coge . '%');
+        }
+        if ($request->filled('email')) {
+            $query->where('email', 'like', '%' . $request->email . '%');
+        }
+        if ($request->filled('regione')) {
+            $query->where('regione', 'like', '%' . $request->regione . '%');
+        }
+        if ($request->filled('citta')) {
+            $query->where('citta', 'like', '%' . $request->citta . '%');
+        }
+        if ($request->filled('codice')) {
+            $query->where('codice', 'like', '%' . $request->codice . '%');
+        }
+        if ($request->filled('customertype_id')) {
+            $query->where('customertype_id', $request->customertype_id);
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortDirection = $request->get('sort_direction', 'asc');
+        $allowedSortBy = ['name', 'piva', 'coge', 'email', 'regione', 'citta', 'codice'];
+        $allowedDirections = ['asc', 'desc'];
+        if (!in_array($sortBy, $allowedSortBy)) {
+            $sortBy = 'name';
+        }
+        if (!in_array($sortDirection, $allowedDirections)) {
+            $sortDirection = 'asc';
+        }
+        $query->orderBy($sortBy, $sortDirection);
+
+        $clientis = $query->paginate(20)->appends($request->query());
 
         // Add invoice count for each clienti
         foreach ($clientis as $clienti) {
@@ -24,7 +65,8 @@ class ClientiController extends Controller
             }
         }
 
-        return view('clientis.index', compact('clientis'));
+        $customertypes = \App\Models\Customertype::all();
+        return view('clientis.index', compact('clientis', 'customertypes', 'sortBy', 'sortDirection'));
     }
 
     /**
@@ -102,5 +144,23 @@ class ClientiController extends Controller
     {
         $clienti->delete();
         return redirect()->route('clientis.index')->with('success', 'Cliente deleted successfully.');
+    }
+
+    public function importInvoiceinsToInvoicesByClienti()
+    {
+        try {
+            $service = new \App\Services\InvoiceService();
+            $result = $service->transferInvoiceinsToInvoicesByClienti();
+
+            $message = "Transfer (by clientis) completed! ";
+            $message .= "New invoices created: {$result['imported']}, ";
+            $message .= "Skipped (already exist): {$result['skipped']}.";
+            if (!empty($result['errors'])) {
+                $message .= " Errors: " . implode('; ', $result['errors']);
+            }
+            return redirect()->route('clientis.index')->with('success', $message);
+        } catch (\Exception $e) {
+            return redirect()->route('clientis.index')->with('error', 'Error during transfer (by clientis): ' . $e->getMessage());
+        }
     }
 }

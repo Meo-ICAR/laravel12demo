@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\ToArray;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use App\Services\InvoiceService;
+use Illuminate\Support\Facades\Artisan;
 
 class InvoiceinImportController extends Controller
 {
@@ -135,6 +136,36 @@ class InvoiceinImportController extends Controller
         }
 
         return back()->with('error', 'No valid invoiceins could be imported. Errors: ' . implode(', ', $errors));
+    }
+
+    public function importCustom(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|file|mimes:csv,xls,xlsx|max:20480',
+        ], [
+            'file.mimes' => 'The file must be a CSV, XLSX, or XLS file.',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $file = $request->file('file');
+        $path = $file->storeAs('imports', uniqid('invoiceins_') . '.' . $file->getClientOriginalExtension());
+        $fullPath = storage_path('app/' . $path);
+
+        // Call the custom import command
+        $output = null;
+        $exitCode = Artisan::call('invoiceins:import-custom', [
+            'file' => $fullPath
+        ]);
+        $output = Artisan::output();
+
+        if ($exitCode === 0) {
+            return redirect()->route('invoiceins.index')->with('success', 'Import completed.<br><pre>' . e($output) . '</pre>');
+        } else {
+            return redirect()->route('invoiceins.index')->with('error', 'Import failed.<br><pre>' . e($output) . '</pre>');
+        }
     }
 
     protected function importRow($data)

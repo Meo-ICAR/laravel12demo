@@ -425,4 +425,73 @@ class InvoiceService
             'errors' => $errors
         ];
     }
+
+    /**
+     * Transfer invoiceins to invoices table using clientis join
+     */
+    public function transferInvoiceinsToInvoicesByClienti()
+    {
+        $invoicesImported = 0;
+        $invoicesSkipped = 0;
+        $errors = [];
+
+        try {
+            // Get invoiceins that have matching clientis
+            $invoiceins = \App\Models\Invoicein::join('clientis', 'clientis.coge', '=', 'invoiceins.nr_cliente_fornitore')
+                ->select('invoiceins.*')
+                ->get();
+
+            Log::info("Starting transfer of invoiceins to invoices (by clientis)", [
+                'total_eligible_invoiceins' => $invoiceins->count()
+            ]);
+
+            foreach ($invoiceins as $invoicein) {
+                try {
+                    $result = $this->createInvoiceFromInvoicein($invoicein);
+                    if ($result['success']) {
+                        $invoicesImported++;
+                        Log::info("Successfully created invoice from invoicein (by clienti)", [
+                            'invoicein_id' => $invoicein->id,
+                            'invoice_number' => $invoicein->nr_documento
+                        ]);
+                    } else {
+                        $invoicesSkipped++;
+                        Log::info("Skipped invoicein (by clienti)", [
+                            'invoicein_id' => $invoicein->id,
+                            'invoice_number' => $invoicein->nr_documento,
+                            'reason' => $result['reason']
+                        ]);
+                        if ($result['reason']) {
+                            $errors[] = $result['reason'];
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = "Error processing invoicein {$invoicein->nr_documento}: " . $e->getMessage();
+                    Log::error("Error processing invoicein (by clienti)", [
+                        'invoicein_id' => $invoicein->id,
+                        'invoice_number' => $invoicein->nr_documento,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            Log::info("Transfer (by clientis) completed", [
+                'imported' => $invoicesImported,
+                'skipped' => $invoicesSkipped,
+                'errors_count' => count($errors)
+            ]);
+
+        } catch (\Exception $e) {
+            $errors[] = "Error importing to invoices (by clientis): " . $e->getMessage();
+            Log::error("Error in transferInvoiceinsToInvoicesByClienti", [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return [
+            'imported' => $invoicesImported,
+            'skipped' => $invoicesSkipped,
+            'errors' => $errors
+        ];
+    }
 }

@@ -106,9 +106,15 @@
                         @endif
                     </h3>
                     <div class="card-tools">
-                        <button type="button" class="btn btn-primary btn-sm mr-2" data-toggle="modal" data-target="#importModal">
+                        <button type="button" class="btn btn-primary btn-sm mr-2" data-toggle="modal" data-target="#importCustomModal">
                             <i class="fas fa-upload"></i> Import CSV/Excel
                         </button>
+                        <form action="{{ route('fornitoris.importInvoiceinsToInvoices') }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to import all eligible Invoiceins to Invoices?');">
+                            @csrf
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-random"></i> Import to Invoices
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -211,41 +217,34 @@
     </div>
 </div>
 
-<!-- Import Modal -->
-<div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form action="{{ route('invoiceins.import') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="importModalLabel">
-                        <i class="fas fa-upload mr-2"></i>Import Invoiceins
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="file">Select File</label>
-                        <input type="file" class="form-control-file" id="file" name="file" accept=".csv,.xlsx,.xls,.txt" required>
-                        <small class="form-text text-muted">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Supported formats: CSV, Excel (.xlsx, .xls), TSV files. Maximum size: 2MB.
-                        </small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-upload"></i> Import
-                    </button>
-                </div>
-            </form>
+<!-- Import Modal for Custom Import -->
+<div class="modal fade" id="importCustomModal" tabindex="-1" role="dialog" aria-labelledby="importCustomModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="importCustomModalLabel">Import Invoiceins (CSV/XLS/XLSX)</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form action="{{ route('invoiceins.import.custom') }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="customImportFile">Select CSV or Excel file</label>
+            <input type="file" name="file" id="customImportFile" class="form-control" accept=".csv,.xls,.xlsx" required>
+            <small class="form-text text-muted">Supported formats: CSV, XLSX, XLS. Maximum size: 2MB.</small>
+          </div>
         </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-upload"></i> Import
+          </button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 @endsection
 

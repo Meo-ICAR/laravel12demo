@@ -173,6 +173,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Clienti routes
     Route::resource('clientis', App\Http\Controllers\ClientiController::class);
     Route::get('clientis-invoices/{id}', [App\Http\Controllers\ClientiInvoiceController::class, 'show'])->name('clientis.invoices.show');
+    Route::post('clientis/import-invoiceins-to-invoices', [\App\Http\Controllers\ClientiController::class, 'importInvoiceinsToInvoicesByClienti'])->name('clientis.importInvoiceinsToInvoicesByClienti');
 
     // Customertypes routes
     Route::resource('customertypes', App\Http\Controllers\CustomertypeController::class);
@@ -225,6 +226,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Invoiceins routes
     Route::get('invoiceins/import', [InvoiceinImportController::class, 'index'])->name('invoiceins.import');
     Route::post('invoiceins/import', [InvoiceinImportController::class, 'import']);
+    Route::post('invoiceins/import-custom', [InvoiceinImportController::class, 'importCustom'])->name('invoiceins.import.custom');
     Route::resource('invoiceins', App\Http\Controllers\InvoiceinController::class);
 
     // Pratiches routes
