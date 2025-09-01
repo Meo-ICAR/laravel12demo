@@ -380,12 +380,12 @@ return [
             'topnav' => true,
             'submenu' => [
                 [
-                    'text' => 'Fornitori',
+                    'text' => 'Produttori',
                     'url' => 'fornitoris',
                     'icon' => 'fas fa-truck',
                 ],
                 [
-                    'text' => 'Clienti',
+                    'text' => 'Banche',
                     'url' => 'clientis',
                     'icon' => 'fas fa-users',
                     'can' => 'clientis_access',
@@ -544,12 +544,12 @@ return [
             'icon' => 'fas fa-address-book',
             'submenu' => [
                 [
-                    'text' => 'Fornitori',
+                    'text' => 'Produttori',
                     'url' => 'fornitoris',
                     'icon' => 'fas fa-truck',
                 ],
                 [
-                    'text' => 'Clienti',
+                    'text' => 'Banche',
                     'url' => 'clientis',
                     'icon' => 'fas fa-users',
                 ],
