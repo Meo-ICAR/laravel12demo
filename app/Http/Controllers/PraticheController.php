@@ -64,16 +64,34 @@ class PraticheController extends Controller
                     Log::info('Excel headers (normalized):', array_keys($rows[0] ?? []));
                 }
             } else {
-                // CSV/TXT parsing
+                // CSV/TXT parsing with semicolon delimiter and duplicate header handling
                 $path = $file->getRealPath();
-                $data = array_map('str_getcsv', file($path));
-                $headers = array_shift($data); // header row
-                Log::info('CSV Headers:', $headers);
-                foreach ($data as $row) {
-                    if (count($row) < count($headers)) {
-                        continue;
+                if (($handle = fopen($path, 'r')) !== false) {
+                    $headers = fgetcsv($handle, 0, ';');
+                    if ($headers === false) {
+                        throw new \RuntimeException('CSV senza intestazioni valide.');
                     }
-                    $rows[] = array_combine($headers, $row);
+                    // Normalize duplicate headers by suffixing _2, _3, ...
+                    $headerCounts = [];
+                    $normalizedHeaders = [];
+                    foreach ($headers as $h) {
+                        $key = $h;
+                        if (isset($headerCounts[$h])) {
+                            $headerCounts[$h]++;
+                            $key = $h . '_' . $headerCounts[$h];
+                        } else {
+                            $headerCounts[$h] = 1;
+                        }
+                        $normalizedHeaders[] = $key;
+                    }
+                    Log::info('CSV Headers (normalized):', $normalizedHeaders);
+                    while (($row = fgetcsv($handle, 0, ';')) !== false) {
+                        if (count($row) < count($normalizedHeaders)) {
+                            continue;
+                        }
+                        $rows[] = array_combine($normalizedHeaders, $row);
+                    }
+                    fclose($handle);
                 }
             }
 
@@ -112,7 +130,7 @@ class PraticheController extends Controller
 
             foreach ($rows as $row) {
                 // Normalize keys to handle both Excel normalized and CSV original headers
-                $id = $row['ID'] ?? $row['id'] ?? $row['Id'] ?? null;
+                $id = $row['ID'] ?? $row['id'] ?? $row['Id'] ?? $row['Pratica'] ?? null;
                 if (!$id) {
                     continue;
                 }
@@ -137,7 +155,8 @@ class PraticheController extends Controller
                     'Istituto_finanziario' => trim((string)($row['Istituto finanziario'] ?? $row['istituto_finanziario'] ?? '')),
                     'Pratica' => trim((string)($row['Pratica'] ?? $row['pratica'] ?? '')),
                     'Status_pratica' => trim((string)($row['Status pratica'] ?? $row['status_pratica'] ?? '')),
-                    'Cliente_ID' => trim((string)($row['ID'] ?? $row['cliente_id'] ?? '')),
+                    // Secondo ID della riga (cliente/esterno) se presente da intestazione duplicata "ID_2"
+                    'Cliente_ID' => trim((string)($row['ID_2'] ?? $row['cliente_id'] ?? '')),
                     'Codice_fiscale' => trim((string)($row['Codice_fiscale'] ?? $row['codice_fiscale'] ?? '')),
                     'Prodotto' => trim((string)($row['Prodotto'] ?? $row['prodotto'] ?? '')),
                     'Residenza_citta' => trim((string)($row['Residenza_citta'] ?? $row['residenza_citta'] ?? '')),
