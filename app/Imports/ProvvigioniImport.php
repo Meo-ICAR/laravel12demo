@@ -70,10 +70,31 @@ class ProvvigioniImport implements ToModel, WithHeadingRow
 
     private function parseDecimal($value)
     {
-        if (!$value) return null;
-        // Replace comma with dot for decimals
-        $value = str_replace('.', '', $value); // remove thousands separator
-        $value = str_replace(',', '.', $value);
-        return is_numeric($value) ? $value : null;
+        if ($value === null || $value === '') return null;
+
+        // Normalize to string and trim whitespace (including non-breaking spaces)
+        $value = trim((string)$value);
+        $value = str_replace("\xc2\xa0", ' ', $value); // NBSP to space
+        $value = trim($value);
+
+        // Remove currency symbols and spaces inside the number
+        $value = str_replace(['€', ' '], '', $value);
+
+        // Cases:
+        // - European format uses comma as decimal separator, dot as thousands: 1.234,56
+        // - Standard format uses dot as decimal separator: 1234.56
+        // We must only remove dots when a comma is present (European format).
+        if (strpos($value, ',') !== false) {
+            // European format: strip thousands dots, convert decimal comma to dot
+            $value = str_replace('.', '', $value);
+            $value = str_replace(',', '.', $value);
+        } else {
+            // No comma present. Assume dot is decimal separator.
+            // Do not remove dots here or we'd lose the decimal part (e.g., 3139.2 -> 31392)
+            // Also strip any grouping commas (unlikely in this branch but safe)
+            $value = str_replace(',', '', $value);
+        }
+
+        return is_numeric($value) ? (float)$value : null;
     }
 }
