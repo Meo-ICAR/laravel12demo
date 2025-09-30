@@ -10,6 +10,27 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
+
+// Simple chunk read filter to limit rows loaded in memory
+class ChunkReadFilter implements IReadFilter
+{
+    private int $startRow = 1;
+    private int $endRow = 1;
+
+    public function setRows(int $startRow, int $chunkSize): void
+    {
+        $this->startRow = $startRow;
+        $this->endRow = $startRow + $chunkSize - 1;
+    }
+
+    public function readCell($column, $row, $worksheetName = ''): bool
+    {
+        // Always read header row 1 to keep headers available for each chunk
+        if ($row === 1) return true;
+        return $row >= $this->startRow && $row <= $this->endRow;
+    }
+}
 
 class ImportLeadsFromSidialLeads extends Command
 {
@@ -23,6 +44,10 @@ class ImportLeadsFromSidialLeads extends Command
 
     public function handle(): int
     {
+        // Increase memory limit to handle large spreadsheets safely
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(0);
+        try { \DB::connection()->disableQueryLog(); } catch (\Throwable $e) {}
         $baseUrl = Config::get('sidial.base_url');
         $token = Config::get('sidial.api_token');
         if (empty($baseUrl) || empty($token)) {
@@ -121,58 +146,109 @@ class ImportLeadsFromSidialLeads extends Command
         $tmpFile = $tmpDir.'/sidial_leads_'.now()->format('Ymd_His').'.xls';
         file_put_contents($tmpFile, $body);
 
-        // Parse spreadsheet
+        // Parse spreadsheet using chunked reading to avoid high memory usage
         try {
-            $spreadsheet = IOFactory::load($tmpFile);
+            $reader = IOFactory::createReaderForFile($tmpFile);
+            if (method_exists($reader, 'setReadDataOnly')) {
+                $reader->setReadDataOnly(true);
+            }
+
+            $chunkSize = 200; // rows per chunk to keep memory low
+            $filter = new ChunkReadFilter();
+            if (method_exists($reader, 'setReadFilter')) {
+                $reader->setReadFilter($filter);
+            }
+
+            // Load header row (1) only to build headers map
+            $filter->setRows(1, 1);
+            $spreadsheet = $reader->load($tmpFile);
             $sheet = $spreadsheet->getActiveSheet();
-            $rows = $sheet->toArray(null, true, true, true); // indexed by column letters
-        } catch (\Throwable $e) {
-            $this->error('Errore parsing XLS: '.$e->getMessage());
+            $highestColumn = $sheet->getHighestColumn();
+            $headerRow = $sheet->rangeToArray('A1:'.$highestColumn.'1', null, true, true, true)[1] ?? [];
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            if (empty($headerRow)) {
+                @unlink($tmpFile);
+                $this->info('Nessuna riga da importare.');
+                return self::SUCCESS;
+            }
+
+            $headers = [];
+            foreach ($headerRow as $colIdx => $value) {
+                $label = trim((string)$value);
+                $headers[$colIdx] = $this->normalizeHeader($label);
+            }
+
+            $batch = [];
+            $imported = 0;
+            $startRow = 2; // data starts after header
+
+            while (true) {
+                $filter->setRows($startRow, $chunkSize);
+                $spreadsheet = $reader->load($tmpFile);
+                $sheet = $spreadsheet->getActiveSheet();
+                $highestRow = $sheet->getHighestRow();
+                if ($highestRow < $startRow) {
+                    // No more data available
+                    $spreadsheet->disconnectWorksheets();
+                    unset($sheet, $spreadsheet);
+                    break;
+                }
+                $endRow = min($startRow + $chunkSize - 1, $highestRow);
+                $rowIterator = $sheet->getRowIterator($startRow, $endRow);
+                $processedAny = false;
+                foreach ($rowIterator as $row) {
+                    $rowIndex = $row->getRowIndex();
+                    if ($rowIndex === 1) continue; // skip header
+                    $processedAny = true;
+                    $cellIterator = $row->getCellIterator();
+                    $cellIterator->setIterateOnlyExistingCells(true);
+                    $assoc = [];
+                    foreach ($cellIterator as $cell) {
+                        $colIdx = $cell->getColumn(); // e.g., 'A','B',...
+                        if (!isset($headers[$colIdx]) || $headers[$colIdx] === '') continue;
+                        $val = $cell->getValue();
+                        $assoc[$headers[$colIdx]] = is_string($val) ? trim($val) : $val;
+                    }
+
+                    if (empty($assoc)) continue;
+
+                    $mapped = $this->mapLeadRow($assoc);
+                    if (!$mapped) continue;
+
+                    $mapped['updated_at'] = now();
+                    $mapped['created_at'] = $mapped['created_at'] ?? now();
+
+                    $batch[] = $mapped;
+                    if (count($batch) >= 300) {
+                        $imported += $this->flushLeads($batch, (bool)$this->option('dry-run'));
+                        $batch = [];
+                    }
+                }
+
+                $spreadsheet->disconnectWorksheets();
+                unset($rowIterator, $sheet, $spreadsheet);
+
+                if (!$processedAny) {
+                    break; // no more rows
+                }
+
+                $startRow += $chunkSize; // next chunk
+            }
+
+            // flush any remaining
+            $imported += $this->flushLeads($batch, (bool)$this->option('dry-run'));
+
             @unlink($tmpFile);
+
+            $this->info("Importazione completata. Righe inserite/aggiornate: $imported");
+            return self::SUCCESS;
+        } catch (\Throwable $e) {
+            @unlink($tmpFile);
+            $this->error('Errore parsing XLS: '.$e->getMessage());
             return self::FAILURE;
         }
-
-        @unlink($tmpFile);
-
-        if (count($rows) <= 1) {
-            $this->info('Nessuna riga da importare.');
-            return self::SUCCESS;
-        }
-
-        // First row is header
-        $headerRow = array_shift($rows);
-        $headers = [];
-        foreach ($headerRow as $colIdx => $value) {
-            $label = trim((string)$value);
-            $headers[$colIdx] = $this->normalizeHeader($label);
-        }
-
-        $batch = [];
-        $imported = 0;
-        foreach ($rows as $rIndex => $row) {
-            $assoc = [];
-            foreach ($row as $colIdx => $val) {
-                if (!isset($headers[$colIdx]) || $headers[$colIdx] === '') continue;
-                $assoc[$headers[$colIdx]] = is_string($val) ? trim($val) : $val;
-            }
-
-            $mapped = $this->mapLeadRow($assoc);
-            if (!$mapped) continue;
-
-            $mapped['updated_at'] = now();
-            $mapped['created_at'] = $mapped['created_at'] ?? now();
-
-            $batch[] = $mapped;
-            if (count($batch) >= 1000) {
-                $imported += $this->flushLeads($batch, (bool)$this->option('dry-run'));
-                $batch = [];
-            }
-        }
-
-        $imported += $this->flushLeads($batch, (bool)$this->option('dry-run'));
-
-        $this->info("Importazione completata. Righe inserite/aggiornate: $imported");
-        return self::SUCCESS;
     }
 
     private function normalizeHeader(string $label): string
@@ -233,6 +309,41 @@ class ImportLeadsFromSidialLeads extends Command
         return Str::snake($label);
     }
 
+    /**
+     * Normalize and validate a phone number
+     */
+    private function normalizePhone(?string $phone): ?string
+    {
+        if (empty($phone)) {
+            return null;
+        }
+
+        // Remove all non-digit characters except leading +
+        $normalized = preg_replace('/[^\d+]/', '', (string)$phone);
+        
+        // Handle international numbers (start with + or 00)
+        if (strpos($normalized, '+') === 0) {
+            // Already in international format
+            return $normalized;
+        }
+        
+        // Handle 00 prefix (international format without +)
+        if (strpos($normalized, '00') === 0) {
+            return '+' . substr($normalized, 2);
+        }
+        
+        // Handle Italian numbers (assume if not international)
+        if (strlen($normalized) >= 6) { // Basic validation for Italian numbers
+            // Remove leading 0 if present and add +39
+            if (strpos($normalized, '0') === 0) {
+                $normalized = '39' . substr($normalized, 1);
+            }
+            return '+' . $normalized;
+        }
+        
+        return $normalized; // Return as is if doesn't match any pattern
+    }
+
     private function parseDate($value)
     {
         if (empty($value)) return null;
@@ -260,110 +371,234 @@ class ImportLeadsFromSidialLeads extends Command
         return (int)$value;
     }
 
+    /**
+     * Map and validate a single lead row from the import
+     */
     private function mapLeadRow(array $row): ?array
     {
-        // Map incoming associative row to Lead columns
+        // Skip if essential fields are missing
+        if (empty($row['telefono']) && empty($row['ragione_sociale']) && empty($row['nome']) && empty($row['cognome'])) {
+            return null;
+        }
+
+        // Helper function to trim strings to specified length
+        $truncate = function($value, $maxLength) {
+            if ($value === null) return null;
+            return mb_substr(trim($value), 0, $maxLength);
+        };
+
+        // Normalize and validate phone numbers
+        $phone1 = $this->normalizePhone($row['telefono'] ?? null);
+        $phone2 = $this->normalizePhone($row['telefono2'] ?? null);
+        $phone3 = $this->normalizePhone($row['telefono3'] ?? null);
+        $phone4 = $this->normalizePhone($row['telefono4'] ?? null);
+
+        // If primary phone is empty but we have alternative numbers, use the first available
+        if (empty($phone1)) {
+            if (!empty($phone2)) {
+                $phone1 = $phone2;
+                $phone2 = null;
+            } elseif (!empty($phone3)) {
+                $phone1 = $phone3;
+                $phone3 = null;
+            } elseif (!empty($phone4)) {
+                $phone1 = $phone4;
+                $phone4 = null;
+            }
+        }
+
+        // Parse dates with error handling
+        $parseDate = function($date) {
+            if (empty($date)) return null;
+            try {
+                return $this->parseDate($date);
+            } catch (\Exception $e) {
+                return null;
+            }
+        };
+
+        // Map the data to match the database schema with length constraints
         $data = [
-            'legacy_id' => $row['id'] ?? null,
-            'campagna' => $row['campagna'] ?? null,
-            'lista' => $row['lista'] ?? null,
-            'ragione_sociale' => $row['ragione_sociale'] ?? null,
-            'cognome' => $row['cognome'] ?? null,
-            'nome' => $row['nome'] ?? null,
-            'telefono' => $row['telefono'] ?? null,
-            'ultimo_operatore' => $row['ultimo_operatore'] ?? null,
-            'esito' => $row['esito'] ?? null,
-            'data_richiamo' => $this->parseDate($row['data_richiamo'] ?? null),
-            'operatore_richiamo' => $row['operatore_richiamo'] ?? null,
-            'scadenza_anagrafica' => $this->parseDate($row['scadenza_anagrafica'] ?? null),
-            'indirizzo1' => $row['indirizzo1'] ?? null,
-            'indirizzo2' => $row['indirizzo2'] ?? null,
-            'indirizzo3' => $row['indirizzo3'] ?? null,
-            'comune' => $row['comune'] ?? null,
-            'provincia' => $row['provincia'] ?? null,
-            'cap' => $row['cap'] ?? null,
-            'regione' => $row['regione'] ?? null,
-            'paese' => $row['paese'] ?? null,
-            'email' => $row['email'] ?? null,
-            'p_iva' => $row['p_iva'] ?? null,
-            'codice_fiscale' => $row['codice_fiscale'] ?? null,
-            'telefono2' => $row['telefono2'] ?? null,
-            'telefono3' => $row['telefono3'] ?? null,
-            'telefono4' => $row['telefono4'] ?? null,
-            'sesso' => $row['sesso'] ?? null,
-            'nota' => $row['nota'] ?? null,
+            'legacy_id' => $truncate($row['id'] ?? null, 20),
+            'campagna' => $truncate($row['campagna'] ?? null, 100),
+            'lista' => $truncate($row['lista'] ?? null, 100),
+            'ragione_sociale' => $truncate($row['ragione_sociale'] ?? null, 255),
+            'cognome' => $truncate($row['cognome'] ?? null, 100),
+            'nome' => $truncate($row['nome'] ?? null, 100),
+            'telefono' => $truncate($phone1, 20), // Max 20 chars
+            'ultimo_operatore' => $truncate($row['ultimo_operatore'] ?? null, 255),
+            'esito' => $truncate($row['esito'] ?? null, 100),
+            'data_richiamo' => $parseDate($row['data_richiamo'] ?? null),
+            'operatore_richiamo' => $truncate($row['operatore_richiamo'] ?? null, 255),
+            'scadenza_anagrafica' => $parseDate($row['scadenza_anagrafica'] ?? null),
+            'indirizzo1' => $truncate($row['indirizzo1'] ?? null, 255),
+            'indirizzo2' => $truncate($row['indirizzo2'] ?? null, 255),
+            'indirizzo3' => $truncate($row['indirizzo3'] ?? null, 255),
+            'comune' => $truncate($row['comune'] ?? null, 100),
+            'provincia' => $truncate($row['provincia'] ?? null, 10),
+            'cap' => $truncate($row['cap'] ?? null, 10),
+            'regione' => $truncate($row['regione'] ?? null, 100),
+            'paese' => $truncate($row['paese'] ?? 'Italia', 100),
+            'email' => filter_var($row['email'] ?? null, FILTER_VALIDATE_EMAIL) ? $truncate($row['email'], 255) : null,
+            'p_iva' => $truncate($row['p_iva'] ?? null, 50),
+            'codice_fiscale' => $truncate($row['codice_fiscale'] ?? null, 20),
+            'telefono2' => $truncate($phone2, 20), // Max 20 chars
+            'telefono3' => $truncate($phone3, 20), // Max 20 chars
+            'telefono4' => $truncate($phone4, 20), // Max 20 chars
+            'sesso' => $truncate($row['sesso'] ?? null, 10),
+            'nota' => $row['nota'] ?? null, // Text field, no length limit
             'attivo' => $this->parseBoolean($row['attivo'] ?? null),
-            'altro1' => $row['altro1'] ?? null,
-            'altro2' => $row['altro2'] ?? null,
-            'altro3' => $row['altro3'] ?? null,
-            'altro4' => $row['altro4'] ?? null,
-            'altro5' => $row['altro5'] ?? null,
-            'altro6' => $row['altro6'] ?? null,
-            'altro7' => $row['altro7'] ?? null,
-            'altro8' => $row['altro8'] ?? null,
-            'altro9' => $row['altro9'] ?? null,
-            'altro10' => $row['altro10'] ?? null,
-            'chiamate' => $this->parseInt($row['chiamate'] ?? 0),
-            'ultima_chiamata' => $this->parseDate($row['ultima_chiamata'] ?? null),
-            'creato_da' => $row['creato_da'] ?? null,
-            'durata_ultima_chiamata' => $row['durata_ultima_chiamata'] ?? null,
-            'totale_durata_chiamate' => $row['totale_durata_chiamate'] ?? null,
-            'chiamate_giornaliere' => $this->parseInt($row['chiamate_giornaliere'] ?? 0),
-            'chiamate_mensili' => $this->parseInt($row['chiamate_mensili'] ?? 0),
-            'data_creazione' => $this->parseDate($row['data_creazione'] ?? null),
-            // company_id intentionally left null in console context
+            'altro1' => $truncate($row['altro1'] ?? null, 255),
+            'altro2' => $truncate($row['altro2'] ?? null, 255),
+            'altro3' => $truncate($row['altro3'] ?? null, 255),
+            'altro4' => $truncate($row['altro4'] ?? null, 255),
+            'altro5' => $truncate($row['altro5'] ?? null, 255),
+            'altro6' => $truncate($row['altro6'] ?? null, 255),
+            'altro7' => $truncate($row['altro7'] ?? null, 255),
+            'altro8' => $truncate($row['altro8'] ?? null, 255),
+            'altro9' => $truncate($row['altro9'] ?? null, 255),
+            'altro10' => $truncate($row['altro10'] ?? null, 255),
+            'chiamate' => max(0, $this->parseInt($row['chiamate'] ?? 0)),
+            'ultima_chiamata' => $parseDate($row['ultima_chiamata'] ?? null),
+            'creato_da' => $truncate($row['creato_da'] ?? 'Sidial Import', 255),
+            'durata_ultima_chiamata' => $truncate($row['durata_ultima_chiamata'] ?? null, 20),
+            'totale_durata_chiamate' => $truncate($row['totale_durata_chiamate'] ?? null, 20),
+            'chiamate_giornaliere' => max(0, $this->parseInt($row['chiamate_giornaliere'] ?? 0)),
+            'chiamate_mensili' => max(0, $this->parseInt($row['chiamate_mensili'] ?? 0)),
+            'data_creazione' => $parseDate($row['data_creazione'] ?? null) ?? now(),
+            'company_id' => $this->companyId ?? null,
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
 
-        // Basic sanity: require at least telefono or ragione_sociale or nome/cognome
-        if (empty($data['telefono']) && empty($data['ragione_sociale']) && empty($data['nome']) && empty($data['cognome'])) {
-            return null;
+        // Additional validation
+        if (empty($data['ragione_sociale']) && empty($data['cognome']) && empty($data['nome'])) {
+            return null; // At least one name field is required
         }
 
         return $data;
     }
 
+    /**
+     * Process and save a batch of leads to the database
+     * 
+     * @param array $batch The batch of leads to process
+     * @param bool $dryRun Whether to simulate the operation without saving
+     * @return int Number of affected rows
+     */
     private function flushLeads(array $batch, bool $dryRun): int
     {
         if (empty($batch)) return 0;
+        
         if ($dryRun) {
             $this->line('[DRY-RUN] Upsert di '.count($batch).' lead.');
             return 0;
         }
 
-        // Determine unique keys: prefer legacy_id when present, otherwise telefono+campagna
-        $withId = array_filter($batch, fn($r) => !empty($r['legacy_id']));
-        $withoutId = array_filter($batch, fn($r) => empty($r['legacy_id']));
         $affected = 0;
-
-        if (!empty($withId)) {
-            DB::table('leads')->upsert(
-                array_values($withId),
-                ['legacy_id'],
-                array_diff(array_keys($withId[array_key_first($withId)]), ['legacy_id', 'created_at'])
-            );
-            $affected += count($withId);
-        }
-
-        foreach ($withoutId as $row) {
-            $keys = [
-                'telefono' => $row['telefono'] ?? null,
-                'campagna' => $row['campagna'] ?? null,
-            ];
-            // if both keys null, fallback to ragione_sociale + nome + cognome + email
-            if (empty($keys['telefono']) && empty($keys['campagna'])) {
-                $keys = [
-                    'ragione_sociale' => $row['ragione_sociale'] ?? null,
-                    'nome' => $row['nome'] ?? null,
-                    'cognome' => $row['cognome'] ?? null,
-                    'email' => $row['email'] ?? null,
-                ];
+        $chunkSize = 500; // Process in smaller chunks to avoid timeouts
+        
+        // Process in chunks to avoid memory issues
+        foreach (array_chunk($batch, $chunkSize) as $chunk) {
+            // Split chunk into records with and without legacy_id
+            $withId = [];
+            $withoutId = [];
+            
+            foreach ($chunk as $row) {
+                if (!empty($row['legacy_id'])) {
+                    $withId[] = $row;
+                } else {
+                    $withoutId[] = $row;
+                }
             }
-            $values = $row;
-            unset($values['created_at']);
-            DB::table('leads')->updateOrInsert($keys, $values);
-            $affected++;
+
+            // Process records with legacy_id (bulk upsert)
+            if (!empty($withId)) {
+                try {
+                    $columnsToUpdate = array_diff(
+                        array_keys($withId[0]), 
+                        ['legacy_id', 'created_at', 'updated_at']
+                    );
+                    
+                    DB::table('leads')->upsert(
+                        $withId,
+                        ['legacy_id'],
+                        $columnsToUpdate
+                    );
+                    $affected += count($withId);
+                } catch (\Exception $e) {
+                    // Fall back to individual updates if bulk fails
+                    $this->warn('Bulk upsert failed, falling back to individual updates: ' . $e->getMessage());
+                    $affected += $this->processIndividualLeads($withId);
+                }
+            }
+
+            // Process records without legacy_id (individual updates)
+            if (!empty($withoutId)) {
+                $affected += $this->processIndividualLeads($withoutId);
+            }
         }
 
+        return $affected;
+    }
+    
+    /**
+     * Process leads one by one to handle any unique constraint issues
+     * 
+     * @param array $leads Array of leads to process
+     * @return int Number of successfully processed leads
+     */
+    private function processIndividualLeads(array $leads): int
+    {
+        $affected = 0;
+        
+        foreach ($leads as $row) {
+            try {
+                $keys = [];
+                
+                // If we have a legacy_id, use it as the unique key
+                if (!empty($row['legacy_id'])) {
+                    $keys = ['legacy_id' => $row['legacy_id']];
+                } 
+                // Otherwise try to create a unique key from available fields
+                else {
+                    $keys = [
+                        'telefono' => $row['telefono'] ?? null,
+                        'campagna' => $row['campagna'] ?? null,
+                    ];
+                    
+                    // If phone and campaign are empty, try alternative keys
+                    if (empty($keys['telefono']) && empty($keys['campagna'])) {
+                        $keys = array_filter([
+                            'ragione_sociale' => $row['ragione_sociale'] ?? null,
+                            'nome' => $row['nome'] ?? null,
+                            'cognome' => $row['cognome'] ?? null,
+                            'email' => $row['email'] ?? null,
+                        ]);
+                        
+                        // Skip if we don't have enough data to uniquely identify the lead
+                        if (empty($keys)) {
+                            $this->warn('Skipping lead - insufficient data for unique identification');
+                            continue;
+                        }
+                    }
+                }
+                
+                // Prepare values for update/insert
+                $values = $row;
+                unset($values['created_at']); // Don't update created_at on upsert
+                
+                // Use updateOrInsert to handle both new and existing records
+                DB::table('leads')->updateOrInsert($keys, $values);
+                $affected++;
+                
+            } catch (\Exception $e) {
+                $this->error('Error processing lead: ' . $e->getMessage());
+                // Log the problematic row for debugging
+                $this->line('Problematic row: ' . json_encode($row, JSON_PRETTY_PRINT));
+            }
+        }
+        
         return $affected;
     }
 }
