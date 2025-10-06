@@ -22,6 +22,17 @@
                     <form id="filterSortForm" method="GET" action="">
                         <div class="row align-items-center">
                             <div class="col-md-3">
+                                <label for="search" class="mb-0"><strong>Cerca:</strong></label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="search" name="search" value="{{ $search ?? '' }}" placeholder="Cerca Denominazione...">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <label for="entrataUscita" class="mb-0"><strong>Entrata/Uscita:</strong></label>
                                 <select id="entrataUscita" name="entrata_uscita" class="form-control form-control-sm" onchange="document.getElementById('filterSortForm').submit();">
                                     <option value="" {{ empty($entrataUscita) ? 'selected' : '' }}>Uscita (default)</option>
@@ -48,6 +59,11 @@
                                 <button id="applySort" class="btn btn-primary btn-sm mt-4" type="submit">
                                     <i class="fas fa-sort"></i> Apply
                                 </button>
+                                @if(!empty($search))
+                                    <a href="{{ route('provvigioni.proformaSummary', array_merge(request()->except('search'), ['search' => ''])) }}" class="btn btn-sm btn-outline-secondary mt-4 ml-1" title="Clear search">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                @endif
                                 <div class="mt-2 text-right">
                                     <small class="text-muted">
                                         Current: {{ ucfirst(str_replace('_', ' ', $orderBy)) }}

@@ -156,13 +156,7 @@
                                             <a href="{{ route('proformas.show', $proforma) }}" class="btn btn-info btn-sm" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ route('proformas.edit', $proforma) }}" class="btn btn-warning btn-sm" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
 
-                                              <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#emailSimModal-{{ $proforma->id }}">
-                                                <i class="fas fa-at"></i>
-                                            </button>
                                               <form action="{{ route('proformas.destroy', $proforma) }}" method="POST" style="display:inline-block">
                                                 @csrf
                                                 @method('DELETE')

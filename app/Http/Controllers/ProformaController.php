@@ -204,7 +204,7 @@ class ProformaController extends Controller
             $recipientEmail = 'hassistosrl@gmail.com';
 
             // Prepare email content
-            $subject = ($proforma->emailsubject ?: 'Proforma  - ' . ' N. ' . $proforma->id . ' #'. ($proforma->fornitore->name ?? 'Unknown')) ;
+            $subject = ($proforma->emailsubject . ($proforma->fornitore->name ?? 'Unknown')) ;
             $body = $proforma->emailbody ?: $this->generateDefaultEmailContent($proforma);
             $from = $proforma->emailfrom ?: config('mail.from.address');
 
@@ -464,8 +464,8 @@ class ProformaController extends Controller
 
         // Update emailsubject to include proforma number if not already present
         $currentSubject = $proforma->emailsubject ?? '';
-        if (!str_contains($currentSubject, '#' . $proforma->id)) {
-            $newSubject = trim($currentSubject . ' #' . $proforma->id);
+        if (!str_contains($currentSubject, '# ' . $proforma->id)) {
+            $newSubject = trim($currentSubject . ' # ' . $proforma->id);
             $proforma->update(['emailsubject' => $newSubject]);
         }
 

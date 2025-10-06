@@ -355,6 +355,7 @@ class ProvvigioneController extends Controller
     {
         $orderBy = $request->get('order_by', 'denominazione_riferimento');
         $orderDirection = $request->get('order_direction', 'asc');
+        $search = $request->get('search', '');
 
         // Validate order parameters
         $allowedOrderBy = ['denominazione_riferimento', 'totale', 'n'];
@@ -397,6 +398,11 @@ class ProvvigioneController extends Controller
             $query->where('provvigioni.entrata_uscita', 'Uscita');
         }
 
+        // Apply search filter
+        if (!empty($search)) {
+            $query->where('provvigioni.denominazione_riferimento', 'LIKE', '%' . $search . '%');
+        }
+
         $proformaSummary = $query->get();
 
         // Convert raw date strings to Carbon instances
@@ -413,7 +419,7 @@ class ProvvigioneController extends Controller
             return $item;
         });
 
-        return view('provvigioni.proforma-summary', compact('proformaSummary', 'orderBy', 'orderDirection', 'entrataUscita'));
+        return view('provvigioni.proforma-summary', compact('proformaSummary', 'orderBy', 'orderDirection', 'entrataUscita', 'search'));
     }
 
     public function createProformaFromSummary(Request $request)
