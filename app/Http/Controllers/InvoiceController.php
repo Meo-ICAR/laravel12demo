@@ -217,7 +217,12 @@ class InvoiceController extends Controller
     public function edit($id)
     {
         $invoice = Invoice::findOrFail($id);
-        return view('invoices.edit', compact('invoice'));
+        $statusOptions = [
+            'riconciliato' => 'Riconciliato',
+            'sospeso' => 'Sospeso',
+        ];
+
+        return view('invoices.edit', compact('invoice', 'statusOptions'));
     }
 
     /**
