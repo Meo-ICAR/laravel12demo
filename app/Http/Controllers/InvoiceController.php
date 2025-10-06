@@ -72,7 +72,7 @@ class InvoiceController extends Controller
                 'invoice_id' => $invoice->id,
                 'invoice_number' => $invoice->invoice_number,
                 'denominazione' => $denominazione,
-                'sent_date' => $sentDate
+              //  'sent_date' => $sentDate
             ]);
 
             // Update invoice as reconciled
@@ -92,28 +92,32 @@ class InvoiceController extends Controller
                 ->whereNotNull('sended_at')
                 ->whereNull('invoice_number');
 
-            if ($sentDate) {
-                $provvigioniQuery->whereDate('sended_at', $sentDate);
-            }
+         //   if ($sentDate) {
+         //       $provvigioniQuery->whereDate('sended_at', $sentDate);
+         //   }
 
             $provvigioni = $provvigioniQuery->get();
 
             Log::info('Found provvigioni records', [
                 'count' => $provvigioni->count(),
                 'denominazione' => $denominazione,
-                'sent_date' => $sentDate
+                'sent_date' => $invoice->invoice_date
             ]);
 
             foreach ($provvigioni as $provvigione) {
-                $provvigione->update([
+                $updateData = [
                     'invoice_number' => $invoice->invoice_number,
                     'stato' => 'Fatturato',
-                ]);
+                    'received_at' => $invoice->invoice_date,
+                ];
+
+                $provvigione->update($updateData);
 
                 Log::info('Updated provvigione', [
                     'provvigione_id' => $provvigione->id,
                     'invoice_number' => $invoice->invoice_number,
-                    'stato' => 'Fatturato'
+                    'stato' => 'Fatturato',
+                    'received_at' => $updateData['received_at']
                 ]);
             }
 
