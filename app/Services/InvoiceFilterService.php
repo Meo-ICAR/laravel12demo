@@ -124,11 +124,19 @@ class InvoiceFilterService
             ->whereNull('invoice_number')
             ->sum('importo');
 
+        // Get total provvigioni count
+        $totalProvvigioni = \App\Models\Provvigione::where('stato', 'Proforma')
+            ->whereNull('invoice_number')
+            ->count();
+            
         return [
             'unreconciled_invoices' => $unreconciledInvoices,
             'provvigioni_summary' => $provvigioniSummary,
             'total_unfiltered_invoices' => $totalUnfilteredInvoices,
             'total_unfiltered_provvigioni' => $totalUnfilteredProvvigioni,
+            'total_provvigioni' => $totalProvvigioni,
+            'unreconciled_count' => $unreconciledInvoices->count(),
+            'total_invoices' => Invoice::count(),
         ];
     }
 }

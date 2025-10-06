@@ -89,7 +89,6 @@ class InvoiceController extends Controller
             // Update provvigioni records
             $provvigioniQuery = Provvigione::where('stato', 'Proforma')
                 ->where('denominazione_riferimento', $denominazione)
-                ->whereNotNull('sended_at')
                 ->whereNull('invoice_number');
 
          //   if ($sentDate) {
@@ -104,6 +103,8 @@ class InvoiceController extends Controller
                 'sent_date' => $invoice->invoice_date
             ]);
 
+            $updatedCount = 0;
+
             foreach ($provvigioni as $provvigione) {
                 $updateData = [
                     'invoice_number' => $invoice->invoice_number,
@@ -111,14 +112,32 @@ class InvoiceController extends Controller
                     'received_at' => $invoice->invoice_date,
                 ];
 
-                $provvigione->update($updateData);
-
-                Log::info('Updated provvigione', [
+                Log::debug('Attempting to update provvigione', [
                     'provvigione_id' => $provvigione->id,
-                    'invoice_number' => $invoice->invoice_number,
-                    'stato' => 'Fatturato',
-                    'received_at' => $updateData['received_at']
+                    'update_data' => $updateData,
+                    'current_values' => [
+                        'invoice_number' => $provvigione->invoice_number,
+                        'stato' => $provvigione->stato,
+                        'received_at' => $provvigione->received_at
+                    ]
                 ]);
+
+                $result = $provvigione->update($updateData);
+
+                // Refresh the model to get updated values
+                $provvigione->refresh();
+
+                Log::info('Update result', [
+                    'provvigione_id' => $provvigione->id,
+                    'update_result' => $result,
+                    'updated_values' => [
+                        'invoice_number' => $provvigione->invoice_number,
+                        'stato' => $provvigione->stato,
+                        'received_at' => $provvigione->received_at
+                    ]
+                ]);
+
+                if ($result) $updatedCount++;
             }
 
             DB::commit();

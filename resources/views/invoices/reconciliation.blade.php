@@ -52,6 +52,98 @@
         </div>
     </div>
 </div>
+<!-- Summary Cards Row -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-warning">
+                <i class="fas fa-file-invoice"></i>
+            </span>
+            <div class="info-box-content">
+                <span class="info-box-text">
+                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
+                        Filtered Unreconciled Invoices
+                    @else
+                        Unreconciled Invoices
+                    @endif
+                </span>
+                <span class="info-box-number">{{ $unreconciled_invoices->count() }}</span>
+                <span class="info-box-text">
+                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
+                        Filtered: € {{ number_format($unreconciled_invoices->sum('total_amount'), 2, ',', '.') }}
+                    @else
+                        Total: € {{ number_format($unreconciled_invoices->sum('total_amount'), 2, ',', '.') }}
+                    @endif
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-info">
+                <i class="fas fa-envelope"></i>
+            </span>
+            <div class="info-box-content">
+                <span class="info-box-text">
+                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
+                        Filtered Provvigioni
+                    @else
+                        Sent Provvigioni
+                    @endif
+                </span>
+                <span class="info-box-number">{{ $provvigioni_summary->count() }}</span>
+                <span class="info-box-text">
+                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
+                        Filtered: € {{ number_format($provvigioni_summary->sum('total_amount'), 2, ',', '.') }}
+                    @else
+                        Total: € {{ number_format($provvigioni_summary->sum('total_amount'), 2, ',', '.') }}
+                    @endif
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-success">
+                <i class="fas fa-users"></i>
+            </span>
+            <div class="info-box-content">
+                <span class="info-box-text">Total Records</span>
+                <span class="info-box-number">{{ $provvigioni_summary->sum('total_records') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-primary">
+                <i class="fas fa-balance-scale"></i>
+            </span>
+            <div class="info-box-content">
+                <span class="info-box-text">Difference</span>
+                @php
+                    $invoiceTotal = $unreconciled_invoices->sum('total_amount');
+                    $provvigioneTotal = $provvigioni_summary->sum('total_amount');
+                    $difference = $invoiceTotal - $provvigioneTotal;
+                @endphp
+                <span class="info-box-number">
+                    € {{ number_format($difference, 2, ',', '.') }}
+                </span>
+                <span class="info-box-text">
+                    @if($difference == 0)
+                        <span class="text-success">Balanced</span>
+                    @elseif($difference > 0)
+                        <span class="text-warning">Invoices higher</span>
+                    @else
+                        <span class="text-info">Provvigioni higher</span>
+                    @endif
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="row">
     <!-- Left Column: Provvigioni Summary -->
@@ -234,98 +326,6 @@
     </div>
 </div>
 
-<!-- Summary Cards Row -->
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="info-box">
-            <span class="info-box-icon bg-warning">
-                <i class="fas fa-file-invoice"></i>
-            </span>
-            <div class="info-box-content">
-                <span class="info-box-text">
-                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
-                        Filtered Unreconciled Invoices
-                    @else
-                        Unreconciled Invoices
-                    @endif
-                </span>
-                <span class="info-box-number">{{ $unreconciled_invoices->count() }}</span>
-                <span class="info-box-text">
-                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
-                        Filtered: € {{ number_format($unreconciled_invoices->sum('total_amount'), 2, ',', '.') }}
-                    @else
-                        Total: € {{ number_format($unreconciled_invoices->sum('total_amount'), 2, ',', '.') }}
-                    @endif
-                </span>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="info-box">
-            <span class="info-box-icon bg-info">
-                <i class="fas fa-envelope"></i>
-            </span>
-            <div class="info-box-content">
-                <span class="info-box-text">
-                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
-                        Filtered Provvigioni
-                    @else
-                        Sent Provvigioni
-                    @endif
-                </span>
-                <span class="info-box-number">{{ $provvigioni_summary->count() }}</span>
-                <span class="info-box-text">
-                    @if(request('denominazione_riferimento') || request('email_date_from') || request('email_date_to'))
-                        Filtered: € {{ number_format($provvigioni_summary->sum('total_amount'), 2, ',', '.') }}
-                    @else
-                        Total: € {{ number_format($provvigioni_summary->sum('total_amount'), 2, ',', '.') }}
-                    @endif
-                </span>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="info-box">
-            <span class="info-box-icon bg-success">
-                <i class="fas fa-users"></i>
-            </span>
-            <div class="info-box-content">
-                <span class="info-box-text">Total Records</span>
-                <span class="info-box-number">{{ $provvigioni_summary->sum('total_records') }}</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="info-box">
-            <span class="info-box-icon bg-primary">
-                <i class="fas fa-balance-scale"></i>
-            </span>
-            <div class="info-box-content">
-                <span class="info-box-text">Difference</span>
-                @php
-                    $invoiceTotal = $unreconciled_invoices->sum('total_amount');
-                    $provvigioneTotal = $provvigioni_summary->sum('total_amount');
-                    $difference = $invoiceTotal - $provvigioneTotal;
-                @endphp
-                <span class="info-box-number">
-                    € {{ number_format($difference, 2, ',', '.') }}
-                </span>
-                <span class="info-box-text">
-                    @if($difference == 0)
-                        <span class="text-success">Balanced</span>
-                    @elseif($difference > 0)
-                        <span class="text-warning">Invoices higher</span>
-                    @else
-                        <span class="text-info">Provvigioni higher</span>
-                    @endif
-                </span>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Provvigione Selection Modal -->
 <div class="modal fade" id="provvigioneModal" tabindex="-1" role="dialog">
@@ -408,13 +408,13 @@
 $(document).ready(function() {
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
-    
+
     let selectedProvvigione = null;
 
     // Handle provvigione selection
     $(document).on('click', '.provvigione-select-btn', function(e) {
         e.preventDefault();
-        
+
         // Update selected provvigione
         selectedProvvigione = {
             denominazione: $(this).data('denominazione'),
@@ -426,7 +426,7 @@ $(document).ready(function() {
         // Update UI
         $('.provvigione-select-btn').removeClass('btn-success').addClass('btn-primary');
         $(this).removeClass('btn-primary').addClass('btn-success');
-        
+
         // Show selection in modal
         $('#provvigione-details').html(`
             <div class="alert alert-success">
@@ -442,7 +442,7 @@ $(document).ready(function() {
     // Handle reconcile action
     $(document).on('click', '.reconcile-btn', function(e) {
         e.preventDefault();
-        
+
         if (!selectedProvvigione) {
             Swal.fire({
                 icon: 'warning',
@@ -457,9 +457,9 @@ $(document).ready(function() {
         const invoiceNumber = $(this).data('invoice-number');
         const $btn = $(this);
         const originalText = $btn.html();
-        
+
         console.log('Reconciling invoice:', { invoiceId, invoiceNumber, selectedProvvigione });
-        
+
         Swal.fire({
             title: 'Confirm Reconciliation',
             html: `Are you sure you want to reconcile invoice <strong>${invoiceNumber}</strong> with:<br><br>
@@ -479,9 +479,9 @@ $(document).ready(function() {
 
                 // Get CSRF token from meta tag
                 const token = $('meta[name="csrf-token"]').attr('content');
-                
+
                 console.log('Sending reconciliation request with token:', token);
-                
+
                 // Make the AJAX request
                 $.ajax({
                     url: '/invoices/reconcile',
@@ -513,7 +513,7 @@ $(document).ready(function() {
                     error: function(xhr, status, error) {
                         console.error('Reconciliation error:', { xhr, status, error });
                         let errorMsg = 'Error reconciling invoice';
-                        
+
                         try {
                             const response = xhr.responseJSON || {};
                             if (response.message) {
@@ -524,7 +524,7 @@ $(document).ready(function() {
                         } catch (e) {
                             console.error('Error parsing error response:', e);
                         }
-                        
+
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
