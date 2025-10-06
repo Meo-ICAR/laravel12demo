@@ -19,8 +19,7 @@
                     <div class="col-md-2">
                         <label for="stato">Filter by Stato:</label>
                         <select name="stato" id="stato" class="form-control">
-                            <option value="">All Stati</option>
-                            @foreach($statoOptions as $option)
+                              @foreach($statoOptions as $option)
                                 <option value="{{ $option }}" {{ request('stato') == $option ? 'selected' : '' }}>
                                     {{ $option }}
                                 </option>
@@ -417,20 +416,11 @@
                                 <td>{{ Str::limit($item->invoice_number, 6) ?: 'N/A' }}</td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('provvigioni.edit', $item->id) }}" class="btn btn-warning btn-sm" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+
                                         <a href="{{ route('provvigioni.show', $item->id) }}" class="btn btn-info btn-sm" title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <form action="{{ route('provvigioni.destroy', $item->id) }}" method="POST" style="display:inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this provvigione?')" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
+
                                 </td>
                             </tr>
                         @empty

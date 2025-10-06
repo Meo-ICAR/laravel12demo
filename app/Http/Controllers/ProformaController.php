@@ -178,8 +178,14 @@ class ProformaController extends Controller
     public function destroy(Proforma $proforma)
     {
         try {
+            // Start a database transaction
+            \DB::beginTransaction();
+
             // Get associated provvigioni IDs before deletion
             $provvigioniIds = $proforma->provvigioni->pluck('id')->toArray();
+
+            // First, detach all provvigioni to ensure pivot table is cleaned up
+            $proforma->provvigioni()->detach();
 
             // Restore provvigioni status to 'Inserito'
             if (!empty($provvigioniIds)) {
@@ -188,12 +194,21 @@ class ProformaController extends Controller
                     ->update(['stato' => 'Inserito']);
             }
 
-            // Delete the proforma (this will cascade delete proforma_provvigione records)
-            $proforma->delete();
+            // Force delete the proforma (bypass soft delete)
+            $proforma->forceDelete();
 
-            return redirect()->route('proformas.index')->with('success', 'Proforma deleted successfully. Associated provvigioni restored to \'Inserito\' status.');
+            // Commit the transaction
+            \DB::commit();
+
+            return redirect()->route('proformas.index')
+                ->with('success', 'Proforma deleted successfully. Associated provvigioni restored to \'Inserito\' status.');
+
         } catch (\Exception $e) {
-            return redirect()->route('proformas.index')->with('error', 'Error deleting proforma: ' . $e->getMessage());
+            // Rollback the transaction on error
+            \DB::rollBack();
+            \Log::error('Error deleting proforma: ' . $e->getMessage());
+            return redirect()->route('proformas.index')
+                ->with('error', 'Error deleting proforma: ' . $e->getMessage());
         }
     }
 
@@ -232,16 +247,31 @@ class ProformaController extends Controller
                 'stato' => 'Spedito'
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'DEBUG MODE: Email simulation successful to ' . $recipientEmail . ' (not actually sent)'
-            ]);
+            $message = 'DEBUG MODE: Email simulation successful to ' . $recipientEmail . ' (not actually sent)';
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ]);
+            }
+
+            return redirect()->route('proformas.index')
+                ->with('success', $message);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to process email: ' . $e->getMessage()
-            ]);
+            $errorMessage = 'Failed to process email: ' . $e->getMessage();
+            \Log::error('Email sending error: ' . $errorMessage);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ]);
+            }
+
+            return redirect()->route('proformas.index')
+                ->with('error', $errorMessage);
         }
     }
 
@@ -314,6 +344,8 @@ class ProformaController extends Controller
                 'message' => 'Failed to process email: ' . $e->getMessage()
             ]);
         }
+         return redirect()->route('proformas.index')
+                ->with('success', $message);
     }
 
     /**
@@ -416,7 +448,11 @@ class ProformaController extends Controller
                     // });
 
                     // Update sended_at timestamp (even in debug mode to simulate success)
-                    $proforma->update(['sended_at' => now()]);
+                       // Update sended_at timestamp and set status to 'inviato' (even in debug mode to simulate success)
+                    $proforma->update([
+                        'sended_at' => now(),
+                        'stato' => 'Spedito'
+                    ]);
 
                     $results[] = [
                         'proforma_id' => $proformaId,
@@ -452,6 +488,8 @@ class ProformaController extends Controller
                 'message' => 'Failed to process bulk emails: ' . $e->getMessage()
             ]);
         }
+         return redirect()->route('proformas.index')
+                ->with('success', $message);
     }
 
     /**

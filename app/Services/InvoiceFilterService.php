@@ -84,8 +84,9 @@ class InvoiceFilterService
 
         // Get Provvigioni summary
         $provvigioniQuery = \App\Models\Provvigione::where('stato', 'Proforma')
-            ->whereNotNull('sended_at')
-            ->whereNull('invoice_number');
+          //  ->whereNotNull('sended_at')
+           // ->whereNull('invoice_number')
+           ;
 
         if ($request->filled('denominazione_riferimento')) {
             $provvigioniQuery->where('denominazione_riferimento', 'like', '%' . $request->denominazione_riferimento . '%');

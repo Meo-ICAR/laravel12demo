@@ -40,7 +40,7 @@
                                 <div class="col-md-6">
                                     <h5 class="text-primary mb-3">
                                         <i class="fas fa-info-circle mr-2"></i>
-                                        Basic Information
+                                        Informazioni
                                     </h5>
                                     <dl class="row">
                                         <dt class="col-sm-4">ID</dt>
@@ -143,7 +143,7 @@
                                         Additional Information
                                     </h5>
                                     <dl class="row">
-                                        <dt class="col-sm-4">Annotation</dt>
+                                        <dt class="col-sm-4">Annotazioni</dt>
                                         <dd class="col-sm-8">
                                             @if($proforma->annotation)
                                                 <div class="alert alert-info mb-0">
@@ -159,14 +159,20 @@
                         </div>
                         <div class="card-footer">
                             <div class="btn-group">
-                                <a href="{{ route('proformas.edit', $proforma) }}" class="btn btn-warning">
-                                    <i class="fas fa-edit mr-1"></i> Edit
+                            @if($proforma->stato === 'Inserito')
+                                            <a href="{{ route('proformas.edit', $proforma) }}" class="btn btn-primary btn-sm" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            @else
+                                            <button type="button" class="btn btn-primary btn-sm" disabled title="Editing is only available for 'Inserito' status">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            @endif
                                 </a>
-                                @if($proforma->emailto)
                                     <button type="button" class="btn btn-info" onclick="sendProformaEmail()">
                                         <i class="fas fa-envelope mr-1"></i> Send Email
                                     </button>
-                                @endif
+
                                 <a href="{{ route('proformas.index') }}" class="btn btn-secondary">
                                     <i class="fas fa-arrow-left mr-1"></i> Back
                                 </a>

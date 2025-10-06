@@ -461,9 +461,15 @@ class ProvvigioneController extends Controller
             'anticipo_descrizione' => $fornitore->anticipo_description,
             'contributo_descrizione' => $fornitore->contributo_description,
             'emailfrom' => $company->email,
-            'emailsubject' => $company->emailsubject ?? 'Proforma compensi provvigionali',
+            'emailsubject' => 'Proforma #', // Will be updated with the actual ID
             'compenso_descrizione' => $company->compenso_descrizione,
         ]);
+
+        // Update emailsubject with the actual proforma ID
+        $proforma->update([
+            'emailsubject' => 'Proforma # ' . $proforma->id
+        ]);
+
         $provvigioni = \App\Models\Provvigione::where('denominazione_riferimento', $denominazione)->where('stato', 'Inserito')->get();
         if ($provvigioni->isNotEmpty()) {
             $pivotData = [];

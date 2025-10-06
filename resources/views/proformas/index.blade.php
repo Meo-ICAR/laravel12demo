@@ -34,8 +34,8 @@
                             <div class="form-group col-md-2">
                                 <label for="stato">Stato</label>
                                 <select name="stato" id="stato" class="form-control">
-                                    <option value="">-- All --</option>
-                                    <option value="Inserito" {{ request()->has('stato') ? (request('stato') == 'Inserito' ? 'selected' : '') : 'selected' }}>Inserito</option>
+                                    <option value="" {{ request('stato') === '' ? 'selected' : '' }}>-- All --</option>
+                                    <option value="Inserito" {{ !request()->has('stato') || request('stato') == 'Inserito' ? 'selected' : '' }}>Inserito</option>
                                     <option value="Spedito" {{ request('stato') == 'Spedito' ? 'selected' : '' }}>Spedito</option>
                                     <option value="Fatturato" {{ request('stato') == 'Fatturato' ? 'selected' : '' }}>Fatturato</option>
                                     <option value="Difforme" {{ request('stato') == 'Difforme' ? 'selected' : '' }}>Difforme</option>
@@ -157,7 +157,9 @@
                                                 <i class="fas fa-eye"></i>
                                             </a>
 
-                                              <form action="{{ route('proformas.destroy', $proforma) }}" method="POST" style="display:inline-block">
+
+
+                                            <form action="{{ route('proformas.destroy', $proforma) }}" method="POST" style="display:inline-block">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure? This will restore associated provvigioni to \'Inserito\' status.')" title="Delete">
