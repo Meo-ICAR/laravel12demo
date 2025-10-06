@@ -11,7 +11,7 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('proformas.index') }}">Proformas</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('proformas.index') }}">Proforma</a></li>
                         <li class="breadcrumb-item active">Edit</li>
                     </ol>
                 </div>
@@ -150,7 +150,7 @@
                                         <div class="form-group">
                                             <label for="annotation">
                                                 <i class="fas fa-sticky-note mr-1"></i>
-                                                Annotation
+                                                Annotazione
                                             </label>
                                             <textarea name="annotation" class="form-control" rows="4" placeholder="Enter internal annotations">{{ old('annotation', $proforma->annotation) }}</textarea>
                                         </div>
@@ -158,7 +158,7 @@
                                         <div class="form-group">
                                             <label for="sended_at">
                                                 <i class="fas fa-paper-plane mr-1"></i>
-                                                Sended At
+                                                Inviato
                                             </label>
                                             <input type="datetime-local" name="sended_at" class="form-control" value="{{ old('sended_at', $proforma->sended_at ? \Carbon\Carbon::parse($proforma->sended_at)->format('Y-m-d\TH:i') : '') }}">
                                         </div>
@@ -166,7 +166,7 @@
                                         <div class="form-group">
                                             <label for="paid_at">
                                                 <i class="fas fa-check-circle mr-1"></i>
-                                                Paid At
+                                                Pagato
                                             </label>
                                             <input type="datetime-local" name="paid_at" class="form-control" value="{{ old('paid_at', $proforma->paid_at ? \Carbon\Carbon::parse($proforma->paid_at)->format('Y-m-d\TH:i') : '') }}">
                                         </div>

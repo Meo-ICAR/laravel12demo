@@ -204,7 +204,7 @@ class ProformaController extends Controller
             $recipientEmail = 'hassistosrl@gmail.com';
 
             // Prepare email content
-            $subject = $proforma->emailsubject ?: 'Proforma Details - ' . ($proforma->fornitore->name ?? 'Unknown');
+            $subject = ($proforma->emailsubject ?: 'Proforma  - ' . ' N. ' . $proforma->id . ' #'. ($proforma->fornitore->name ?? 'Unknown')) ;
             $body = $proforma->emailbody ?: $this->generateDefaultEmailContent($proforma);
             $from = $proforma->emailfrom ?: config('mail.from.address');
 
@@ -226,8 +226,11 @@ class ProformaController extends Controller
             //             ->html($body);
             // });
 
-            // Update sended_at timestamp (even in debug mode to simulate success)
-            $proforma->update(['sended_at' => now()]);
+            // Update sended_at timestamp and set status to 'inviato' (even in debug mode to simulate success)
+            $proforma->update([
+                'sended_at' => now(),
+                'stato' => 'Spedito'
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -294,8 +297,11 @@ class ProformaController extends Controller
             //             ->html($body);
             // });
 
-            // Update sended_at timestamp (even in debug mode to simulate success)
-            $proforma->update(['sended_at' => now()]);
+            // Update sended_at timestamp and set status to 'inviato' (even in debug mode to simulate success)
+            $proforma->update([
+                'sended_at' => now(),
+                 'stato' => 'Spedito'
+            ]);
 
             return response()->json([
                 'success' => true,

@@ -4,12 +4,12 @@
 <div class="container-fluid">
     <div class="row mb-2">
         <div class="col-sm-6">
-            <h1>Proformas</h1>
+            <h1>Proforma</h1>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="#">Home</a></li>
-                <li class="breadcrumb-item active">Proformas</li>
+                <li class="breadcrumb-item active">Proforma</li>
             </ol>
         </div>
     </div>
@@ -17,7 +17,7 @@
         <div class="col-12">
             <div class="card card-secondary">
                 <div class="card-header">
-                    <h3 class="card-title">Filters</h3>
+                    <h3 class="card-title">Filtri</h3>
                     <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-toggle="collapse" data-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
                             <i class="fas fa-filter"></i>
@@ -46,11 +46,11 @@
                                 <input type="text" name="emailsubject" id="emailsubject" class="form-control" value="{{ request('emailsubject') }}">
                             </div>
                             <div class="form-group col-md-2">
-                                <label for="sended_at">Sended At</label>
+                                <label for="sended_at">Inviato</label>
                                 <input type="text" name="sended_at" id="sended_at" class="form-control" value="{{ request('sended_at') }}" placeholder="YYYY-MM-DD">
                             </div>
                             <div class="form-group col-md-2">
-                                <label for="paid_at">Paid At</label>
+                                <label for="paid_at">Pagato</label>
                                 <input type="text" name="paid_at" id="paid_at" class="form-control" value="{{ request('paid_at') }}" placeholder="YYYY-MM-DD">
                             </div>
                             <div class="form-group col-md-2">
@@ -85,10 +85,10 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Proformas List</h3>
+                    <h3 class="card-title">Lista Proforma</h3>
                     <div class="card-tools">
                         <button type="button" class="btn btn-success btn-sm" onclick="sendBulkEmails()" id="bulkEmailBtn" disabled>
-                            <i class="fas fa-envelope"></i> Send Bulk Emails
+                            <i class="fas fa-envelope"></i> Invia tutte le Email
                         </button>
                     </div>
                 </div>
@@ -107,9 +107,9 @@
                                 <th class="text-right">Anticipo</th>
                                 <th class="text-right">Totale</th>
                                 <th class="text-right">Provvigioni</th>
-                                <th>Sended At</th>
-                                <th>Paid At</th>
-                                <th>Actions</th>
+                                <th>Inviato</th>
+                                <th>Pagato</th>
+                                <th>Azioni</th>
                                 <th>Email Subject</th>
                             </tr>
                         </thead>
@@ -159,19 +159,17 @@
                                             <a href="{{ route('proformas.edit', $proforma) }}" class="btn btn-warning btn-sm" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <form action="{{ route('proformas.destroy', $proforma) }}" method="POST" style="display:inline-block">
+
+                                              <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#emailSimModal-{{ $proforma->id }}">
+                                                <i class="fas fa-at"></i>
+                                            </button>
+                                              <form action="{{ route('proformas.destroy', $proforma) }}" method="POST" style="display:inline-block">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure? This will restore associated provvigioni to \'Inserito\' status.')" title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
-                                            <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#emailBodyModal-{{ $proforma->id }}">
-                                                <i class="fas fa-envelope-open-text"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#emailSimModal-{{ $proforma->id }}">
-                                                <i class="fas fa-at"></i>
-                                            </button>
                                         </div>
                                         <!-- Email Simulation Modal -->
                                         <div class="modal fade" id="emailSimModal-{{ $proforma->id }}" tabindex="-1" role="dialog" aria-labelledby="emailSimModalLabel-{{ $proforma->id }}" aria-hidden="true">
