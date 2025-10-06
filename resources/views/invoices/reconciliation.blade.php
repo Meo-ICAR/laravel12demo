@@ -405,33 +405,111 @@
 @section('js')
 <script>
 $(document).ready(function() {
-    console.log('Document ready!');
+    let selectedProvvigione = null;
 
-    // Simple Provvigione selection
-    $(document).on('click', '.provvigione-select-btn', function() {
-        console.log('Provvigione button clicked!');
+    // Handle provvigione selection
+    $(document).on('click', '.provvigione-select-btn', function(e) {
+        e.preventDefault();
+        
+        // Update selected provvigione
+        selectedProvvigione = {
+            denominazione: $(this).data('denominazione'),
+            sentDate: $(this).data('sent-date')
+        };
 
-        var $btn = $(this);
-        var denominazione = $btn.data('denominazione');
-        var sentDate = $btn.data('sent-date');
-
-        // Simple alert to show selection
-        alert('Selected: ' + (denominazione || 'N/A') + '\nSent Date: ' + (sentDate || 'N/A'));
-
-        // Change button color to show selection
+        // Update UI
         $('.provvigione-select-btn').removeClass('btn-success').addClass('btn-primary');
-        $btn.removeClass('btn-primary').addClass('btn-success');
+        $(this).removeClass('btn-primary').addClass('btn-success');
+        
+        // Show selection in modal
+        $('#provvigione-details').html(`
+            <div class="alert alert-success">
+                <h5><i class="icon fas fa-check"></i> Selected Provvigione</h5>
+                <p><strong>Denominazione:</strong> ${selectedProvvigione.denominazione || 'N/A'}</p>
+                <p><strong>Sent Date:</strong> ${selectedProvvigione.sentDate || 'N/A'}</p>
+                <p class="mb-0">Now click "Reconcile" on an invoice to match them.</p>
+            </div>
+        `);
+        $('#provvigioneModal').modal('show');
     });
 
-    // Simple reconcile button
-    $(document).on('click', '.reconcile-btn', function() {
-        console.log('Reconcile button clicked!');
+    // Handle reconcile action
+    $(document).on('click', '.reconcile-btn', function(e) {
+        e.preventDefault();
+        
+        if (!selectedProvvigione) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Selection Required',
+                text: 'Please select a provvigione first',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
 
-        var invoiceId = $(this).data('invoice-id');
-        var invoiceNumber = $(this).data('invoice-number');
+        const invoiceId = $(this).data('invoice-id');
+        const invoiceNumber = $(this).data('invoice-number');
+        const $btn = $(this);
+        const originalText = $btn.html();
+        
+        Swal.fire({
+            title: 'Confirm Reconciliation',
+            html: `Are you sure you want to reconcile invoice <strong>${invoiceNumber}</strong> with:<br><br>
+                  <strong>Denominazione:</strong> ${selectedProvvigione.denominazione || 'N/A'}<br>
+                  <strong>Sent Date:</strong> ${selectedProvvigione.sentDate || 'N/A'}`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, reconcile',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading state
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Reconciling...');
 
-        alert('Reconcile invoice: ' + (invoiceNumber || 'N/A') + '\nID: ' + invoiceId);
+                // Make API call
+                $.ajax({
+                    url: '{{ route("invoices.reconcile") }}',
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        invoice_id: invoiceId,
+                        denominazione_riferimento: selectedProvvigione.denominazione,
+                        sent_date: selectedProvvigione.sentDate
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Invoice has been reconciled successfully.',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            // Reload the page to see changes
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'Error reconciling invoice';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg += ': ' + xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMsg,
+                            confirmButtonText: 'OK'
+                        });
+                        $btn.prop('disabled', false).html(originalText);
+                    }
+                });
+            }
+        });
     });
+
+    // Show tooltips
+    $('[data-toggle="tooltip"]').tooltip();
 });
 </script>
 @stop
