@@ -46,13 +46,20 @@ class InvoiceController extends Controller
      */
     public function reconcile(Request $request)
     {
-        Log::info('Reconciliation request received', $request->all());
+        Log::info('Reconciliation request received', [
+            'request_data' => $request->all(),
+            'headers' => $request->headers->all(),
+            'user' => auth()->user() ? auth()->user()->id : 'guest'
+        ]);
 
-        $request->validate([
+        // Validate request
+        $validated = $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
             'denominazione_riferimento' => 'required|string',
             'sent_date' => 'nullable|date',
         ]);
+
+        Log::debug('Validation passed', ['validated' => $validated]);
 
         try {
             DB::beginTransaction();

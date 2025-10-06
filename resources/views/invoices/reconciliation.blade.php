@@ -403,8 +403,12 @@
 @stop
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
     let selectedProvvigione = null;
 
     // Handle provvigione selection
@@ -416,6 +420,8 @@ $(document).ready(function() {
             denominazione: $(this).data('denominazione'),
             sentDate: $(this).data('sent-date')
         };
+
+        console.log('Selected provvigione:', selectedProvvigione);
 
         // Update UI
         $('.provvigione-select-btn').removeClass('btn-success').addClass('btn-primary');
@@ -452,6 +458,8 @@ $(document).ready(function() {
         const $btn = $(this);
         const originalText = $btn.html();
         
+        console.log('Reconciling invoice:', { invoiceId, invoiceNumber, selectedProvvigione });
+        
         Swal.fire({
             title: 'Confirm Reconciliation',
             html: `Are you sure you want to reconcile invoice <strong>${invoiceNumber}</strong> with:<br><br>
@@ -469,17 +477,29 @@ $(document).ready(function() {
                 // Show loading state
                 $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Reconciling...');
 
-                // Make API call
+                // Get CSRF token from meta tag
+                const token = $('meta[name="csrf-token"]').attr('content');
+                
+                console.log('Sending reconciliation request with token:', token);
+                
+                // Make the AJAX request
                 $.ajax({
-                    url: '{{ route("invoices.reconcile") }}',
-                    method: 'POST',
+                    url: '/invoices/reconcile',
+                    type: 'POST',
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
                     data: {
-                        _token: '{{ csrf_token() }}',
+                        _token: token,
                         invoice_id: invoiceId,
                         denominazione_riferimento: selectedProvvigione.denominazione,
                         sent_date: selectedProvvigione.sentDate
                     },
                     success: function(response) {
+                        console.log('Reconciliation successful:', response);
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',
@@ -490,26 +510,38 @@ $(document).ready(function() {
                             location.reload();
                         });
                     },
-                    error: function(xhr) {
+                    error: function(xhr, status, error) {
+                        console.error('Reconciliation error:', { xhr, status, error });
                         let errorMsg = 'Error reconciling invoice';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMsg += ': ' + xhr.responseJSON.message;
+                        
+                        try {
+                            const response = xhr.responseJSON || {};
+                            if (response.message) {
+                                errorMsg = response.message;
+                            } else if (xhr.responseText) {
+                                errorMsg = xhr.responseText;
+                            }
+                        } catch (e) {
+                            console.error('Error parsing error response:', e);
                         }
+                        
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: errorMsg,
+                            html: `<div style="text-align: left;">
+                                <p>${errorMsg}</p>
+                                <p class="text-muted small mt-2">If this problem persists, please contact support.</p>
+                            </div>`,
                             confirmButtonText: 'OK'
                         });
+                    },
+                    complete: function() {
                         $btn.prop('disabled', false).html(originalText);
                     }
                 });
             }
         });
     });
-
-    // Show tooltips
-    $('[data-toggle="tooltip"]').tooltip();
 });
 </script>
 @stop
