@@ -175,6 +175,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('clientis-invoices/{id}', [App\Http\Controllers\ClientiInvoiceController::class, 'show'])->name('clientis.invoices.show');
     Route::post('clientis/import-invoiceins-to-invoices', [\App\Http\Controllers\ClientiController::class, 'importInvoiceinsToInvoicesByClienti'])->name('clientis.importInvoiceinsToInvoicesByClienti');
 
+    // Pratiche routes - accessible by all authenticated users
+    Route::middleware('auth')->group(function () {
+        Route::resource('pratiches', 'App\Http\Controllers\pratichecontroller');
+    });
+
     // Customertypes routes
     Route::resource('customertypes', App\Http\Controllers\CustomertypeController::class);
 
@@ -229,10 +234,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('invoiceins/import-custom', [InvoiceinImportController::class, 'importCustom'])->name('invoiceins.import.custom');
     Route::resource('invoiceins', App\Http\Controllers\InvoiceinController::class);
 
-    // Pratiches routes
-    Route::post('pratiches/import', [App\Http\Controllers\PraticheController::class, 'import'])->name('pratiches.import');
+    // Pratiche routes
     Route::resource('pratiches', App\Http\Controllers\PraticheController::class);
+    
+    // Import API routes
+    Route::get('pratiches/import-api', [App\Http\Controllers\PraticheController::class, 'showImportApiForm'])
+        ->name('pratiches.import.api.form');
+    Route::post('pratiches/import-api', [App\Http\Controllers\PraticheController::class, 'importFromApi'])
+        ->name('pratiches.import.api');
+    
+    // Keep the old route for backward compatibility
     Route::resource('pratiches-crud', App\Http\Controllers\PraticheCrudController::class);
+
 
     // FornitoriInvoice routes
     Route::get('fornitoris-invoices', [App\Http\Controllers\FornitoriInvoiceController::class, 'index'])->name('fornitoris.invoices.index');
