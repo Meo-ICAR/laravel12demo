@@ -25,18 +25,13 @@
                 <i class="fas fa-filter"></i> Filter Calls
             </h5>
             <div class="d-flex align-items-center">
-                <button type="button" class="btn btn-primary btn-sm mr-2" data-toggle="modal" data-target="#importEsitiModal">
+                <button type="button" class="btn btn-primary btn-sm mr-2" data-bs-toggle="modal" data-bs-target="#importEsitiModal">
                     <i class="fas fa-file-import"></i> Importa da SIDIAL
                 </button>
-                <button class="btn btn-link text-dark" type="button" data-toggle="collapse" data-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                <button class="btn btn-link text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
                     <i class="fas fa-chevron-down"></i> Show Filters
                 </button>
             </div>
-            
-            <!-- Debug Modal Button -->
-            <button type="button" class="btn btn-danger btn-sm ml-2" onclick="document.getElementById('importEsitiModal').classList.add('show'); document.getElementById('importEsitiModal').style.display='block';">
-                <i class="fas fa-bug"></i> Debug Modal
-            </button>
         </div>
         <div class="collapse" id="filterCollapse">
         <div class="card-body">

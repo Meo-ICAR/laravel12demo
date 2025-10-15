@@ -36,11 +36,32 @@
 @stop
 
 @section('css')
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome-free/css/all.min.css') }}">
+    <!-- AdminLTE -->
+    <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/adminlte.min.css') }}">
     @vite(['resources/css/app.css'])
 @stop
 
 @section('js')
+    <!-- jQuery -->
+    <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+    <!-- Bootstrap 4 -->
+    <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- AdminLTE App -->
+    <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
     @vite(['resources/js/app.js'])
+    
+    <script>
+        // Debug: Log when document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Document ready');
+            console.log('jQuery version:', $.fn.jquery);
+            console.log('Bootstrap version:', $.fn.tooltip ? $.fn.tooltip.Constructor.VERSION : 'Bootstrap not loaded');
+        });
+    </script>
 @stop
 
 @section('footer')
