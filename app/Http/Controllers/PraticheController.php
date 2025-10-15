@@ -18,30 +18,35 @@ class PraticheController extends PraticheCrudController
     }
 
     /**
-     * Import Pratiche from API
-     */
-    public function importFromApi(Request $request)
-    {
-        $request->validate([
-            'data_inizio' => 'required|date',
-            'data_fine' => 'required|date|after_or_equal:data_inizio',
+ * Import Pratiche from API
+ */
+public function importFromApi(Request $request)
+{
+    $request->validate([
+        'data_inizio' => 'required|date',
+        'data_fine' => 'required|date|after_or_equal:data_inizio',
+    ]);
+
+    try {
+        // Run the command programmatically
+        \Artisan::call('pratiche:import-api', [
+            '--start-date' => $request->data_inizio,
+            '--end-date' => $request->data_fine,
         ]);
 
-        try {
-            // Your API import logic here
-            $response = [
-                'success' => true,
-                'message' => 'Importazione completata con successo!',
-            ];
+        // Get the command output
+        $output = \Artisan::output();
 
-            return redirect()
-                ->route('pratiches.import.api.form')
-                ->with('success', $response['message']);
+        return redirect()
+            ->route('pratiches.import.api.form')
+            ->with('success', 'Importazione completata con successo!')
+            ->with('output', $output);
 
-        } catch (\Exception $e) {
-            return redirect()
-                ->route('pratiches.import.api.form')
-                ->with('error', 'Errore durante l\'importazione: ' . $e->getMessage());
-        }
+    } catch (\Exception $e) {
+        \Log::error('Import error: ' . $e->getMessage());
+        return redirect()
+            ->route('pratiches.import.api.form')
+            ->with('error', 'Errore durante l\'importazione: ' . $e->getMessage());
     }
-}
+
+}    }

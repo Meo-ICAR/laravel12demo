@@ -20,114 +20,150 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="pratica_id">ID Pratica *</label>
-                                    <input type="text" class="form-control @error('pratica_id') is-invalid @enderror"
-                                           id="pratica_id" name="pratica_id" value="{{ old('pratica_id', $pratiche->pratica_id) }}" required>
-                                    @error('pratica_id')
+                                    <label for="codice_pratica">Codice Pratica *</label>
+                                    <input type="text" class="form-control @error('codice_pratica') is-invalid @enderror"
+                                           id="codice_pratica" name="codice_pratica"
+                                           value="{{ old('codice_pratica', $pratiche->codice_pratica) }}" required>
+                                    @error('codice_pratica')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="Data_inserimento">Data Inserimento</label>
-                                    <input type="date" class="form-control @error('Data_inserimento') is-invalid @enderror"
-                                           id="Data_inserimento" name="Data_inserimento"
-                                           value="{{ old('Data_inserimento', $pratiche->Data_inserimento ? $pratiche->Data_inserimento->format('Y-m-d') : '') }}">
-                                    @error('Data_inserimento')
+                                    <label for="data_inserimento_pratica">Data Inserimento</label>
+                                    <input type="date" class="form-control @error('data_inserimento_pratica') is-invalid @enderror"
+                                           id="data_inserimento_pratica" name="data_inserimento_pratica"
+                                           value="{{ old('data_inserimento_pratica', $pratiche->data_inserimento_pratica ? $pratiche->data_inserimento_pratica->format('Y-m-d') : '') }}">
+                                    @error('data_inserimento_pratica')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nome_cliente">Nome Cliente *</label>
+                                    <input type="text" class="form-control @error('nome_cliente') is-invalid @enderror"
+                                           id="nome_cliente" name="nome_cliente"
+                                           value="{{ old('nome_cliente', $pratiche->nome_cliente) }}" required>
+                                    @error('nome_cliente')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cognome_cliente">Cognome Cliente *</label>
+                                    <input type="text" class="form-control @error('cognome_cliente') is-invalid @enderror"
+                                           id="cognome_cliente" name="cognome_cliente"
+                                           value="{{ old('cognome_cliente', $pratiche->cognome_cliente) }}" required>
+                                    @error('cognome_cliente')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="codice_fiscale">Codice Fiscale *</label>
+                                    <input type="text" class="form-control @error('codice_fiscale') is-invalid @enderror"
+                                           id="codice_fiscale" name="codice_fiscale"
+                                           value="{{ old('codice_fiscale', $pratiche->codice_fiscale) }}" required>
+                                    @error('codice_fiscale')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="denominazione_agente">Denominazione Agente</label>
+                                    <input type="text" class="form-control @error('denominazione_agente') is-invalid @enderror"
+                                           id="denominazione_agente" name="denominazione_agente"
+                                           value="{{ old('denominazione_agente', $pratiche->denominazione_agente) }}">
+                                    @error('denominazione_agente')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="partita_iva_agente">Partita IVA Agente</label>
+                                    <input type="text" class="form-control @error('partita_iva_agente') is-invalid @enderror"
+                                           id="partita_iva_agente" name="partita_iva_agente"
+                                           value="{{ old('partita_iva_agente', $pratiche->partita_iva_agente) }}">
+                                    @error('partita_iva_agente')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="denominazione_banca">Banca</label>
+                                    <input type="text" class="form-control @error('denominazione_banca') is-invalid @enderror"
+                                           id="denominazione_banca" name="denominazione_banca"
+                                           value="{{ old('denominazione_banca', $pratiche->denominazione_banca) }}">
+                                    @error('denominazione_banca')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="tipo_prodotto">Tipo Prodotto *</label>
+                                    <select class="form-control @error('tipo_prodotto') is-invalid @enderror"
+                                            id="tipo_prodotto" name="tipo_prodotto" required>
+                                        <option value="">Seleziona tipo prodotto</option>
+                                        <option value="prestito" {{ old('tipo_prodotto', $pratiche->tipo_prodotto) == 'prestito' ? 'selected' : '' }}>Prestito</option>
+                                        <option value="mutuo" {{ old('tipo_prodotto', $pratiche->tipo_prodotto) == 'mutuo' ? 'selected' : '' }}>Mutuo</option>
+                                        <option value="cessione" {{ old('tipo_prodotto', $pratiche->tipo_prodotto) == 'cessione' ? 'selected' : '' }}>Cessione del Quinto</option>
+                                    </select>
+                                    @error('tipo_prodotto')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="stato_pratica">Stato Pratica *</label>
+                                    <select class="form-control @error('stato_pratica') is-invalid @enderror"
+                                            id="stato_pratica" name="stato_pratica" required>
+                                        <option value="">Seleziona stato</option>
+                                        <option value="in_attesa" {{ old('stato_pratica', $pratiche->stato_pratica) == 'in_attesa' ? 'selected' : '' }}>In Attesa</option>
+                                        <option value="in_lavorazione" {{ old('stato_pratica', $pratiche->stato_pratica) == 'in_lavorazione' ? 'selected' : '' }}>In Lavorazione</option>
+                                        <option value="completata" {{ old('stato_pratica', $pratiche->stato_pratica) == 'completata' ? 'selected' : '' }}>Completata</option>
+                                        <option value="respinta" {{ old('stato_pratica', $pratiche->stato_pratica) == 'respinta' ? 'selected' : '' }}>Respinta</option>
+                                    </select>
+                                    @error('stato_pratica')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
-                            <label for="Descrizione">Descrizione</label>
-                            <textarea class="form-control @error('Descrizione') is-invalid @enderror"
-                                      id="Descrizione" name="Descrizione" rows="3">{{ old('Descrizione', $pratiche->Descrizione) }}</textarea>
-                            @error('Descrizione')
+                            <label for="descrizione_prodotto">Descrizione Prodotto</label>
+                            <textarea class="form-control @error('descrizione_prodotto') is-invalid @enderror"
+                                    id="descrizione_prodotto" name="descrizione_prodotto" rows="3">{{ old('descrizione_prodotto', $pratiche->descrizione_prodotto) }}</textarea>
+                            @error('descrizione_prodotto')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="Cliente">Cliente</label>
-                                    <input type="text" class="form-control @error('Cliente') is-invalid @enderror"
-                                           id="Cliente" name="Cliente" value="{{ old('Cliente', $pratiche->Cliente) }}">
-                                    @error('Cliente')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="Agente">Agente</label>
-                                    <input type="text" class="form-control @error('Agente') is-invalid @enderror"
-                                           id="Agente" name="Agente" value="{{ old('Agente', $pratiche->Agente) }}">
-                                    @error('Agente')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="Segnalatore">Segnalatore</label>
-                                    <input type="text" class="form-control @error('Segnalatore') is-invalid @enderror"
-                                           id="Segnalatore" name="Segnalatore" value="{{ old('Segnalatore', $pratiche->Segnalatore) }}">
-                                    @error('Segnalatore')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="Fonte">Fonte</label>
-                                    <input type="text" class="form-control @error('Fonte') is-invalid @enderror"
-                                           id="Fonte" name="Fonte" value="{{ old('Fonte', $pratiche->Fonte) }}">
-                                    @error('Fonte')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="Tipo">Tipo</label>
-                                    <select class="form-control @error('Tipo') is-invalid @enderror" id="Tipo" name="Tipo">
-                                        <option value="">Seleziona tipo</option>
-                                        <option value="Cessione" {{ old('Tipo', $pratiche->Tipo) == 'Cessione' ? 'selected' : '' }}>Cessione</option>
-                                        <option value="Mutuo" {{ old('Tipo', $pratiche->Tipo) == 'Mutuo' ? 'selected' : '' }}>Mutuo</option>
-                                        <option value="Prestito" {{ old('Tipo', $pratiche->Tipo) == 'Prestito' ? 'selected' : '' }}>Prestito</option>
-                                        <option value="Delega" {{ old('Tipo', $pratiche->Tipo) == 'Delega' ? 'selected' : '' }}>Delega</option>
-                                        <option value="Polizza" {{ old('Tipo', $pratiche->Tipo) == 'Polizza' ? 'selected' : '' }}>Polizza</option>
-                                    </select>
-                                    @error('Tipo')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="Istituto_finanziario">Istituto Finanziario</label>
-                                    <input type="text" class="form-control @error('Istituto_finanziario') is-invalid @enderror"
-                                           id="Istituto_finanziario" name="Istituto_finanziario"
-                                           value="{{ old('Istituto_finanziario', $pratiche->Istituto_finanziario) }}">
-                                    @error('Istituto_finanziario')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
+
+                        <div class="form-group text-right">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Aggiorna
+                                <i class="fas fa-save"></i> Aggiorna Pratica
                             </button>
-                            <a href="{{ route('pratiches-crud.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Annulla
-                            </a>
                         </div>
                     </form>
                 </div>

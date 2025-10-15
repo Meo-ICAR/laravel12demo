@@ -20,6 +20,14 @@ class Pratiche extends Model
             }
         });
     }
+     /**
+     * Get the column name for the "created at" timestamp.
+     * This tells Laravel to use 'data_inserimento_pratica' for default ordering
+     */
+    public function getCreatedAtColumn()
+    {
+        return 'data_inserimento_pratica';
+    }
 
     protected $fillable = [
         'codice_pratica',
@@ -33,10 +41,14 @@ class Pratiche extends Model
         'descrizione_prodotto',
         'data_inserimento_pratica',
         'stato_pratica',
-
     ];
 
-    protected $casts = [
-        'data_inserimento_pratica' => 'datetime',
+    protected $dates = [
+        'data_inserimento_pratica',
+        'created_at',
+        'updated_at',
     ];
+
+
+
 }

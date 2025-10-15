@@ -19,53 +19,78 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
+                            <h5 class="mb-3">Informazioni Generali</h5>
                             <table class="table table-borderless">
                                 <tr>
-                                    <th width="30%">ID Pratica:</th>
-                                    <td><strong>{{ $pratiche->pratica_id }}</strong></td>
+                                    <th width="40%">Codice Pratica:</th>
+                                    <td><strong>{{ $pratiche->codice_pratica }}</strong></td>
                                 </tr>
                                 <tr>
                                     <th>Data Inserimento:</th>
-                                    <td>{{ $pratiche->Data_inserimento ? $pratiche->Data_inserimento->format('d/m/Y') : 'Non specificata' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Cliente:</th>
-                                    <td>{{ $pratiche->Cliente ?: 'Non specificato' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Agente:</th>
-                                    <td>{{ $pratiche->Agente ?: 'Non specificato' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Segnalatore:</th>
-                                    <td>{{ $pratiche->Segnalatore ?: 'Non specificato' }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <th width="30%">Tipo:</th>
                                     <td>
-                                        @if($pratiche->Tipo)
-                                            <span class="badge badge-{{ $pratiche->Tipo == 'Cessione' ? 'success' : ($pratiche->Tipo == 'Mutuo' ? 'primary' : ($pratiche->Tipo == 'Prestito' ? 'warning' : 'info')) }}">
-                                                {{ $pratiche->Tipo }}
-                                            </span>
+                                        @if($pratiche->data_inserimento_pratica)
+                                            {{ is_string($pratiche->data_inserimento_pratica) ? \Carbon\Carbon::parse($pratiche->data_inserimento_pratica)->format('d/m/Y') : $pratiche->data_inserimento_pratica->format('d/m/Y') }}
                                         @else
-                                            Non specificato
+                                            Non specificata
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th>Istituto Finanziario:</th>
-                                    <td>{{ $pratiche->Istituto_finanziario ?: 'Non specificato' }}</td>
+                                    <th>Stato:</th>
+                                    <td>
+                                        <span class="badge badge-{{ $pratiche->stato_pratica == 'completata' ? 'success' : ($pratiche->stato_pratica == 'in_lavorazione' ? 'warning' : 'secondary') }}">
+                                            {{ ucfirst(str_replace('_', ' ', $pratiche->stato_pratica)) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <h5 class="mt-4 mb-3">Dati Cliente</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="40%">Nome:</th>
+                                    <td>{{ $pratiche->nome_cliente ?: 'Non specificato' }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Fonte:</th>
-                                    <td>{{ $pratiche->Fonte ?: 'Non specificata' }}</td>
+                                    <th>Cognome:</th>
+                                    <td>{{ $pratiche->cognome_cliente ?: 'Non specificato' }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Data Creazione:</th>
+                                    <th>Codice Fiscale:</th>
+                                    <td>{{ $pratiche->codice_fiscale ?: 'Non specificato' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Informazioni Aggiuntive</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="40%">Tipo Prodotto:</th>
+                                    <td>
+                                        <span class="badge badge-info">
+                                            {{ ucfirst($pratiche->tipo_prodotto) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Denominazione Banca:</th>
+                                    <td>{{ $pratiche->denominazione_banca ?: 'Non specificata' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Denominazione Agente:</th>
+                                    <td>{{ $pratiche->denominazione_agente ?: 'Non specificato' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Partita IVA Agente:</th>
+                                    <td>{{ $pratiche->partita_iva_agente ?: 'Non specificata' }}</td>
+                                </tr>
+                            </table>
+
+                            <h5 class="mt-4 mb-3">Dati di Sistema</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="40%">Data Creazione:</th>
                                     <td>{{ $pratiche->created_at->format('d/m/Y H:i') }}</td>
                                 </tr>
                                 <tr>
@@ -76,12 +101,14 @@
                         </div>
                     </div>
 
-                    @if($pratiche->Descrizione)
+                    @if($pratiche->descrizione_prodotto)
                     <div class="row mt-4">
                         <div class="col-12">
-                            <h5>Descrizione</h5>
-                            <div class="alert alert-info">
-                                {{ $pratiche->Descrizione }}
+                            <h5>Descrizione Prodotto</h5>
+                            <div class="card">
+                                <div class="card-body">
+                                    {!! nl2br(e($pratiche->descrizione_prodotto)) !!}
+                                </div>
                             </div>
                         </div>
                     </div>

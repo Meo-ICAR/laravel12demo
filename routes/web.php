@@ -159,6 +159,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Calls routes
     Route::get('calls/import', [App\Http\Controllers\CallController::class, 'showImportForm'])->name('calls.import.form');
     Route::post('calls/import', [App\Http\Controllers\CallController::class, 'import'])->name('calls.import');
+    Route::post('calls/import/sidial', [App\Http\Controllers\CallController::class, 'importFromSidial'])->name('calls.import.sidial');
     Route::get('calls/dashboard', [App\Http\Controllers\CallController::class, 'dashboard'])->name('calls.dashboard');
     Route::get('calls', [App\Http\Controllers\CallController::class, 'index'])->name('calls.index');
     Route::resource('calls', App\Http\Controllers\CallController::class);
@@ -168,6 +169,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('leads/export', [App\Http\Controllers\LeadController::class, 'export'])->name('leads.export');
     Route::get('leads/analytics', [App\Http\Controllers\LeadController::class, 'analytics'])->name('leads.analytics');
     Route::post('leads/import', [App\Http\Controllers\LeadController::class, 'import'])->name('leads.import');
+    Route::post('leads/import/sidial', [App\Http\Controllers\LeadController::class, 'importFromSidial'])->name('leads.import.sidial');
     Route::resource('leads', App\Http\Controllers\LeadController::class);
 
     // Clienti routes
@@ -243,8 +245,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('pratiches/import-api', [App\Http\Controllers\PraticheController::class, 'importFromApi'])
         ->name('pratiches.import.api');
     
+    // New import routes
+    Route::post('pratiche/import', [App\Http\Controllers\PraticheCrudController::class, 'import'])
+        ->name('pratiche.import');
+    
     // Keep the old route for backward compatibility
-    Route::resource('pratiches-crud', App\Http\Controllers\PraticheCrudController::class);
+    Route::resource('pratiches-crud', App\Http\Controllers\PraticheCrudController::class)->parameters([
+        'pratiches-crud' => 'pratiche'
+    ]);
 
 
     // FornitoriInvoice routes

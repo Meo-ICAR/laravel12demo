@@ -7,9 +7,47 @@ use Illuminate\Http\Request;
 use App\Imports\CallsImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Artisan;
 
 class CallController extends Controller
 {
+    /**
+     * Import esiti from SIDIAL
+     */
+    public function importFromSidial(Request $request)
+    {
+        $request->validate([
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+        ]);
+
+        try {
+            $fromDate = Carbon::parse($request->from_date)->format('d/m/Y');
+            $toDate = Carbon::parse($request->to_date)->format('d/m/Y');
+            $dryRun = $request->has('dry_run') ? '--dry-run' : '';
+
+            // Run the import command
+            $exitCode = Artisan::call('sidial:import-esiti', [
+                '--from' => $fromDate,
+                '--to' => $toDate,
+                '--dry-run' => $request->has('dry_run'),
+            ]);
+
+            if ($exitCode === 0) {
+                $output = trim(Artisan::output());
+                return response()->json([
+                    'message' => 'Importazione completata con successo! ' . $output,
+                ]);
+            }
+
+            throw new \Exception('Errore durante l\'esecuzione del comando di importazione');
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */

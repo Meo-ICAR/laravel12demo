@@ -32,7 +32,7 @@ class ChunkReadFilter implements IReadFilter
     }
 }
 
-class ImportLeadsFromSidialLeads extends Command
+class c extends Command
 {
     protected $signature = 'sidial:import-leads '
         .' {--advancedCampaign=* : ID campagna ripetibile, es. --advancedCampaign=17 --advancedCampaign=22}'
@@ -320,18 +320,18 @@ class ImportLeadsFromSidialLeads extends Command
 
         // Remove all non-digit characters except leading +
         $normalized = preg_replace('/[^\d+]/', '', (string)$phone);
-        
+
         // Handle international numbers (start with + or 00)
         if (strpos($normalized, '+') === 0) {
             // Already in international format
             return $normalized;
         }
-        
+
         // Handle 00 prefix (international format without +)
         if (strpos($normalized, '00') === 0) {
             return '+' . substr($normalized, 2);
         }
-        
+
         // Handle Italian numbers (assume if not international)
         if (strlen($normalized) >= 6) { // Basic validation for Italian numbers
             // Remove leading 0 if present and add +39
@@ -340,7 +340,7 @@ class ImportLeadsFromSidialLeads extends Command
             }
             return '+' . $normalized;
         }
-        
+
         return $normalized; // Return as is if doesn't match any pattern
     }
 
@@ -481,7 +481,7 @@ class ImportLeadsFromSidialLeads extends Command
 
     /**
      * Process and save a batch of leads to the database
-     * 
+     *
      * @param array $batch The batch of leads to process
      * @param bool $dryRun Whether to simulate the operation without saving
      * @return int Number of affected rows
@@ -489,7 +489,7 @@ class ImportLeadsFromSidialLeads extends Command
     private function flushLeads(array $batch, bool $dryRun): int
     {
         if (empty($batch)) return 0;
-        
+
         if ($dryRun) {
             $this->line('[DRY-RUN] Upsert di '.count($batch).' lead.');
             return 0;
@@ -497,13 +497,13 @@ class ImportLeadsFromSidialLeads extends Command
 
         $affected = 0;
         $chunkSize = 500; // Process in smaller chunks to avoid timeouts
-        
+
         // Process in chunks to avoid memory issues
         foreach (array_chunk($batch, $chunkSize) as $chunk) {
             // Split chunk into records with and without legacy_id
             $withId = [];
             $withoutId = [];
-            
+
             foreach ($chunk as $row) {
                 if (!empty($row['legacy_id'])) {
                     $withId[] = $row;
@@ -516,10 +516,10 @@ class ImportLeadsFromSidialLeads extends Command
             if (!empty($withId)) {
                 try {
                     $columnsToUpdate = array_diff(
-                        array_keys($withId[0]), 
+                        array_keys($withId[0]),
                         ['legacy_id', 'created_at', 'updated_at']
                     );
-                    
+
                     DB::table('leads')->upsert(
                         $withId,
                         ['legacy_id'],
@@ -541,32 +541,32 @@ class ImportLeadsFromSidialLeads extends Command
 
         return $affected;
     }
-    
+
     /**
      * Process leads one by one to handle any unique constraint issues
-     * 
+     *
      * @param array $leads Array of leads to process
      * @return int Number of successfully processed leads
      */
     private function processIndividualLeads(array $leads): int
     {
         $affected = 0;
-        
+
         foreach ($leads as $row) {
             try {
                 $keys = [];
-                
+
                 // If we have a legacy_id, use it as the unique key
                 if (!empty($row['legacy_id'])) {
                     $keys = ['legacy_id' => $row['legacy_id']];
-                } 
+                }
                 // Otherwise try to create a unique key from available fields
                 else {
                     $keys = [
                         'telefono' => $row['telefono'] ?? null,
                         'campagna' => $row['campagna'] ?? null,
                     ];
-                    
+
                     // If phone and campaign are empty, try alternative keys
                     if (empty($keys['telefono']) && empty($keys['campagna'])) {
                         $keys = array_filter([
@@ -575,7 +575,7 @@ class ImportLeadsFromSidialLeads extends Command
                             'cognome' => $row['cognome'] ?? null,
                             'email' => $row['email'] ?? null,
                         ]);
-                        
+
                         // Skip if we don't have enough data to uniquely identify the lead
                         if (empty($keys)) {
                             $this->warn('Skipping lead - insufficient data for unique identification');
@@ -583,22 +583,22 @@ class ImportLeadsFromSidialLeads extends Command
                         }
                     }
                 }
-                
+
                 // Prepare values for update/insert
                 $values = $row;
                 unset($values['created_at']); // Don't update created_at on upsert
-                
+
                 // Use updateOrInsert to handle both new and existing records
                 DB::table('leads')->updateOrInsert($keys, $values);
                 $affected++;
-                
+
             } catch (\Exception $e) {
                 $this->error('Error processing lead: ' . $e->getMessage());
                 // Log the problematic row for debugging
                 $this->line('Problematic row: ' . json_encode($row, JSON_PRETTY_PRINT));
             }
         }
-        
+
         return $affected;
     }
 }

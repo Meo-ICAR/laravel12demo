@@ -24,12 +24,23 @@
             <h5 class="card-title mb-0">
                 <i class="fas fa-filter"></i> Filter Calls
             </h5>
-            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
-                <i class="fas fa-chevron-down"></i> Show Filters
+            <div class="d-flex align-items-center">
+                <button type="button" class="btn btn-primary btn-sm mr-2" data-toggle="modal" data-target="#importEsitiModal">
+                    <i class="fas fa-file-import"></i> Importa da SIDIAL
+                </button>
+                <button class="btn btn-link text-dark" type="button" data-toggle="collapse" data-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                    <i class="fas fa-chevron-down"></i> Show Filters
+                </button>
+            </div>
+            
+            <!-- Debug Modal Button -->
+            <button type="button" class="btn btn-danger btn-sm ml-2" onclick="document.getElementById('importEsitiModal').classList.add('show'); document.getElementById('importEsitiModal').style.display='block';">
+                <i class="fas fa-bug"></i> Debug Modal
             </button>
         </div>
         <div class="collapse" id="filterCollapse">
         <div class="card-body">
+            @include('calls.import-modal')
             <form action="{{ route('calls.index') }}" method="GET" class="row" id="filterForm">
                 <div class="col-md-2">
                     <label for="numero_chiamato">Numero Chiamato:</label>
@@ -185,8 +196,75 @@
     </div>
 </div>
 
+@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
+    // Set default dates for import form (last 7 days)
+    let endDate = new Date();
+    let startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    
+    // Format dates as YYYY-MM-DD
+    const formatDate = (date) => {
+        return date.toISOString().split('T')[0];
+    };
+    
+    $('#from_date').val(formatDate(startDate));
+    $('#to_date').val(formatDate(endDate));
+    
+    // Handle import form submission
+    $('#importEsitiForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            from_date: $('#from_date').val(),
+            to_date: $('#to_date').val(),
+            dry_run: $('#dry_run').is(':checked') ? 1 : 0,
+            _token: '{{ csrf_token() }}'
+        };
+        
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: formData,
+            beforeSend: function() {
+                $('#importEsitiForm button[type="submit"]')
+                    .prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Importazione in corso...');
+            },
+            success: function(response) {
+                new Noty({
+                    type: 'success',
+                    text: response.message || 'Importazione completata con successo!',
+                    timeout: 5000
+                }).show();
+                
+                $('#importEsitiModal').modal('hide');
+                
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+            },
+            error: function(xhr) {
+                let errorMessage = 'Si è verificato un errore durante l\'importazione';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
+                new Noty({
+                    type: 'error',
+                    text: errorMessage,
+                    timeout: 5000
+                }).show();
+            },
+            complete: function() {
+                $('#importEsitiForm button[type="submit"]')
+                    .prop('disabled', false)
+                    .text('Importa');
+            }
+        });
+    });
+
     // Filter form submission - omit empty values from URL
     const filterForm = document.getElementById('filterForm');
     if (filterForm) {

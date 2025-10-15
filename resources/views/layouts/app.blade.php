@@ -43,9 +43,49 @@
 
         <!-- jQuery first -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        
+        <!-- Noty for notifications -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/noty@3.2.0/browser/noty.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/noty@3.2.0/browser/themes/mint.css">
+        
+        <!-- Popper.js (required for Bootstrap 4) -->
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+        
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <!-- AdminLTE Scripts -->
         <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+        
+        <!-- Noty JS -->
+        <script src="https://cdn.jsdelivr.net/npm/noty@3.2.0/browser/noty.min.js"></script>
+        
+        <!-- Initialize tooltips and popovers -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize tooltips and popovers
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+                
+                var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+                var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                    return new bootstrap.Popover(popoverTriggerEl);
+                });
+                
+                // Make sure jQuery is available for legacy code
+                if (window.jQuery) {
+                    $(function () {
+                        // Initialize any jQuery plugins or code that depends on jQuery
+                        $('[data-toggle="tooltip"]').tooltip();
+                        $('[data-toggle="popover"]').popover();
+                    });
+                }
+            });
+        </script>
+        
+        <!-- Stack for pushed scripts -->
+        @stack('scripts')
     </body>
 </html>
