@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ImportInvoiceins::class,
         \App\Console\Commands\CaptureHelpScreenshots::class,
         \App\Console\Commands\ImportLeadsFromSidialLeads::class,
+        \App\Console\Commands\ImportDailyData::class,
     ];
 
     /**
@@ -28,9 +29,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire:inspire')->hourly();
-         // Import esiti from SIDIAL daily at 02:15
-        $schedule->command('sidial:import-esiti')->dailyAt('02:15');
+        // Run the daily imports at 2:00 AM
+        $schedule->command('import:daily')->dailyAt('02:00');
+
+        // Keep the existing schedule for backward compatibility
+       // $schedule->command('sidial:import-esiti')->dailyAt('02:15');
     }
 
     /**

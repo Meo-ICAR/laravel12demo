@@ -32,7 +32,7 @@ class ChunkReadFilter implements IReadFilter
     }
 }
 
-class c extends Command
+class ImportLeadsFromSidialLeads extends Command
 {
     protected $signature = 'sidial:import-leads '
         .' {--advancedCampaign=* : ID campagna ripetibile, es. --advancedCampaign=17 --advancedCampaign=22}'
