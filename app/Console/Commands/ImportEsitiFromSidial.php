@@ -217,29 +217,30 @@ class ImportEsitiFromSidial extends Command
 
         $imported += $this->flushUpsert($toUpsert, (bool)$this->option('dry-run'), $table);
 
-        // Update the last activation date in the environment
-        $dotenv = new \Dotenv\Dotenv(base_path());
-        $dotenv->load();
-        $dotenv->populate([
-            'SIDIAL_ESITI_LAST_ACTIVATION' => $toDay
-        ], true);
-        
-        // Write the .env file
+        // Update the last activation date in the .env file
         $envPath = base_path('.env');
-        $envContent = file_get_contents($envPath);
-        $envContent = preg_replace(
-            '/^SIDIAL_ESITI_LAST_ACTIVATION=.*/m',
-            "SIDIAL_ESITI_LAST_ACTIVATION=$toDay",
-            $envContent,
-            1,
-            $count
-        );
         
-        if ($count === 0) {
-            $envContent .= "\nSIDIAL_ESITI_LAST_ACTIVATION=$toDay\n";
+        if (file_exists($envPath)) {
+            $envContent = file_get_contents($envPath);
+            $envContent = preg_replace(
+                '/^SIDIAL_ESITI_LAST_ACTIVATION=.*/m',
+                "SIDIAL_ESITI_LAST_ACTIVATION=$toDay",
+                $envContent,
+                1,
+                $count
+            );
+            
+            if ($count === 0) {
+                $envContent .= "\nSIDIAL_ESITI_LAST_ACTIVATION=$toDay\n";
+            }
+            
+            file_put_contents($envPath, $envContent);
+            
+            // Update the current environment
+            putenv("SIDIAL_ESITI_LAST_ACTIVATION=$toDay");
+            $_ENV['SIDIAL_ESITI_LAST_ACTIVATION'] = $toDay;
+            $_SERVER['SIDIAL_ESITI_LAST_ACTIVATION'] = $toDay;
         }
-        
-        file_put_contents($envPath, $envContent);
 
         $this->info("Importazione completata. Righe inserite/aggiornate: $imported");
         return self::SUCCESS;

@@ -291,30 +291,32 @@ class ImportLeadsFromSidialLeads extends Command
             @unlink($tmpFile);
 
             if ($imported > 0) {
-                // Update the last activation date in the environment
-                $dotenv = new \Dotenv\Dotenv(base_path());
-                $dotenv->load();
-                $dotenv->populate([
-                    'SIDIAL_LEADS_LAST_ACTIVATION' => $toCreated
-                ], true);
-                
-                // Write the .env file
+                // Update the last activation date in the .env file
                 $envPath = base_path('.env');
-                $envContent = file_get_contents($envPath);
-                $envContent = preg_replace(
-                    '/^SIDIAL_LEADS_LAST_ACTIVATION=.*/m',
-                    "SIDIAL_LEADS_LAST_ACTIVATION=$toCreated",
-                    $envContent,
-                    1,
-                    $count
-                );
                 
-                if ($count === 0) {
-                    $envContent .= "\nSIDIAL_LEADS_LAST_ACTIVATION=$toCreated\n";
+                if (file_exists($envPath)) {
+                    $envContent = file_get_contents($envPath);
+                    $envContent = preg_replace(
+                        '/^SIDIAL_LEADS_LAST_ACTIVATION=.*/m',
+                        "SIDIAL_LEADS_LAST_ACTIVATION=$toCreated",
+                        $envContent,
+                        1,
+                        $count
+                    );
+                    
+                    if ($count === 0) {
+                        $envContent .= "\nSIDIAL_LEADS_LAST_ACTIVATION=$toCreated\n";
+                    }
+                    
+                    file_put_contents($envPath, $envContent);
+                    
+                    // Update the current environment
+                    putenv("SIDIAL_LEADS_LAST_ACTIVATION=$toCreated");
+                    $_ENV['SIDIAL_LEADS_LAST_ACTIVATION'] = $toCreated;
+                    $_SERVER['SIDIAL_LEADS_LAST_ACTIVATION'] = $toCreated;
+                    
+                    $this->info("Aggiornato SIDIAL_LEADS_LAST_ACTIVATION a $toCreated");
                 }
-                
-                file_put_contents($envPath, $envContent);
-                $this->info("Aggiornato SIDIAL_LEADS_LAST_ACTIVATION a $toCreated");
             }
 
             $this->info("Importazione completata. Righe inserite/aggiornate: $imported");
