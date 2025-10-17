@@ -26,13 +26,12 @@ class ImportProvvigioniFromApi extends Command
         $this->info("Importing provvigioni from {$startDate->format('Y-m-d')} to {$endDate->format('Y-m-d')}");
 
         try {
-            $apiUrl = 'https://races.mediafacile.it/ws/hassisto.php';
+            $apiUrl = env('MEDIAFACILE_BASE_URL', 'https://races.mediafacile.it/ws/hassisto.php');
             $queryParams = [
-                'table' => 'provigioni',
+                'table' => 'compensi',
                 'data_inizio' => $startDate->format('Y-m-d'),
                 'data_fine' => $endDate->format('Y-m-d'),
             ];
-
             $response = Http::withHeaders([
                 'Accept' => 'application/json, */*',
                 'User-Agent' => 'ProForma Import/1.0',
@@ -45,13 +44,13 @@ class ImportProvvigioniFromApi extends Command
             ])
             ->retry(3, 1000, function ($exception) {
                 // Retry on connection timeouts or server errors
-                return $exception instanceof \\Illuminate\\Http\\Client\\ConnectionException || 
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
                        ($exception->getCode() >= 500);
             })
             ->get($apiUrl, $queryParams);
 
             // Log the request and response for debugging
-            \\Log::info('Provvigioni API Request', [
+            \Log::info('Provvigioni API Request', [
                 'url' => $apiUrl,
                 'params' => $queryParams,
                 'status' => $response->status(),
@@ -59,7 +58,7 @@ class ImportProvvigioniFromApi extends Command
             ]);
 
             if (!$response->successful()) {
-                \\Log::error('Provvigioni API Error', [
+                \Log::error('Provvigioni API Error', [
                     'status' => $response->status(),
                     'response' => substr($response->body(), 0, 1000),
                 ]);
@@ -116,7 +115,7 @@ class ImportProvvigioniFromApi extends Command
                         $imported++;
                         $this->info("Imported new provvigione for pratica: {$provvigioneData['id_pratica']}");
                     }
-                } catch (\\Exception $e) {
+                } catch (\Exception $e) {
                     $this->error("Error processing item: " . $e->getMessage());
                     $errors++;
                 }
@@ -124,9 +123,9 @@ class ImportProvvigioniFromApi extends Command
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;
-        } catch (\\Illuminate\\Http\\Client\\RequestException $e) {
+        } catch (\Illuminate\Http\Client\RequestException $e) {
             $this->error('HTTP Request Error: ' . $e->getMessage());
-            \\Log::error('Provvigioni API Request Exception', [
+            \Log::error('Provvigioni API Request Exception', [
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'response' => $e->response ? [
@@ -135,7 +134,7 @@ class ImportProvvigioniFromApi extends Command
                 ] : null
             ]);
             return 1;
-        } catch (\\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->error('Unexpected Error: ' . $e->getMessage());
             \Log::error('Unexpected Error in Provvigioni Import', [
                 'error' => $e->getMessage(),
@@ -143,7 +142,6 @@ class ImportProvvigioniFromApi extends Command
             ]);
             return 1;
         }
-    }
     }
 
     protected function parseLine($line)

@@ -63,7 +63,7 @@ class ImportDailyData extends Command
 
         foreach ($commands as $cmd) {
             $this->info("Running: {$cmd['command']}...");
-            
+
             try {
                 $result = $this->call($cmd['command'], $cmd['params']);
                 $success = $result === 0;
@@ -74,7 +74,7 @@ class ImportDailyData extends Command
                     'message' => $message,
                     'exit_code' => $result
                 ];
-                
+
                 if (!$success) {
                     $hasFailures = true;
                     $this->error("Command failed: {$cmd['command']} (Exit Code: $result)");
@@ -92,7 +92,7 @@ class ImportDailyData extends Command
                 ];
                 $this->error("Error in command {$cmd['command']}: $errorMsg");
             }
-            
+
             $this->newLine();
         }
 
@@ -100,7 +100,7 @@ class ImportDailyData extends Command
         $this->info('=== Import Summary ===');
         $headers = ['Command', 'Status', 'Exit Code'];
         $rows = [];
-        
+
         foreach ($results as $result) {
             $rows[] = [
                 $result['command'],
@@ -108,14 +108,14 @@ class ImportDailyData extends Command
                 $result['exit_code']
             ];
         }
-        
+
         $this->table($headers, $rows);
-        
+
         if ($hasFailures) {
             $this->warn('Daily imports completed with some failures.');
             return 1;
         }
-        
+
         $this->info('✅ All daily imports completed successfully!');
         return 0;
     }

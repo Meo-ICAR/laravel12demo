@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Dotenv\Dotenv;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
 
@@ -65,7 +66,7 @@ class ImportLeadsFromSidialLeads extends Command
             $fromCarbon = Carbon::createFromFormat('d/m/Y', $fromOpt);
         } else {
             // fallback: use configured last_activation or 01/01/2024
-            $fallback = Config::get('sidial.last_activation', '01/01/2024');
+            $fallback = env('SIDIAL_LEADS_LAST_ACTIVATION', null);
             $fromCarbon = Carbon::createFromFormat('d/m/Y', $fallback);
         }
 
@@ -117,6 +118,12 @@ class ImportLeadsFromSidialLeads extends Command
         if (!empty($campaigns)) {
             $query['advancedCampaign'] = array_values($campaigns);
         }
+            // Log the request and response for debugging
+            \Log::info('SIDIAL LEADS API url', [
+                'url' => $baseUrl,
+                'params' => $query,
+
+            ]);
 
         try {
             $response = Http::withHeaders([
@@ -130,7 +137,7 @@ class ImportLeadsFromSidialLeads extends Command
             ])
             ->retry(3, 1000, function ($exception) {
                 // Retry on connection timeouts or server errors
-                return $exception instanceof \Illuminate\Http\Client\ConnectionException || 
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
                        ($exception->getCode() >= 500);
             })
             ->get($baseUrl, $query);
@@ -159,13 +166,14 @@ class ImportLeadsFromSidialLeads extends Command
         }
 
         // Log the response details for debugging
-        \Log::info('SIDIAL API Response', [
+        /*
+        \Log::info('SIDIAL API LEADS Response', [
             'url' => $baseUrl,
             'status' => $response->status(),
             'headers' => $response->headers(),
             'body' => substr((string)$response->body(), 0, 500) // First 500 chars of response
         ]);
-
+        */
         if (!$response->ok()) {
             $this->error('Errore SIDIAL: '.$response->status().' '.substr((string)$response->body(), 0, 300));
             return self::FAILURE;
@@ -281,6 +289,33 @@ class ImportLeadsFromSidialLeads extends Command
             $imported += $this->flushLeads($batch, (bool)$this->option('dry-run'));
 
             @unlink($tmpFile);
+
+            if ($imported > 0) {
+                // Update the last activation date in the environment
+                $dotenv = new \Dotenv\Dotenv(base_path());
+                $dotenv->load();
+                $dotenv->populate([
+                    'SIDIAL_LEADS_LAST_ACTIVATION' => $toCreated
+                ], true);
+                
+                // Write the .env file
+                $envPath = base_path('.env');
+                $envContent = file_get_contents($envPath);
+                $envContent = preg_replace(
+                    '/^SIDIAL_LEADS_LAST_ACTIVATION=.*/m',
+                    "SIDIAL_LEADS_LAST_ACTIVATION=$toCreated",
+                    $envContent,
+                    1,
+                    $count
+                );
+                
+                if ($count === 0) {
+                    $envContent .= "\nSIDIAL_LEADS_LAST_ACTIVATION=$toCreated\n";
+                }
+                
+                file_put_contents($envPath, $envContent);
+                $this->info("Aggiornato SIDIAL_LEADS_LAST_ACTIVATION a $toCreated");
+            }
 
             $this->info("Importazione completata. Righe inserite/aggiornate: $imported");
             return self::SUCCESS;

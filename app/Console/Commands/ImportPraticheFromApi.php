@@ -26,7 +26,8 @@ class ImportPraticheFromApi extends Command
         $this->info("Importing pratiche from {$startDate->format('Y-m-d')} to {$endDate->format('Y-m-d')}");
 
         try {
-            $response = Http::get('https://races.mediafacile.it/ws/hassisto.php', [
+            $apiUrl = env('MEDIAFACILE_BASE_URL', 'https://races.mediafacile.it/ws/hassisto.php');
+            $response = Http::get($apiUrl , [
                 'table' => 'pratiche',
                 'data_inizio' => $startDate->format('Y-m-d'),
                 'data_fine' => $endDate->format('Y-m-d'),

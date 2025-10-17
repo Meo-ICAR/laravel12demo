@@ -41,10 +41,10 @@ class ImportEsitiFromSidial extends Command
             if ($last) {
                 $fromCarbon = Carbon::parse($last);
             } else {
-                $fallback = Config::get('sidial.last_activation');
+                $fallback = env('SIDIAL_ESITI_LAST_ACTIVATION', null);
                 if (!$fallback) {
-                    $this->warn('Nessun dato precedente trovato e nessuna SIDIAL_LAST_ACTIVATION configurata. Userò 01/01/2024 come fallback.');
-                    $fromCarbon = Carbon::create(2024, 1, 1);
+                    $this->warn('Nessun dato precedente trovato e nessuna SIDIAL_LAST_ACTIVATION configurata. Userò 01/10/2025 come fallback.');
+                    $fromCarbon = Carbon::create(2025, 10, 1);
                 } else {
                     $fromCarbon = Carbon::createFromFormat('d/m/Y', $fallback);
                 }
@@ -63,6 +63,7 @@ class ImportEsitiFromSidial extends Command
 
         $this->info("Importo esiti da $fromDay a $toDay nella tabella '$table'...");
 
+
         // Build query params per API requirement
         $query = [
             'apiToken' => $token,
@@ -74,7 +75,12 @@ class ImportEsitiFromSidial extends Command
             'fromDay' => $fromDay,
             'toDay' => $toDay,
         ];
+          // Log the request and response for debugging
+          \Log::info('SIDIAL ESITI API url', [
+            'url' => $baseUrl,
+            'params' => $query,
 
+        ]);
         // Http client call with timeout and retry configuration
         try {
             $response = Http::withHeaders([
@@ -88,7 +94,7 @@ class ImportEsitiFromSidial extends Command
             ])
             ->retry(3, 1000, function ($exception) {
                 // Retry on connection timeouts or server errors
-                return $exception instanceof \Illuminate\Http\Client\ConnectionException || 
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
                        ($exception->getCode() >= 500);
             })
             ->get($baseUrl, $query);
@@ -99,7 +105,7 @@ class ImportEsitiFromSidial extends Command
                     $this->info("Nessun dato disponibile per l'intervallo $fromDay - $toDay (404 file not found). Proseguo.");
                     return self::SUCCESS;
                 }
-                
+
                 $this->error('Errore chiamando SIDIAL: ' . $response->status() . ' - ' . substr((string)$response->body(), 0, 200));
                 \Log::error('SIDIAL API Error Response', [
                     'url' => $baseUrl,
@@ -116,7 +122,7 @@ class ImportEsitiFromSidial extends Command
                 $this->info("Nessun dato disponibile per l'intervallo $fromDay - $toDay (404 file not found). Proseguo.");
                 return self::SUCCESS;
             }
-            
+
             $this->error('Errore nella richiesta a SIDIAL: ' . $e->getMessage());
             \Log::error('SIDIAL API Request Error', [
                 'url' => $baseUrl,
@@ -129,7 +135,7 @@ class ImportEsitiFromSidial extends Command
                 ] : null
             ]);
             return self::FAILURE;
-            
+
         } catch (\Throwable $e) {
             $this->error('Errore imprevisto: ' . $e->getMessage());
             \Log::error('Unexpected Error in SIDIAL Import Esiti', [
@@ -210,6 +216,30 @@ class ImportEsitiFromSidial extends Command
         }
 
         $imported += $this->flushUpsert($toUpsert, (bool)$this->option('dry-run'), $table);
+
+        // Update the last activation date in the environment
+        $dotenv = new \Dotenv\Dotenv(base_path());
+        $dotenv->load();
+        $dotenv->populate([
+            'SIDIAL_ESITI_LAST_ACTIVATION' => $toDay
+        ], true);
+        
+        // Write the .env file
+        $envPath = base_path('.env');
+        $envContent = file_get_contents($envPath);
+        $envContent = preg_replace(
+            '/^SIDIAL_ESITI_LAST_ACTIVATION=.*/m',
+            "SIDIAL_ESITI_LAST_ACTIVATION=$toDay",
+            $envContent,
+            1,
+            $count
+        );
+        
+        if ($count === 0) {
+            $envContent .= "\nSIDIAL_ESITI_LAST_ACTIVATION=$toDay\n";
+        }
+        
+        file_put_contents($envPath, $envContent);
 
         $this->info("Importazione completata. Righe inserite/aggiornate: $imported");
         return self::SUCCESS;
