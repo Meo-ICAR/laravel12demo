@@ -123,15 +123,22 @@ class ImportLeadsFromSidialLeads extends Command
               ->get($baseUrl, $query);
         } catch (\Throwable $e) {
             $this->error('Errore chiamando SIDIAL: '.$e->getMessage());
-            \Log::info('SIDIAL API Request', [
+            \Log::error('SIDIAL API Request Error', [
                 'url' => $baseUrl,
                 'query' => $query,
-                'headers' => $response->headers(),
-                'status' => $response->status(),
-                'body' => substr((string)$response->body(), 0, 500) // First 500 chars of response
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return self::FAILURE;
         }
+
+        // Log the response details for debugging
+        \Log::info('SIDIAL API Response', [
+            'url' => $baseUrl,
+            'status' => $response->status(),
+            'headers' => $response->headers(),
+            'body' => substr((string)$response->body(), 0, 500) // First 500 chars of response
+        ]);
 
         if (!$response->ok()) {
             $this->error('Errore SIDIAL: '.$response->status().' '.substr((string)$response->body(), 0, 300));
