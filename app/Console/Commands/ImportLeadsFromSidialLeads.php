@@ -88,6 +88,9 @@ class ImportLeadsFromSidialLeads extends Command
         $query = [
             'a' => 'getLeadsExport',
             'apiToken' => $token,
+            'fromCreatedWhen' => $fromCreated,
+            'toCreatedWhen' => $toCreated,
+            /*
             'searchPhone' => '',
             'searchRagSoc' => '',
             'searchSurname' => '',
@@ -102,12 +105,12 @@ class ImportLeadsFromSidialLeads extends Command
             'toDay' => '',
             'fromExpireWhen' => '',
             'toExpireWhen' => '',
-            'fromCreatedWhen' => $fromCreated,
-            'toCreatedWhen' => $toCreated,
+
             'fromRecallWhen' => '',
             'toRecallWhen' => '',
             'totAttemptsFrom' => '',
             'totAttemptsTo' => '',
+            */
         ];
 
         // Append advancedCampaign as array parameter (Laravel serializes as advancedCampaign[0]=...)
