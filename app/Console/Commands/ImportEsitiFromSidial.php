@@ -75,32 +75,68 @@ class ImportEsitiFromSidial extends Command
             'toDay' => $toDay,
         ];
 
-        // Http client call
+        // Http client call with timeout and retry configuration
         try {
             $response = Http::withHeaders([
                 'Accept' => 'text/plain, text/csv, */*'
-            ])->withOptions(['http_errors' => false])
-              ->retry(3, 500)
-              ->get($baseUrl, $query);
-        } catch (\Throwable $e) {
-            // Some environments may still throw on 404; handle gracefully
-            if ($e instanceof \Illuminate\Http\Client\RequestException) {
-                $resp = $e->response;
-                if ($resp && $resp->status() === 404 && str_contains((string)$resp->body(), 'file not found')) {
+            ])
+            ->timeout(60) // 60 seconds timeout
+            ->connectTimeout(10) // 10 seconds to establish connection
+            ->withOptions([
+                'http_errors' => false,
+                'verify' => false, // Only if you need to bypass SSL verification
+            ])
+            ->retry(3, 1000, function ($exception) {
+                // Retry on connection timeouts or server errors
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException || 
+                       ($exception->getCode() >= 500);
+            })
+            ->get($baseUrl, $query);
+
+            // Handle non-200 responses
+            if (!$response->ok()) {
+                if ($response->status() === 404 && str_contains((string)$response->body(), 'file not found')) {
                     $this->info("Nessun dato disponibile per l'intervallo $fromDay - $toDay (404 file not found). Proseguo.");
                     return self::SUCCESS;
                 }
+                
+                $this->error('Errore chiamando SIDIAL: ' . $response->status() . ' - ' . substr((string)$response->body(), 0, 200));
+                \Log::error('SIDIAL API Error Response', [
+                    'url' => $baseUrl,
+                    'query' => $query,
+                    'status' => $response->status(),
+                    'body' => substr((string)$response->body(), 0, 1000)
+                ]);
+                return self::FAILURE;
             }
-            $this->error('Errore chiamando SIDIAL (exception): ' . $e->getMessage());
-            return self::FAILURE;
-        }
 
-        if (!$response->ok()) {
-            if ($response->status() === 404 && str_contains((string)$response->body(), 'file not found')) {
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            // Handle 404 with file not found message
+            if ($e->response && $e->response->status() === 404 && str_contains((string)$e->response->body(), 'file not found')) {
                 $this->info("Nessun dato disponibile per l'intervallo $fromDay - $toDay (404 file not found). Proseguo.");
                 return self::SUCCESS;
             }
-            $this->error('Errore chiamando SIDIAL: ' . $response->status() . ' ' . $response->body());
+            
+            $this->error('Errore nella richiesta a SIDIAL: ' . $e->getMessage());
+            \Log::error('SIDIAL API Request Error', [
+                'url' => $baseUrl,
+                'query' => $query,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'response' => $e->response ? [
+                    'status' => $e->response->status(),
+                    'body' => substr((string)$e->response->body(), 0, 1000)
+                ] : null
+            ]);
+            return self::FAILURE;
+            
+        } catch (\Throwable $e) {
+            $this->error('Errore imprevisto: ' . $e->getMessage());
+            \Log::error('Unexpected Error in SIDIAL Import Esiti', [
+                'url' => $baseUrl,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return self::FAILURE;
         }
 

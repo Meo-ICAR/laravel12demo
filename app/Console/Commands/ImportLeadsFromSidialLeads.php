@@ -121,14 +121,37 @@ class ImportLeadsFromSidialLeads extends Command
         try {
             $response = Http::withHeaders([
                 'Accept' => 'application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, */*'
-            ])->withOptions(['http_errors' => false])
-              ->retry(3, 500)
-              ->get($baseUrl, $query);
-        } catch (\Throwable $e) {
-            $this->error('Errore chiamando SIDIAL: '.$e->getMessage());
+            ])
+            ->timeout(60) // 60 seconds timeout
+            ->connectTimeout(10) // 10 seconds to establish connection
+            ->withOptions([
+                'http_errors' => false,
+                'verify' => false, // Only if you need to bypass SSL verification
+            ])
+            ->retry(3, 1000, function ($exception) {
+                // Retry on connection timeouts or server errors
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException || 
+                       ($exception->getCode() >= 500);
+            })
+            ->get($baseUrl, $query);
+
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            $this->error('Errore nella richiesta a SIDIAL: ' . $e->getMessage());
             \Log::error('SIDIAL API Request Error', [
                 'url' => $baseUrl,
                 'query' => $query,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'response' => $e->response ? [
+                    'status' => $e->response->status(),
+                    'body' => substr((string)$e->response->body(), 0, 1000)
+                ] : null
+            ]);
+            return self::FAILURE;
+        } catch (\Throwable $e) {
+            $this->error('Errore imprevisto: ' . $e->getMessage());
+            \Log::error('Unexpected Error in SIDIAL Import', [
+                'url' => $baseUrl,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

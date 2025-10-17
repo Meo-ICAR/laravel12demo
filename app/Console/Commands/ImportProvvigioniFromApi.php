@@ -26,78 +26,124 @@ class ImportProvvigioniFromApi extends Command
         $this->info("Importing provvigioni from {$startDate->format('Y-m-d')} to {$endDate->format('Y-m-d')}");
 
         try {
-            $response = Http::get('https://races.mediafacile.it/ws/hassisto.php', [
+            $apiUrl = 'https://races.mediafacile.it/ws/hassisto.php';
+            $queryParams = [
                 'table' => 'provigioni',
                 'data_inizio' => $startDate->format('Y-m-d'),
                 'data_fine' => $endDate->format('Y-m-d'),
+            ];
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json, */*',
+                'User-Agent' => 'ProForma Import/1.0',
+            ])
+            ->timeout(60) // 60 seconds timeout
+            ->connectTimeout(10) // 10 seconds to establish connection
+            ->withOptions([
+                'http_errors' => false,
+                'verify' => false, // Only if you need to bypass SSL verification
+            ])
+            ->retry(3, 1000, function ($exception) {
+                // Retry on connection timeouts or server errors
+                return $exception instanceof \\Illuminate\\Http\\Client\\ConnectionException || 
+                       ($exception->getCode() >= 500);
+            })
+            ->get($apiUrl, $queryParams);
+
+            // Log the request and response for debugging
+            \\Log::info('Provvigioni API Request', [
+                'url' => $apiUrl,
+                'params' => $queryParams,
+                'status' => $response->status(),
+                'response_size' => strlen($response->body()),
             ]);
 
-            if ($response->successful()) {
-                $lines = explode("\n", trim($response->body()));
-
-                if (empty($lines)) {
-                    $this->error('No data received from API');
-                    return 1;
-                }
-
-                // Get headers from first line
-                $headers = $this->parseLine($lines[0]);
-                $data = [];
-
-                // Process data lines
-                for ($i = 1; $i < count($lines); $i++) {
-                    $values = $this->parseLine($lines[$i]);
-                    if (count($values) === count($headers)) {
-                        $data[] = array_combine($headers, $values);
-                    }
-                }
-
-                if (empty($data)) {
-                    $this->info('No records found in the specified date range');
-                    return 0;
-                }
-
-                $imported = 0;
-                $updated = 0;
-                $errors = 0;
-
-                foreach ($data as $item) {
-                    try {
-                        $provvigioneData = $this->mapApiToModel($item);
-
-                        if (empty($provvigioneData['id_pratica'])) {
-                            $this->warn('Skipping item without id_pratica: ' . json_encode($item));
-                            $errors++;
-                            continue;
-                        }
-
-                        $existing = Provvigione::where('id_pratica', $provvigioneData['id_pratica'])->first();
-
-                        if ($existing) {
-                            $existing->update($provvigioneData);
-                            $updated++;
-                            $this->info("Updated provvigione for pratica: {$provvigioneData['id_pratica']}");
-                        } else {
-                            Provvigione::create($provvigioneData);
-                            $imported++;
-                            $this->info("Imported new provvigione for pratica: {$provvigioneData['id_pratica']}");
-                        }
-                    } catch (\Exception $e) {
-                        $this->error("Error processing item: " . $e->getMessage());
-                        $errors++;
-                    }
-                }
-
-                $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
-                return 0;
-            } else {
-                $this->error('API request failed: ' . $response->status());
+            if (!$response->successful()) {
+                \\Log::error('Provvigioni API Error', [
+                    'status' => $response->status(),
+                    'response' => substr($response->body(), 0, 1000),
+                ]);
+                $this->error('API request failed with status: ' . $response->status());
                 return 1;
             }
-        } catch (\Exception $e) {
-            $this->error('Error: ' . $e->getMessage());
+
+            $lines = explode("\n", trim($response->body()));
+
+            if (empty($lines)) {
+                $this->error('No data received from API');
+                return 1;
+            }
+
+            // Get headers from first line
+            $headers = $this->parseLine($lines[0]);
+            $data = [];
+
+            // Process data lines
+            for ($i = 1; $i < count($lines); $i++) {
+                $values = $this->parseLine($lines[$i]);
+                if (count($values) === count($headers)) {
+                    $data[] = array_combine($headers, $values);
+                }
+            }
+
+            if (empty($data)) {
+                $this->info('No records found in the specified date range');
+                return 0;
+            }
+
+            $imported = 0;
+            $updated = 0;
+            $errors = 0;
+
+            foreach ($data as $item) {
+                try {
+                    $provvigioneData = $this->mapApiToModel($item);
+
+                    if (empty($provvigioneData['id_pratica'])) {
+                        $this->warn('Skipping item without id_pratica: ' . json_encode($item));
+                        $errors++;
+                        continue;
+                    }
+
+                    $existing = Provvigione::where('id_pratica', $provvigioneData['id_pratica'])->first();
+
+                    if ($existing) {
+                        $existing->update($provvigioneData);
+                        $updated++;
+                        $this->info("Updated provvigione for pratica: {$provvigioneData['id_pratica']}");
+                    } else {
+                        Provvigione::create($provvigioneData);
+                        $imported++;
+                        $this->info("Imported new provvigione for pratica: {$provvigioneData['id_pratica']}");
+                    }
+                } catch (\\Exception $e) {
+                    $this->error("Error processing item: " . $e->getMessage());
+                    $errors++;
+                }
+            }
+
+            $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
+            return 0;
+        } catch (\\Illuminate\\Http\\Client\\RequestException $e) {
+            $this->error('HTTP Request Error: ' . $e->getMessage());
+            \\Log::error('Provvigioni API Request Exception', [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'response' => $e->response ? [
+                    'status' => $e->response->status(),
+                    'body' => substr((string)$e->response->body(), 0, 1000)
+                ] : null
+            ]);
+            return 1;
+        } catch (\\Throwable $e) {
+            $this->error('Unexpected Error: ' . $e->getMessage());
+            \Log::error('Unexpected Error in Provvigioni Import', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return 1;
         }
+    }
     }
 
     protected function parseLine($line)
