@@ -35,6 +35,7 @@ class ImportProvvigioniFromApi extends Command
             $response = Http::withHeaders([
                 'Accept' => 'application/json, */*',
                 'User-Agent' => 'ProForma Import/1.0',
+                'X-Api-Key' => 'kzoPW9i3HCs4WJ8ja8xk',
             ])
             ->timeout(60) // 60 seconds timeout
             ->connectTimeout(10) // 10 seconds to establish connection
@@ -66,28 +67,114 @@ class ImportProvvigioniFromApi extends Command
                 return 1;
             }
 
-            $lines = explode("\n", trim($response->body()));
+            $responseBody = trim($response->body());
 
-            if (empty($lines)) {
-                $this->error('No data received from API');
+            if (empty($responseBody)) {
+                $this->error('Empty response body from API');
                 return 1;
             }
 
-            // Get headers from first line
+            // Log complete API response
+            \Log::info('Complete API response:', [
+                'response' => $responseBody,
+                'total_bytes' => strlen($responseBody),
+                'line_count' => count(explode("\n", $responseBody))
+            ]);
+
+            // Process lines
+            $lines = explode("\n", $responseBody);
+            $lines = array_filter($lines, function($line) {
+                return trim($line) !== '';
+            });
+            $lines = array_values($lines);
+
+            // Remove empty lines (already done above)
+            $lines = array_values($lines); // Reindex array
+
+            if (count($lines) < 2) { // Need at least header row + 1 data row
+                $this->info('No data rows found in API response');
+                return 0;
+            }
+
+            // Get headers from first line and clean them
             $headers = $this->parseLine($lines[0]);
             $data = [];
+            $headerCount = count($headers);
+
+            // Debug: Log the headers
+            \Log::debug('Headers:', ['headers' => $headers, 'count' => $headerCount]);
 
             // Process data lines
             for ($i = 1; $i < count($lines); $i++) {
                 $values = $this->parseLine($lines[$i]);
-                if (count($values) === count($headers)) {
+
+                // Skip empty lines
+                if (empty($values)) {
+                    continue;
+                }
+
+                // If we have more values than headers, truncate the extra values
+                if (count($values) > $headerCount) {
+                    $values = array_slice($values, 0, $headerCount);
+                }
+                // If we have fewer values than headers, pad with nulls
+                elseif (count($values) < $headerCount) {
+                    $values = array_pad($values, $headerCount, null);
+                }
+
+                try {
                     $data[] = array_combine($headers, $values);
+                } catch (\Exception $e) {
+                    $this->warn(sprintf(
+                        'Error combining row %d: %s',
+                        $i + 1,
+                        $e->getMessage()
+                    ));
+                    \Log::error('Error combining row data', [
+                        'headers' => $headers,
+                        'values' => $values,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
 
+
             if (empty($data)) {
                 $this->info('No records found in the specified date range');
+                $this->info('API Response Status: ' . $response->status());
+                $this->info('API Response Preview: ' . substr($response->body(), 0, 200));
                 return 0;
+            }
+
+            // Verify response headers match expected format
+            if (!empty($data)) {
+                $firstItem = $data[0];
+                $expectedHeaders = [
+                    'Codice Record',
+                    'Codice Pratica',
+                    'Codice Compenso',
+                    'Tipo Compenso',
+                    'Importo Compenso',
+                    'Stato Compenso'
+                ];
+
+                $actualHeaders = array_keys($firstItem);
+
+                // Check if all expected headers exist in the response
+                $missingHeaders = array_diff($expectedHeaders, $actualHeaders);
+                if (!empty($missingHeaders)) {
+                    $this->error('Missing expected headers: ' . implode(', ', $missingHeaders));
+                    $this->warn('Actual headers: ' . implode(', ', $actualHeaders));
+                    return 1;
+                }
+
+                // Check if headers are in the correct order
+                $matchingHeaders = array_intersect($expectedHeaders, $actualHeaders);
+                if ($matchingHeaders !== $expectedHeaders) {
+                    $this->warn('Warning: Headers are not in the expected order.');
+                    $this->warn('Expected order: ' . implode('\t', $expectedHeaders));
+                    $this->warn('Actual order:   ' . implode('\t', $matchingHeaders));
+                }
             }
 
             $imported = 0;
@@ -98,22 +185,26 @@ class ImportProvvigioniFromApi extends Command
                 try {
                     $provvigioneData = $this->mapApiToModel($item);
 
-                    if (empty($provvigioneData['id_pratica'])) {
-                        $this->warn('Skipping item without id_pratica: ' . json_encode($item));
+                    // Use 'Codice Pratica' as the identifier since that's what's in the API response
+                    if (empty($item['Codice Record'])) {
+                        $this->warn('Skipping item without Codice Provvigione: ' . json_encode($item));
                         $errors++;
                         continue;
                     }
 
-                    $existing = Provvigione::where('id_pratica', $provvigioneData['id_pratica'])->first();
+                    // Ensure we have the codice record in our data
+                    $provvigioneData['id'] = $item['Codice Record'];
+
+                    $existing = Provvigione::where('id', $provvigioneData['id'])->first();
 
                     if ($existing) {
                         $existing->update($provvigioneData);
                         $updated++;
-                        $this->info("Updated provvigione for pratica: {$provvigioneData['id_pratica']}");
+                        $this->info("Updated provvigione : {$provvigioneData['id']}");
                     } else {
                         Provvigione::create($provvigioneData);
                         $imported++;
-                        $this->info("Imported new provvigione for pratica: {$provvigioneData['id_pratica']}");
+                        $this->info("Imported new provvigione: {$provvigioneData['id']}");
                     }
                 } catch (\Exception $e) {
                     $this->error("Error processing item: " . $e->getMessage());
@@ -146,41 +237,33 @@ class ImportProvvigioniFromApi extends Command
 
     protected function parseLine($line)
     {
-        return array_map('trim', explode("\t", $line));
+        // First try to split by tab
+        $parts = explode("\t", trim($line));
+
+        // If we only got one part, try splitting by multiple spaces
+        if (count($parts) <= 1) {
+            $parts = preg_split('/\s{2,}/', trim($line));
+        }
+
+        // Clean up each part
+        return array_map(function($part) {
+            return trim($part, " \t\n\r\0\x0B\"'`");
+        }, $parts);
     }
 
     protected function mapApiToModel(array $apiData): array
     {
         return [
-            'id' => $apiData['ID'] ?? (string) Str::uuid(),
-            'legacy_id' => $apiData['ID'] ?? null,
-            'data_inserimento_compenso' => $apiData['Data Inserimento Compenso'] ?? now(),
-            'descrizione' => $apiData['Descrizione'] ?? null,
-            'tipo' => $apiData['Tipo'] ?? 'provvigione',
-            'importo' => $apiData['Importo'] ?? 0,
-            'importo_effettivo' => $apiData['Importo Effettivo'] ?? 0,
-            'quota' => $apiData['Quota'] ?? 0,
-            'stato' => $apiData['Stato'] ?? 'da_pagare',
-            'denominazione_riferimento' => $apiData['Denominazione Riferimento'] ?? null,
-            'entrata_uscita' => $apiData['Entrata/Uscita'] ?? 'entrata',
-            'cognome' => $apiData['Cognome'] ?? null,
-            'nome' => $apiData['Nome'] ?? null,
-            'segnalatore' => $apiData['Segnalatore'] ?? null,
-            'fonte' => $apiData['Fonte'] ?? 'api',
-            'id_pratica' => $apiData['ID Pratica'] ?? null,
-            'tipo_pratica' => $apiData['Tipo Pratica'] ?? null,
-            'data_inserimento_pratica' => $apiData['Data Inserimento Pratica'] ?? now(),
-            'data_stipula' => $apiData['Data Stipula'] ?? null,
-            'istituto_finanziario' => $apiData['Istituto Finanziario'] ?? null,
-            'prodotto' => $apiData['Prodotto'] ?? null,
-            'macrostatus' => $apiData['Macrostatus'] ?? null,
-            'status_pratica' => $apiData['Status Pratica'] ?? null,
-            'data_status_pratica' => $apiData['Data Status Pratica'] ?? null,
-            'montante' => $apiData['Montante'] ?? 0,
-            'importo_erogato' => $apiData['Importo Erogato'] ?? 0,
-            'sended_at' => $apiData['Data Invio'] ?? null,
-            'received_at' => $apiData['Data Ricezione'] ?? null,
-            'paided_at' => $apiData['Data Pagamento'] ?? null,
+            'id' => $apiData['Codice Record'] ?? null,
+            'legacy_id' => $apiData['Codice Pratica'] ?? null,
+            'id_pratica' => $apiData['Codice Pratica'] ?? null,
+            'entrata_uscita' => $apiData['Codice Compenso'] ?? null,
+            'tipo' => $apiData['Tipo Compenso'] ?? 'provvigione',
+            'importo' => is_numeric($apiData['Importo Compenso']) ? $apiData['Importo Compenso'] : (is_string($apiData['Importo Compenso']) ? (float) str_replace(',', '.', $apiData['Importo Compenso']) : 0),
+            'status_pratica' => $apiData['Stato Compenso'] ?? '',
+            'fonte' => 'api',
+          //  'data_inserimento_compenso' => now(),
+          //  'data_inserimento_pratica' => now(),
         ];
     }
 }

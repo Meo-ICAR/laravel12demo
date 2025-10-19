@@ -27,19 +27,67 @@ class ImportPraticheFromApi extends Command
 
         try {
             $apiUrl = env('MEDIAFACILE_BASE_URL', 'https://races.mediafacile.it/ws/hassisto.php');
-            $response = Http::get($apiUrl , [
+            $queryParams = [
                 'table' => 'pratiche',
                 'data_inizio' => $startDate->format('Y-m-d'),
                 'data_fine' => $endDate->format('Y-m-d'),
+            ];
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json, */*',
+                'User-Agent' => 'ProForma Import/1.0',
+                'X-Api-Key' => 'kzoPW9i3HCs4WJ8ja8xk',
+            ])
+            ->timeout(60) // 60 seconds timeout
+            ->connectTimeout(10) // 10 seconds to establish connection
+            ->withOptions([
+                'http_errors' => false,
+                'verify' => false, // Only if you need to bypass SSL verification
+            ])
+            ->retry(3, 1000, function ($exception) {
+                // Retry on connection timeouts or server errors
+                return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
+                       ($exception->getCode() >= 500);
+            })
+            ->get($apiUrl, $queryParams);
+
+            // Log the request and response for debugging
+            \Log::info('Pratiche API Request', [
+                'url' => $apiUrl,
+                'params' => $queryParams,
+                'status' => $response->status(),
+                'response_size' => strlen($response->body()),
             ]);
 
-            if ($response->successful()) {
-                $lines = explode("\n", trim($response->body()));
+            if (!$response->successful()) {
+                \Log::error('Pratiche API Error', [
+                    'status' => $response->status(),
+                    'response' => substr($response->body(), 0, 1000),
+                ]);
+                $this->error('API request failed with status: ' . $response->status());
+                return 1;
+            }
 
-                if (empty($lines)) {
-                    $this->error('No data received from API');
-                    return 1;
-                }
+            $responseBody = trim($response->body());
+            $lines = explode("\n", $responseBody);
+            $lines = array_filter($lines, function($line) {
+                return trim($line) !== '';
+            });
+            $lines = array_values($lines);
+
+            if (empty($lines)) {
+                $this->error('No data received from API');
+                return 1;
+            }
+
+            // Log first 5 records for debugging
+            if (count($lines) > 0) {
+                $sampleRecords = array_slice($lines, 0, min(6, count($lines))); // Header + up to 5 records
+                \Log::info('First 5 API records (including header):', [
+                    'sample' => $sampleRecords,
+                    'total_records' => count($lines) - 1, // Exclude header
+                ]);
+            }
 
                 // Get headers from first line
                 $headers = $this->parseLine($lines[0]);
@@ -91,12 +139,23 @@ class ImportPraticheFromApi extends Command
 
                 $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
                 return 0;
-            } else {
-                $this->error('API request failed: ' . $response->status());
-                return 1;
-            }
-        } catch (\Exception $e) {
-            $this->error('Error: ' . $e->getMessage());
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            $this->error('HTTP Request Error: ' . $e->getMessage());
+            \Log::error('Pratiche API Request Exception', [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'response' => $e->response ? [
+                    'status' => $e->response->status(),
+                    'body' => substr((string)$e->response->body(), 0, 1000)
+                ] : null
+            ]);
+            return 1;
+        } catch (\Throwable $e) {
+            $this->error('Unexpected Error: ' . $e->getMessage());
+            \Log::error('Unexpected Error in Pratiche Import', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return 1;
         }
     }
