@@ -47,7 +47,7 @@ class ImportDailyData extends Command
                 ]
             ],
 
-            /*
+
             [
                 'command' => 'provvigioni:import-api',
                 'params' => [
@@ -55,7 +55,7 @@ class ImportDailyData extends Command
                     '--end-date' => $endDate,
                 ]
             ],
-            */
+
         ];
 
         $results = [];
