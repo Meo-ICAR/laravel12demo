@@ -10,16 +10,10 @@ class Pratiche extends Model
 {
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $primaryKey = 'id';
 
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($model) {
-            if (empty($model->{$model->getKeyName()})) {
-                $model->{$model->getKeyName()} = (string) Str::uuid();
-            }
-        });
-    }
+
+
      /**
      * Get the column name for the "created at" timestamp.
      * This tells Laravel to use 'data_inserimento_pratica' for default ordering
@@ -30,6 +24,7 @@ class Pratiche extends Model
     }
 
     protected $fillable = [
+        'id',
         'codice_pratica',
         'nome_cliente',
         'cognome_cliente',

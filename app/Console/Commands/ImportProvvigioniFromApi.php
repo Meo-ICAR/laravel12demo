@@ -150,12 +150,18 @@ class ImportProvvigioniFromApi extends Command
             if (!empty($data)) {
                 $firstItem = $data[0];
                 $expectedHeaders = [
-                    'Codice Record',
-                    'Codice Pratica',
-                    'Codice Compenso',
-                    'Tipo Compenso',
-                    'Importo Compenso',
-                    'Stato Compenso'
+                    'ID Compenso',
+                    'Data Inserimento',
+                    'Descrizione',
+                    'Tipo',
+                    'Importo',
+                    'Importo Effettivo',
+                    'Stato',
+                    'Denominazione Riferimento',
+                    'Entrata Uscita',
+                    'ID Pratica',
+                    'Agente',
+                    'Istituto finanziario'
                 ];
 
                 $actualHeaders = array_keys($firstItem);
@@ -186,14 +192,14 @@ class ImportProvvigioniFromApi extends Command
                     $provvigioneData = $this->mapApiToModel($item);
 
                     // Use 'Codice Pratica' as the identifier since that's what's in the API response
-                    if (empty($item['Codice Record'])) {
-                        $this->warn('Skipping item without Codice Provvigione: ' . json_encode($item));
+                    if (empty($item['ID Compenso'])) {
+                        $this->warn('Skipping item without ID Compenso: ' . json_encode($item));
                         $errors++;
                         continue;
                     }
 
-                    // Ensure we have the codice record in our data
-                    $provvigioneData['id'] = $item['Codice Record'];
+                    // Ensure we have the ID Compenso in our data
+                    $provvigioneData['id'] = $item['ID Compenso'];
 
                     $existing = Provvigione::where('id', $provvigioneData['id'])->first();
 
@@ -253,17 +259,35 @@ class ImportProvvigioniFromApi extends Command
 
     protected function mapApiToModel(array $apiData): array
     {
+        $dataInserimento = null;
+        $dataInserimentoValue = $apiData['Data Inserimento Compenso'] ?? $apiData['Data Inserimento'] ?? null;
+
+        if (!empty($dataInserimentoValue)) {
+            try {
+                $dateParts = explode('/', $dataInserimentoValue);
+                if (count($dateParts) === 3) {
+                    $dataInserimento = Carbon::createFromFormat('d/m/Y', $dataInserimentoValue);
+                }
+            } catch (\Exception $e) {
+                // If parsing fails, leave as null
+                $this->warn("Failed to parse date: " . $dataInserimentoValue);
+            }
+        }
+
         return [
-            'id' => $apiData['Codice Record'] ?? null,
-            'legacy_id' => $apiData['Codice Pratica'] ?? null,
-            'id_pratica' => $apiData['Codice Pratica'] ?? null,
-            'entrata_uscita' => $apiData['Codice Compenso'] ?? null,
-            'tipo' => $apiData['Tipo Compenso'] ?? 'provvigione',
-            'importo' => is_numeric($apiData['Importo Compenso']) ? $apiData['Importo Compenso'] : (is_string($apiData['Importo Compenso']) ? (float) str_replace(',', '.', $apiData['Importo Compenso']) : 0),
-            'status_pratica' => $apiData['Stato Compenso'] ?? '',
+            'id' => $apiData['ID Compenso'] ?? null,
+            'data_inserimento_compenso' => $dataInserimento,
+            'descrizione' => $apiData['Descrizione'] ?? null,
+            'tipo' => $apiData['Tipo'] ?? 'provvigione',
+            'importo' => is_numeric($apiData['Importo']) ? $apiData['Importo'] : (is_string($apiData['Importo']) ? (float) str_replace(',', '.', $apiData['Importo']) : 0),
+            'importo_effettivo' => is_numeric($apiData['Importo Effettivo'] ?? null) ? $apiData['Importo Effettivo'] : (is_string($apiData['Importo Effettivo'] ?? null) ? (float) str_replace(',', '.', $apiData['Importo Effettivo']) : null),
+            'status_pratica' => $apiData['Stato'] ?? '',
+            'denominazione_riferimento' => $apiData['Denominazione Riferimento'] ?? null,
+            'entrata_uscita' => $apiData['Entrata Uscita'] ?? null,
+            'id_pratica' => $apiData['ID Pratica'] ?? null,
+            'segnalatore' => $apiData['Agente'] ?? null,
+            'istituto_finanziario' => $apiData['Istituto finanziario'] ?? null,
             'fonte' => 'api',
-          //  'data_inserimento_compenso' => now(),
-          //  'data_inserimento_pratica' => now(),
         ];
     }
 }

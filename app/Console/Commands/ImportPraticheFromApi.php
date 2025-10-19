@@ -80,14 +80,6 @@ class ImportPraticheFromApi extends Command
                 return 1;
             }
 
-            // Log first 5 records for debugging
-            if (count($lines) > 0) {
-                $sampleRecords = array_slice($lines, 0, min(6, count($lines))); // Header + up to 5 records
-                \Log::info('First 5 API records (including header):', [
-                    'sample' => $sampleRecords,
-                    'total_records' => count($lines) - 1, // Exclude header
-                ]);
-            }
 
                 // Get headers from first line
                 $headers = $this->parseLine($lines[0]);
@@ -114,22 +106,22 @@ class ImportPraticheFromApi extends Command
                     try {
                         $praticaData = $this->mapApiToModel($item);
 
-                        if (empty($praticaData['codice_pratica'])) {
-                            $this->warn('Skipping item without codice_pratica: ' . json_encode($item));
+                        if (empty($praticaData['id'])) {
+                            $this->warn('Skipping item without id: ' . json_encode($item));
                             $errors++;
                             continue;
                         }
 
-                        $existing = Pratiche::where('codice_pratica', $praticaData['codice_pratica'])->first();
+                        $existing = Pratiche::where('id', $praticaData['id'])->first();
 
                         if ($existing) {
                             $existing->update($praticaData);
                             $updated++;
-                            $this->info("Updated pratica: {$praticaData['codice_pratica']}");
+                            $this->info("Updated pratica: {$praticaData['id']}");
                         } else {
                             Pratiche::create($praticaData);
                             $imported++;
-                            $this->info("Imported new pratica: {$praticaData['codice_pratica']}");
+                            $this->info("Imported new pratica: {$praticaData['id']}");
                         }
                     } catch (\Exception $e) {
                         $this->error("Error processing item: " . $e->getMessage());
@@ -167,9 +159,23 @@ class ImportPraticheFromApi extends Command
 
     protected function mapApiToModel(array $apiData): array
     {
+        $dataInserimento = null;
+        $dataInserimentoValue = $apiData['Data Inserimento Pratica'];
+
+        if (!empty($dataInserimentoValue)) {
+            try {
+                $dateParts = explode('/', $dataInserimentoValue);
+                if (count($dateParts) === 3) {
+                    $dataInserimento = Carbon::createFromFormat('d/m/Y', $dataInserimentoValue);
+                }
+            } catch (\Exception $e) {
+                // If parsing fails, leave as null
+                $this->warn("Failed to parse date: " . $dataInserimentoValue);
+            }
+        }
         return [
-            'id' => $apiData['ID'] ?? (string) Str::uuid(),
-            'codice_pratica' => $apiData['Codice Pratica'] ?? null,
+            'id' => $apiData['ID Pratica'] ?? (string) Str::uuid(),
+            'codice_pratica' => $apiData['ID Pratica'] ?? null,
             'nome_cliente' => $apiData['Nome Cliente'] ?? null,
             'cognome_cliente' => $apiData['Cognome Cliente'] ?? null,
             'codice_fiscale' => $apiData['Codice Fiscale'] ?? null,
@@ -178,7 +184,7 @@ class ImportPraticheFromApi extends Command
             'denominazione_banca' => $apiData['Denominazione Banca'] ?? null,
             'tipo_prodotto' => $apiData['Tipo Prodotto'] ?? null,
             'denominazione_prodotto' => $apiData['Descrizione Prodotto'] ?? null,
-            'data_inserimento_pratica' => $apiData['Data Inserimento Pratica'] ?? now(),
+            'data_inserimento_pratica' => $dataInserimento  ?? now(),
             'stato_pratica' => $apiData['Stato Pratica'] ?? null,
         ];
     }
