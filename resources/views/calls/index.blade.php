@@ -122,9 +122,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Calls List</h3>
                 <div>
-                    <a href="{{ route('calls.import.form') }}" class="btn btn-info btn-sm mr-2">
-                        <i class="fas fa-upload"></i> Import Calls
-                    </a>
+
                     <a href="{{ route('calls.dashboard') }}" class="btn btn-secondary btn-sm mr-2">
                         <i class="fas fa-chart-line"></i> Calls Dashboard
                     </a>
@@ -198,26 +196,26 @@ $(document).ready(function() {
     let endDate = new Date();
     let startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
-    
+
     // Format dates as YYYY-MM-DD
     const formatDate = (date) => {
         return date.toISOString().split('T')[0];
     };
-    
+
     $('#from_date').val(formatDate(startDate));
     $('#to_date').val(formatDate(endDate));
-    
+
     // Handle import form submission
     $('#importEsitiForm').on('submit', function(e) {
         e.preventDefault();
-        
+
         const formData = {
             from_date: $('#from_date').val(),
             to_date: $('#to_date').val(),
             dry_run: $('#dry_run').is(':checked') ? 1 : 0,
             _token: '{{ csrf_token() }}'
         };
-        
+
         $.ajax({
             url: $(this).attr('action'),
             type: 'POST',
@@ -233,9 +231,9 @@ $(document).ready(function() {
                     text: response.message || 'Importazione completata con successo!',
                     timeout: 5000
                 }).show();
-                
+
                 $('#importEsitiModal').modal('hide');
-                
+
                 setTimeout(function() {
                     window.location.reload();
                 }, 1000);
@@ -245,7 +243,7 @@ $(document).ready(function() {
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMessage = xhr.responseJSON.message;
                 }
-                
+
                 new Noty({
                     type: 'error',
                     text: errorMessage,

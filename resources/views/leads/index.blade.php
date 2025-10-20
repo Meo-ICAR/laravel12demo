@@ -175,15 +175,11 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Leads List</h3>
                 <div>
-                    <a href="{{ route('leads.import') }}" class="btn btn-success btn-sm mr-2">
-                        <i class="fas fa-upload"></i> Import Leads
-                    </a>
+
                     <a href="{{ route('leads.dashboard') }}" class="btn btn-info btn-sm mr-2">
                         <i class="fas fa-chart-line"></i> Dashboard
                     </a>
-                    <a href="{{ route('leads.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Create Lead
-                    </a>
+
                 </div>
             </div>
         </div>
