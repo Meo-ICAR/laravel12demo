@@ -26,6 +26,8 @@ class User extends Authenticatable
         'password',
         'company_id',
         'cf',
+        'microsoft_id',
+        'azure_id',
     ];
 
     /**

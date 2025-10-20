@@ -53,7 +53,7 @@
     <!-- AdminLTE App -->
     <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
     @vite(['resources/js/app.js'])
-    
+
     <script>
         // Debug: Log when document is ready
         document.addEventListener('DOMContentLoaded', function() {

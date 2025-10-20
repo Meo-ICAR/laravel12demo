@@ -16,6 +16,8 @@
         "laravel/socialite": "^5.2",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1",
+        "socialiteproviders/azureadb2c": "*",
+        "socialiteproviders/microsoft": "^4.7",
         "spatie/browsershot": "^5.0",
         "spatie/laravel-multitenancy": "*",
         "spatie/laravel-permission": "^6.20"

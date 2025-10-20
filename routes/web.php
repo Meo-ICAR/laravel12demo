@@ -28,6 +28,10 @@ Route::middleware('guest')->group(function () {
     Route::get('login', function () {
         return view('auth.login');
     })->name('login');
+    
+    // Microsoft/Azure AD OAuth Routes
+    Route::get('login/microsoft', [\App\Http\Controllers\Auth\AzureAuthController::class, 'redirect'])->name('microsoft.login');
+    Route::get('login/microsoft/callback', [\App\Http\Controllers\Auth\AzureAuthController::class, 'callback']);
 
     Route::get('register', function () {
         return view('auth.register');
@@ -36,22 +40,6 @@ Route::middleware('guest')->group(function () {
     Route::get('forgot-password', function () {
         return view('auth.forgot-password');
     })->name('password.request');
-
-    Route::get('login/microsoft', function () {
-        return Socialite::driver('microsoft')->redirect();
-    })->name('login.microsoft');
-
-    Route::get('login/microsoft/callback', function () {
-        $microsoftUser = Socialite::driver('microsoft')->user();
-        $user = User::firstOrCreate([
-            'email' => $microsoftUser->getEmail(),
-        ], [
-            'name' => $microsoftUser->getName() ?? $microsoftUser->getNickname() ?? $microsoftUser->getEmail(),
-            'password' => bcrypt(str()->random(16)),
-        ]);
-        Auth::login($user, true);
-        return redirect('/dashboard');
-    });
 });
 
 // All other routes require authentication

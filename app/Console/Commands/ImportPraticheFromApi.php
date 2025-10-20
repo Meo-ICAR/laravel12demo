@@ -36,7 +36,7 @@ class ImportPraticheFromApi extends Command
             $response = Http::withHeaders([
                 'Accept' => 'application/json, */*',
                 'User-Agent' => 'ProForma Import/1.0',
-                'X-Api-Key' => 'kzoPW9i3HCs4WJ8ja8xk',
+                'X-Api-Key' => env('MEDIAFACILE_HEADER_KEY'),
             ])
             ->timeout(60) // 60 seconds timeout
             ->connectTimeout(10) // 10 seconds to establish connection

@@ -15,19 +15,22 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+
         <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        
+
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        
+
         <!-- AdminLTE CSS -->
         <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/adminlte.min.css') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-        
+
         <!-- Noty CSS -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/noty@3.2.0/browser/noty.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/noty@3.2.0/browser/themes/mint.css">
+        <!-- Microsoft CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
@@ -50,16 +53,16 @@
 
         <!-- Popper.js (required for Bootstrap 4) -->
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-        
+
         <!-- Bootstrap JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <!-- AdminLTE Scripts -->
         <script src="{{ asset('vendor/adminlte/dist/js/adminlte.min.js') }}"></script>
-        
+
         <!-- Noty JS -->
         <script src="https://cdn.jsdelivr.net/npm/noty@3.2.0/browser/noty.min.js"></script>
-        
+
         <!-- Initialize Bootstrap components -->
         <script>
             // Wait for the DOM to be fully loaded
@@ -70,13 +73,13 @@
                     tooltipTriggerList.map(function (tooltipTriggerEl) {
                         return new bootstrap.Tooltip(tooltipTriggerEl);
                     });
-                    
+
                     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
                     popoverTriggerList.map(function (popoverTriggerEl) {
                         return new bootstrap.Popover(popoverTriggerEl);
                     });
                 }
-                
+
                 // Initialize jQuery components if jQuery is available
                 if (typeof jQuery !== 'undefined') {
                     jQuery(function($) {
@@ -87,10 +90,10 @@
                 }
             });
         </script>
-        
+
         <!-- Stack for pushed scripts -->
         @stack('scripts')
-        
+
         <!-- Application Scripts -->
         @vite(['resources/js/app.js'])
     </body>

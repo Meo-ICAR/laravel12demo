@@ -19,6 +19,7 @@
                     <div class="col-md-2">
                         <label for="stato">Filter by Stato:</label>
                         <select name="stato" id="stato" class="form-control">
+                              <option value="">All</option>
                               @foreach($statoOptions as $option)
                                 <option value="{{ $option }}" {{ request('stato') == $option ? 'selected' : '' }}>
                                     {{ $option }}
@@ -71,8 +72,6 @@
                         <label for="status_pratica">Stato Pratica:</label>
                         <select name="status_pratica" id="status_pratica" class="form-control">
                             <option value="">All</option>
-                            <option value="PERFEZIONATA" {{ request('status_pratica', 'PERFEZIONATA') == 'PERFEZIONATA' ? 'selected' : '' }}>PERFEZIONATA</option>
-                            <option value="ALTRO" {{ request('status_pratica') == 'ALTRO' ? 'selected' : '' }}>ALTRO</option>
                             @php
                                 $allStatusPratica = [
                                     'PERFEZIONATA',
@@ -242,9 +241,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Provvigioni List</h3>
                 <div>
-                    <a href="{{ route('provvigioni.import') }}" class="btn btn-primary btn-sm mr-2">
-                        <i class="fas fa-upload"></i> Import Provvigioni
-                    </a>
+
                     <a href="{{ route('provvigioni.dashboard') }}" class="btn btn-info btn-sm mr-2">
                         <i class="fas fa-chart-line mr-1"></i> Dashboard
                     </a>

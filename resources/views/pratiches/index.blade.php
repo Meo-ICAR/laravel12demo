@@ -11,9 +11,7 @@
                         <a href="{{ route('pratiches.import.api.form') }}" class="btn btn-success mr-2">
                             <i class="fas fa-cloud-download-alt"></i> Importa da API
                         </a>
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#importModal">
-                            <i class="fas fa-upload"></i> Importa CSV
-                        </button>
+
                     </div>
                 </div>
                 <div class="card-body">

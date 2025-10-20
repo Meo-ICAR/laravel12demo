@@ -15,14 +15,7 @@
             <h5 class="card-title mb-0">
                 <i class="fas fa-filter"></i> Filter Leads
             </h5>
-            <div class="float-right">
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#importLeadsModal">
-                    <i class="fas fa-file-import"></i> Importa da SIDIAL
-                </button>
-                <a href="{{ route('leads.create') }}" class="btn btn-success">
-                    <i class="fas fa-plus"></i> Nuovo Lead
-                </a>
-            </div>
+
         </div>
         <div class="card-body">
             @include('leads.import-modal')

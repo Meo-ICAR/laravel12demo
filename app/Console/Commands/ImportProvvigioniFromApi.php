@@ -35,7 +35,7 @@ class ImportProvvigioniFromApi extends Command
             $response = Http::withHeaders([
                 'Accept' => 'application/json, */*',
                 'User-Agent' => 'ProForma Import/1.0',
-                'X-Api-Key' => 'kzoPW9i3HCs4WJ8ja8xk',
+                'X-Api-Key' => env('MEDIAFACILE_HEADER_KEY'),
             ])
             ->timeout(60) // 60 seconds timeout
             ->connectTimeout(10) // 10 seconds to establish connection
@@ -214,8 +214,10 @@ class ImportProvvigioniFromApi extends Command
                             $skipped++;
                         }
                     } else {
+                        $provvigioneData->stato='Inserito';
                         Provvigione::create($provvigioneData);
                         $imported++;
+
                         $this->info("Imported new provvigione: {$provvigioneData['id']}");
                     }
                 } catch (\Exception $e) {
@@ -223,6 +225,11 @@ class ImportProvvigioniFromApi extends Command
                     $errors++;
                 }
             }
+            // Lancia update da pratiche
+            // import pratiche from api, at the end run update provvigioni p
+            // inner join pratiches k on k.id = p.id_pratica
+            // set p.cognome = k.cognome_cliente, p.nome = k.nome_cliente
+            // where p.cognome is null
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;

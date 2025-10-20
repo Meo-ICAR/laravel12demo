@@ -27,6 +27,23 @@ return [
     | Supported: "github", "gitlab", "bitbucket"
     |
     */
+    'microsoft' => [
+        'client_id' => env('MICROSOFT_CLIENT_ID'),
+        'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
+        'redirect' => env('MICROSOFT_REDIRECT_URI'),
+        'tenant' => env('MICROSOFT_TENANT_ID', 'common'),
+        'scopes' => [
+            'openid',
+            'email',
+            'profile',
+            'offline_access',
+        ],
+        'with' => [
+            'response_type' => 'code',
+            'prompt' => 'select_account',
+            'response_mode' => 'query',
+        ],
+    ],
 
     'providers' => [
         'github' => [
@@ -47,10 +64,22 @@ return [
             'redirect' => env('BITBUCKET_REDIRECT_URI'),
         ],
 
-        'microsoft' => [
-            'client_id' => env('MICROSOFT_CLIENT_ID'),
-            'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
-            'redirect' => env('MICROSOFT_REDIRECT_URI'),
+        'azure' => [
+            'client_id' => env('AZURE_CLIENT_ID'),
+            'client_secret' => env('AZURE_CLIENT_SECRET'),
+            'redirect' => env('AZURE_REDIRECT_URI'),
+            'tenant' => env('AZURE_TENANT_ID', 'common'),
+            'scopes' => [
+                'openid',
+                'email',
+                'profile',
+                'offline_access',
+            ],
+            'with' => [
+                'response_type' => 'code',
+                'prompt' => 'select_account',
+                'response_mode' => 'query',
+            ],
         ],
     ],
 

@@ -64,7 +64,7 @@
 
         {{-- Microsoft login button --}}
         <div class="mb-3">
-            <a href="{{ route('login.microsoft') }}" class="btn btn-block btn-outline-primary">
+            <a href="{{ route('microsoft.login') }}" class="btn btn-block btn-outline-primary">
                 <i class="fab fa-microsoft mr-2"></i> Login with Microsoft
             </a>
         </div>

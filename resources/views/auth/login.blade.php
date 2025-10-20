@@ -57,6 +57,14 @@
             </div>
         </div>
     </form>
+
+    {{-- Microsoft Login Button --}}
+    <div class="social-auth-links text-center mt-3">
+        <p>- OR -</p>
+        <a href="{{ route('microsoft.login') }}" class="btn btn-block btn-outline-primary" style="background-color: #0078d4; color: white; border-color: #0078d4;">
+            <i class="fab fa-microsoft mr-2"></i> Sign in with Microsoft
+        </a>
+    </div>
 @stop
 
 @section('auth_footer')
