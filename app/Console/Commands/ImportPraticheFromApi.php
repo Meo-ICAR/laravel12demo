@@ -117,11 +117,11 @@ class ImportPraticheFromApi extends Command
                         if ($existing) {
                             $existing->update($praticaData);
                             $updated++;
-                            $this->info("Updated pratica: {$praticaData['id']}");
+                          //  $this->info("Updated pratica: {$praticaData['id']}");
                         } else {
                             Pratiche::create($praticaData);
                             $imported++;
-                            $this->info("Imported new pratica: {$praticaData['id']}");
+                          //  $this->info("Imported new pratica: {$praticaData['id']}");
                         }
                     } catch (\Exception $e) {
                         $this->error("Error processing item: " . $e->getMessage());

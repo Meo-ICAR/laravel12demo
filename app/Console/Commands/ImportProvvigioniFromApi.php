@@ -204,9 +204,15 @@ class ImportProvvigioniFromApi extends Command
                     $existing = Provvigione::where('id', $provvigioneData['id'])->first();
 
                     if ($existing) {
-                        $existing->update($provvigioneData);
-                        $updated++;
-                        $this->info("Updated provvigione : {$provvigioneData['id']}");
+                        // Check if any of the timestamp fields are already set
+                        if (empty($existing->sended_at) && empty($existing->received_at) && empty($existing->paided_at)) {
+                            $existing->update($provvigioneData);
+                            $updated++;
+                            $this->info("Updated provvigione: {$provvigioneData['id']}");
+                        } else {
+                            $this->info("Skipped update for provvigione {$provvigioneData['id']} - timestamps sended, received paide dalready set");
+                            $skipped++;
+                        }
                     } else {
                         Provvigione::create($provvigioneData);
                         $imported++;
