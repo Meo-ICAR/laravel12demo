@@ -147,6 +147,7 @@ class ImportInvoiceinsCustom extends Command
             'Codice TD' => 'codice_td',
             'Nr. cliente/fornitore' => 'nr_cliente_fornitore',
             'Nome fornitore' => 'nome_fornitore',
+            'Nome cliente' => 'nome_cliente',
             'Partita IVA' => 'partita_iva',
             'Nr. Documento Fornitore' => 'nr_documento_fornitore',
             'Allegato' => 'allegato',
@@ -166,7 +167,8 @@ class ImportInvoiceinsCustom extends Command
             'Cod. colleg. dimen. 2' => 'cod_colleg_dimen_2',
             'Allegato in File XML' => 'allegato_in_file_xml',
             'Note 1' => 'note1',
-            'Note 2' => 'note2'
+            'Note 2' => 'note2',
+            'Filtro Carichi' => 'filtro_carichi'
         ];
 
         // Create a map of header names to their column indices
@@ -229,7 +231,8 @@ class ImportInvoiceinsCustom extends Command
     protected function mapRow($row, $headerMap)
     {
         $mapped = [];
-
+        $inputFormat = 'd/m/Y H:i:s';
+        $mysqlFormat = 'Y-m-d H:i:s';
         // First pass: map all fields and clean values
         foreach ($headerMap as $headerName => $modelField) {
             $value = $row[$headerName] ?? '';
@@ -245,7 +248,7 @@ class ImportInvoiceinsCustom extends Command
         }
 
         // Debug: Log the mapping for the first few rows
-        static $rowCount = 0;
+        static $rowCount = 5;
         if ($rowCount < 5) {
             $this->info("Raw row data: " . json_encode($row, JSON_PRETTY_PRINT));
             $this->info("Mapped row data: " . json_encode($mapped, JSON_PRETTY_PRINT));
@@ -254,6 +257,7 @@ class ImportInvoiceinsCustom extends Command
 
         // Set default values for required fields
         $emptyFields = [
+            /*
             'nr_fatt_acq_registrata' => '',
             'nr_nota_cr_acq_registrata' => '',
             'codice_td' => $mapped['codice_td'] ?? '',  // From column 'C: Codice TD'
@@ -269,6 +273,7 @@ class ImportInvoiceinsCustom extends Command
             'data_ora_invio_ricezione' => $mapped['data_ora_invio'] ?? null,  // From column 'I: Data ora Invio/Ricezione'
             'id_sdi' => $mapped['id_sdi'] ?? '',  // From column 'R: Id SDI'
             'nr_lotto_documento' => ''  // Not in Excel
+            */
         ];
 
         // Merge with existing mapped data, preserving any existing values
@@ -294,11 +299,16 @@ class ImportInvoiceinsCustom extends Command
                 // Convert to string if it's a float to handle decimal separators
                 $value = (string)$mapped[$field];
                 // Remove any thousands separators and convert decimal comma to dot
-                $value = str_replace(['.', ','], ['', '.'], $value);
+                $value = str_replace('.', '' , $value);
+                $value = str_replace( ',','', $value);
+                $mapped[$field] = (float)$value/100;
                 // Format to specified number of decimal places
+                /*
                 $mapped[$field] = is_numeric($value) ?
-                    number_format((float)$value, $decimals, '.', '') :
+                    number_format((float)$value, $decimals, ',', '.') :
+                   // number_format((float)$value, $decimals, '.', '') :
                     number_format(0, $decimals, '.', '');
+                */
             } else {
                 $mapped[$field] = number_format(0, $decimals, '.', '');
             }
@@ -319,6 +329,7 @@ class ImportInvoiceinsCustom extends Command
             }
         }
 
+
         // Handle boolean fields
         $booleanFields = [
             'allegato',
@@ -337,7 +348,7 @@ class ImportInvoiceinsCustom extends Command
                 } elseif (is_numeric($value)) {
                     $mapped[$field] = (bool)$value;
                 } else {
-                    $mapped[$field] = in_array(strtoupper($value), ['TRUE', '1', 'YES', 'Y', 'SI']);
+                    $mapped[$field] = in_array(strtoupper($value), ['TRUE', '1', 'YES', 'Y', 'SI','VERO']);
                 }
             } else {
                 $mapped[$field] = false;
@@ -382,6 +393,7 @@ class ImportInvoiceinsCustom extends Command
                 'importo_iva' => $data['importo_iva'] ?? 0,
                 'importo_totale_collegato' => $data['importo_totale_collegato'] ?? 0,
                 'importo_bollo' => $data['importo_bollo'] ?? 0,
+                'imponibile_iva' => $data['imponibile_iva'] ?? 0,
 
                 // Additional fields from Excel
                 'tipo_di_documento' => $data['tipo_di_documento'] ?? 'Fattura',
@@ -394,7 +406,14 @@ class ImportInvoiceinsCustom extends Command
                 'cdc_codice' => $data['cdc_codice'] ?? null,
                 'cod_colleg_dimen_2' => $data['cod_colleg_dimen_2'] ?? null,
                 'note' => trim(($data['note1'] ?? '') . ' ' . ($data['note2'] ?? '')),
-
+                'partita_iva' => $data['partita_iva'] ?? '',
+                'codice_td' => $data['codice_td'] ?? '',
+                'nr_documento_fornitore' => $data['nr_documento_fornitore'] ?? '',
+                'allegato' => $data['allegato'] ?? '',
+                'data_documento_fornitore' => $data['data_documento_fornitore'] ?? null,
+                'data_ora_invio_ricezione' => '2'.substr($data['data_ora_invio_ricezione'], 1, 19) ?? null,
+                'id_sdi' => $data['id_sdi'] ?? null,
+                'allegato_in_file_xml' => $data['allegato_in_file_xml'] ?? '',
                 // Boolean flags
                 'pec_presente' => $data['pec_presente'] ?? false,
                 'partita_iva_presente' => $data['partita_iva_presente'] ?? false,
@@ -407,7 +426,7 @@ class ImportInvoiceinsCustom extends Command
             ]);
 
             $invoicein->save();
-            $this->info("Imported invoice: {$data['nr_documento']}");
+          //  $this->info("Imported invoice: {$data['nr_documento']}");
             return true;
 
         } catch (\Exception $e) {
