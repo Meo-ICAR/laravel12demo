@@ -34,18 +34,31 @@ class AzureAuthController extends Controller
                        $microsoftUser->getNickname() ??
                        $microsoftUser->getEmail();
 
-            $user = User::updateOrCreate(
-                ['email' => $microsoftUser->getEmail()],
-                [
-                    'name' => $userName,
-                    'email' => $microsoftUser->getEmail(),
-                    'email_verified_at' => now(),
-                    'microsoft_id' => $microsoftUser->getId(),
-                    'azure_id' => $microsoftUser->getId(),
-                    // Set a random password for Microsoft users (they won't use it)
-                    'password' => bcrypt(\Illuminate\Support\Str::random(32)),
-                ]
-            );
+            // First try to find by Microsoft ID
+            $user = User::where('microsoft_id', $microsoftUser->getId())->first();
+
+            // If not found by Microsoft ID, try by email
+            if (!$user) {
+                $user = User::where('email', $microsoftUser->getEmail())->first();
+            }
+
+            // Prepare user data
+            $userData = [
+                'name' => $userName,
+                'email' => $microsoftUser->getEmail(),
+                'email_verified_at' => now(),
+                'microsoft_id' => $microsoftUser->getId(),
+                'azure_id' => $microsoftUser->getId(),
+            ];
+
+            // If user exists, update their record
+            if ($user) {
+                $user->update($userData);
+            } else {
+                // Create new user if doesn't exist
+                $userData['password'] = bcrypt(\Illuminate\Support\Str::random(32));
+                $user = User::create($userData);
+            }
 
             // Log successful authentication
             \Log::info('Microsoft Login Success', [

@@ -17,9 +17,8 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/import/dummy
 /vendor
 Homestead.json
 Homestead.yaml
 Thumbs.db
-Gestione Documenti Elettronici in Entrata (IFE).xlsx
-fatturein.csv
