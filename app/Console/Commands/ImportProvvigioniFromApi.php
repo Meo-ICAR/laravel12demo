@@ -251,6 +251,15 @@ class ImportProvvigioniFromApi extends Command
 
                 $this->info("Updated {$updatedCount} records with customer names from pratiche.");
             }
+            $insertedFornitoriCount = \DB::insert(
+                    "insert into fornitoris (id,name) select uuid(),denominazione_riferimento from vwfornitorinew"
+            );
+            $this->info("Inserted {$insertedFornitoriCount} records into produttori.");
+
+            $insertedClientiCount = \DB::insert(
+                "insert into clientis (id,name) select uuid(),denominazione_riferimento from vwclientinew"
+            );
+            $this->info("Inserted {$insertedClientiCount} records into mandatarie.");
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;

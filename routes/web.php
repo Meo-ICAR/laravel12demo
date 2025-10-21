@@ -121,11 +121,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('invoices/{id}', [App\Http\Controllers\InvoiceController::class, 'destroy'])->name('invoices.destroy');
 
     // Fornitori routes
-    Route::middleware(['permission:fornitori_management'])->group(function () {
+  //  Route::middleware(['permission:fornitori_management'])->group(function () {
         Route::post('fornitoris/import', [FornitoriController::class, 'import'])->name('fornitoris.import');
         Route::post('fornitoris/import-invoiceins-to-invoices', [FornitoriController::class, 'importInvoiceinsToInvoices'])->name('fornitoris.importInvoiceinsToInvoices');
         Route::resource('fornitoris', FornitoriController::class);
-    });
+  //  });
 
     // Provvigioni routes
     Route::get('provvigioni/proforma-summary', [App\Http\Controllers\ProvvigioneController::class, 'proformaSummary'])->name('provvigioni.proformaSummary');
@@ -172,9 +172,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('clientis/import-invoiceins-to-invoices', [\App\Http\Controllers\ClientiController::class, 'importInvoiceinsToInvoicesByClienti'])->name('clientis.importInvoiceinsToInvoicesByClienti');
 
     // Pratiche routes - accessible by all authenticated users
-    Route::middleware('auth')->group(function () {
+ //   Route::middleware('auth')->group(function () {
         Route::resource('pratiches', 'App\Http\Controllers\pratichecontroller');
-    });
+  //  });
 
     // Customertypes routes
     Route::resource('customertypes', App\Http\Controllers\CustomertypeController::class);
