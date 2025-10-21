@@ -150,21 +150,147 @@ class InvoiceinImportController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        // Ensure the imports directory exists and is writable
+        $importPath = storage_path('app/imports');
+        if (!file_exists($importPath)) {
+            $created = mkdir($importPath, 0755, true);
+            if (!$created) {
+                \Log::error('Failed to create import directory: ' . $importPath);
+                return back()->with('error', 'Failed to create import directory. Please check storage permissions.');
+            }
+        }
+
+        if (!is_writable($importPath)) {
+            \Log::error('Import directory is not writable: ' . $importPath);
+            return back()->with('error', 'Import directory is not writable. Please check storage permissions.');
+        }
+
         $file = $request->file('file');
-        $path = $file->storeAs('imports', uniqid('invoiceins_') . '.' . $file->getClientOriginalExtension());
-        $fullPath = storage_path('app/' . $path);
+        $originalName = $file->getClientOriginalName();
+        $extension = strtolower($file->getClientOriginalExtension());
+        
+        // Generate a unique filename
+        $filename = 'invoiceins_' . time() . '_' . uniqid() . '.' . $extension;
+        
+        try {
+            // Store the file with error handling
+            $storedPath = $file->storeAs('imports', $filename);
+            if ($storedPath === false) {
+                throw new \Exception('Failed to store the uploaded file.');
+            }
+            
+            $fullPath = storage_path('app/' . ltrim($storedPath, '/'));
+            
+            // Verify file was stored correctly
+            if (!file_exists($fullPath)) {
+                throw new \Exception('File was not stored correctly. Storage path: ' . $fullPath);
+            }
+            
+            // Log successful storage
+            \Log::info('Successfully stored import file', [
+                'original_name' => $originalName,
+                'stored_path' => $storedPath,
+                'full_path' => $fullPath,
+                'file_size' => filesize($fullPath) . ' bytes',
+                'file_type' => mime_content_type($fullPath),
+                'is_readable' => is_readable($fullPath) ? 'yes' : 'no',
+                'is_writable' => is_writable($fullPath) ? 'yes' : 'no'
+            ]);
 
-        // Call the custom import command
-        $output = null;
-        $exitCode = Artisan::call('invoiceins:import-custom', [
-            'file' => $fullPath
-        ]);
-        $output = Artisan::output();
+            // Convert XLS to CSV if needed before passing to the command
+            if (in_array($extension, ['xls', 'xlsx'])) {
+                try {
+                    $csvPath = $this->convertExcelToCsv($fullPath, $importPath);
+                    \Log::info('Converted XLS to CSV', [
+                        'original' => $fullPath,
+                        'converted' => $csvPath,
+                        'exists' => file_exists($csvPath) ? 'yes' : 'no'
+                    ]);
+                    $fullPath = $csvPath; // Use the converted CSV file
+                } catch (\Exception $e) {
+                    throw new \Exception('Failed to convert Excel file to CSV: ' . $e->getMessage());
+                }
+            }
 
-        if ($exitCode === 0) {
-            return redirect()->route('invoiceins.index')->with('success', 'Import completed.<br><pre>' . e($output) . '</pre>');
-        } else {
-            return redirect()->route('invoiceins.index')->with('error', 'Import failed.<br><pre>' . e($output) . '</pre>');
+            // Call the custom import command
+            $exitCode = Artisan::call('invoiceins:import-custom', [
+                'file' => $fullPath
+            ]);
+            $output = Artisan::output();
+            \Log::info('Import command output', ['exit_code' => $exitCode, 'output' => $output]);
+
+            // Clean up the file after import
+            $this->cleanupFile($fullPath);
+
+            if ($exitCode === 0) {
+                return redirect()->route('invoiceins.index')->with('success', 'Import completed.<br><pre>' . e($output) . '</pre>');
+            } else {
+                return redirect()->route('invoiceins.index')->with('error', 'Import failed.<br><pre>' . e($output) . '</pre>');
+            }
+        } catch (\Exception $e) {
+            // Clean up the file if there was an error
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+            \Log::error('Import error: ' . $e->getMessage());
+            return redirect()->route('invoiceins.index')->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Convert Excel file to CSV format
+     */
+    protected function convertExcelToCsv($excelPath, $outputDir)
+    {
+        try {
+            $data = Excel::toArray([], $excelPath);
+            if (empty($data)) {
+                throw new \Exception('No data found in the Excel file');
+            }
+
+            $csvPath = $outputDir . '/converted_' . time() . '.csv';
+            $file = fopen($csvPath, 'w');
+            
+            foreach ($data[0] as $row) {
+                fputcsv($file, $row, ';');
+            }
+            
+            fclose($file);
+            
+            if (!file_exists($csvPath)) {
+                throw new \Exception('Failed to create CSV file at: ' . $csvPath);
+            }
+            
+            return $csvPath;
+        } catch (\Exception $e) {
+            \Log::error('Excel to CSV conversion failed', [
+                'file' => $excelPath,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+    
+    /**
+     * Safely remove a file if it exists
+     */
+    protected function cleanupFile($path)
+    {
+        try {
+            if (file_exists($path)) {
+                $deleted = unlink($path);
+                if (!$deleted) {
+                    \Log::warning('Failed to delete file: ' . $path);
+                } else {
+                    \Log::info('Successfully cleaned up file: ' . $path);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error during file cleanup', [
+                'file' => $path,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 

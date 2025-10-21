@@ -36,12 +36,15 @@
                             </ul>
                         </div>
                     @endif
-                    <form action="{{ route('invoiceins.import') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('invoiceins.import.custom') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="form-group">
                             <label for="file">CSV or Excel File</label>
                             <input type="file" name="file" id="file" class="form-control" required>
-                            <small class="form-text text-muted">Supported formats: CSV, XLSX, XLS. Maximum size: 2MB.</small>
+                            <small class="form-text text-muted">
+                                Supported formats: CSV, XLSX, XLS. Maximum size: 20MB.
+                                <br>Note: For XLS/XLSX files, please ensure the first row contains headers.
+                            </small>
                         </div>
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary">
