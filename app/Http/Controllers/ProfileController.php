@@ -18,6 +18,19 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
+    /**
+     * Display the user's profile.
+     */
+    public function show(Request $request): View
+    {
+        return view('profile.show', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    /**
+     * Display the user's profile edit form.
+     */
     public function edit(Request $request): View
     {
         return view('profile.edit', [
@@ -50,7 +63,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return Redirect::route('profile.edit')
+        return Redirect::route('profile.edit', ['tab' => 'profile'])
             ->with('status', 'profile-updated')
             ->with('success', 'Profile updated successfully.');
     }
@@ -66,7 +79,9 @@ class ProfileController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return back()->with('success', 'Password updated successfully.');
+        return redirect()->route('profile.edit', ['tab' => 'password'])
+            ->with('status', 'password-updated')
+            ->with('success', 'Password updated successfully.');
     }
 
     /**

@@ -28,7 +28,7 @@ Route::middleware('guest')->group(function () {
     Route::get('login', function () {
         return view('auth.login');
     })->name('login');
-    
+
     // Microsoft/Azure AD OAuth Routes
     Route::get('login/microsoft', [\App\Http\Controllers\Auth\AzureAuthController::class, 'redirect'])->name('microsoft.login');
     Route::get('login/microsoft/callback', [\App\Http\Controllers\Auth\AzureAuthController::class, 'callback']);
@@ -48,6 +48,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('dashboard');
     });
 
+    // Profile routes
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'show'])->name('profile.show');
+        Route::get('/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    });
+
+    // Dashboard routes
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
@@ -55,9 +64,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/home', function () {
         return view('dashboard');
     })->name('home');
-
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Help Routes
@@ -226,17 +232,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Pratiche routes
     Route::resource('pratiches', App\Http\Controllers\PraticheController::class);
-    
+
     // Import API routes
     Route::get('pratiches/import-api', [App\Http\Controllers\PraticheController::class, 'showImportApiForm'])
         ->name('pratiches.import.api.form');
-    Route::post('pratiches/import-api', [App\Http\Controllers\PraticheController::class, 'importFromApi'])
-        ->name('pratiches.import.api');
-    
+
     // New import routes
     Route::post('pratiche/import', [App\Http\Controllers\PraticheCrudController::class, 'import'])
         ->name('pratiche.import');
-    
+
     // Keep the old route for backward compatibility
     Route::resource('pratiches-crud', App\Http\Controllers\PraticheCrudController::class)->parameters([
         'pratiches-crud' => 'pratiche'

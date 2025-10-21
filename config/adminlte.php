@@ -135,11 +135,11 @@ return [
     */
 
     'usermenu_enabled' => true,
-    'usermenu_header' => false,
+    'usermenu_header' => true,
     'usermenu_header_class' => 'bg-primary',
-    'usermenu_image' => false,
-    'usermenu_desc' => false,
-    'usermenu_profile_url' => false,
+    'usermenu_image' => true,
+    'usermenu_desc' => true,
+    'usermenu_profile_url' => 'profile.edit',
 
     /*
     |--------------------------------------------------------------------------
@@ -322,11 +322,7 @@ return [
             'topnav' => true,
             'submenu' => [
 
-                [
-                    'text' => 'Provvigioni Import',
-                    'url' => 'provvigioni/import',
-                    'icon' => 'fas fa-file-import',
-                ],
+
                    [
                     'text' => 'Provvigioni',
                     'url' => 'provvigioni',
@@ -464,11 +460,7 @@ return [
                     'icon' => 'far fa-circle',
                 ],
                   // Filament Admin Panel link
-        [
-            'text' => 'Filament Admin',
-            'url' => 'admin',
-            'icon' => 'fas fa-toolbox',
-        ],
+
             ],
         ],
          [
@@ -480,11 +472,7 @@ return [
             'icon' => 'fas fa-file-invoice-dollar',
             'submenu' => [
 
-                [
-                    'text' => 'Provvigioni Import',
-                    'url' => 'provvigioni/import',
-                    'icon' => 'fas fa-file-import',
-                ],
+
                 [
                     'text' => 'Provvigioni',
                     'url' => 'provvigioni',

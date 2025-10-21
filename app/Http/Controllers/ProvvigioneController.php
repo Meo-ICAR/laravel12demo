@@ -80,13 +80,9 @@ class ProvvigioneController extends Controller
             $query->where('provvigioni.entrata_uscita', $request->entrata_uscita);
         }
 
-        // Filter by status_pratica if provided, default to 'PERFEZIONATA'
-        if ($request->has('status_pratica')) {
-            if ($request->status_pratica !== '') {
-                $query->where('provvigioni.status_pratica', $request->status_pratica);
-            }
-        } else {
-            $query->where('provvigioni.status_pratica', 'PERFEZIONATA');
+        // Filter by status_pratica if provided
+        if ($request->has('status_pratica') && $request->status_pratica !== '') {
+            $query->where('provvigioni.status_pratica', $request->status_pratica);
         }
 
         // Get total count and total importo before pagination

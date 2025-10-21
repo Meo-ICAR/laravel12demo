@@ -151,7 +151,7 @@
 
                         <!-- Password Tab -->
                         <div class="tab-pane {{ request('tab') === 'password' ? 'show active' : '' }}" id="password">
-                            <form method="post" action="{{ route('profile.password') }}" class="form-horizontal">
+                            <form method="post" action="{{ route('profile.password.update') }}" class="form-horizontal">
                                 @csrf
                                 @method('put')
                                 

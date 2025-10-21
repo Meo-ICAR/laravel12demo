@@ -45,16 +45,7 @@
                                class="form-control" value="{{ request('cognome') }}"
                                placeholder="Search...">
                     </div>
-                    <div class="col-md-2">
-                        <label for="data_status_pratica_from">Data Status Pratica From:</label>
-                        <input type="date" name="data_status_pratica_from" id="data_status_pratica_from"
-                               class="form-control" value="{{ request('data_status_pratica_from') }}">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="data_status_pratica_to">Data Status Pratica To:</label>
-                        <input type="date" name="data_status_pratica_to" id="data_status_pratica_to"
-                               class="form-control" value="{{ request('data_status_pratica_to') }}">
-                    </div>
+
                     <div class="col-md-2">
                         <label for="sended_at">Sended At Date:</label>
                         <input type="date" name="sended_at" id="sended_at"
@@ -210,8 +201,7 @@
                                 @if(request('denominazione_riferimento')) <span class="badge badge-secondary">Fornitore: {{ request('denominazione_riferimento') }}</span> @endif
                                 @if(request('istituto_finanziario')) <span class="badge badge-secondary">Istituto: {{ request('istituto_finanziario') }}</span> @endif
                                 @if(request('cognome')) <span class="badge badge-secondary">Cognome: {{ request('cognome') }}</span> @endif
-                                @if(request('data_status_pratica_from')) <span class="badge badge-secondary">Data Status From: {{ request('data_status_pratica_from') }}</span> @endif
-                                @if(request('data_status_pratica_to')) <span class="badge badge-secondary">Data Status To: {{ request('data_status_pratica_to') }}</span> @endif
+                                @if(request('status_pratica')) <span class="badge badge-secondary">Status Pratica: {{ request('status_pratica') }}</span> @endif
                                 @if(request('sended_at')) <span class="badge badge-secondary">Sended At: {{ request('sended_at') }}</span> @endif
                             </small>
                         </p>
@@ -330,9 +320,9 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'data_status_pratica', 'order' => request('sort') == 'data_status_pratica' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
-                                    Data Status Pratica
-                                    @if(request('sort') == 'data_status_pratica')
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'status_pratica', 'order' => request('sort') == 'status_pratica' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Status
+                                    @if(request('sort') == 'status_pratica')
                                         <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
                                     @else
                                         <i class="fas fa-sort ml-1 text-muted"></i>
@@ -403,11 +393,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($item->data_status_pratica)
-                                        {{ \Carbon\Carbon::parse($item->data_status_pratica)->format('d/m/Y') }}
-                                    @else
-                                        -
-                                    @endif
+                                {{ $item->status_pratica }}
                                 </td>
                                 <td>{{ $item->sended_at ? \Carbon\Carbon::parse($item->sended_at)->format('d/m/Y') : 'N/A' }}</td>
                                 <td>{{ Str::limit($item->invoice_number, 6) ?: 'N/A' }}</td>
@@ -913,6 +899,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @section('css')
 <style>
+    /* Pagination Styles */
+    .pagination {
+        margin: 0;
+    }
+    .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 38px;
+        height: 38px;
+        padding: 0 12px;
+    }
+    .page-link i {
+        font-size: 0.8rem;
+    }
+    .page-item.active .page-link {
+        z-index: 1;
+    }
     .sortable-header {
         cursor: pointer;
         user-select: none;

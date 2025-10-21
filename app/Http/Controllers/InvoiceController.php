@@ -361,12 +361,71 @@ class InvoiceController extends Controller
         // Add dateFrom and dateTo for the view
         $data['dateFrom'] = $request->input('date_from', '');
         $data['dateTo'] = $request->input('date_to', '');
+        $data['fornitore'] = $request->input('fornitore', '');
+
+        // Add fornitoriList for the dropdown (alias of fornitori)
+        $data['fornitoriList'] = $data['fornitori'];
 
         // Add additional dashboard-specific data
-        $data['total_invoices'] = Invoice::count();
-        $data['total_amount'] = Invoice::sum('total_amount');
-        $data['reconciled_count'] = Invoice::where('isreconiled', true)->count();
-        $data['unreconciled_count'] = Invoice::where('isreconiled', false)->orWhereNull('isreconiled')->count();
+        $data['totalInvoices'] = Invoice::count();
+        $data['totalAmount'] = Invoice::sum('total_amount');
+        $data['reconciledCount'] = Invoice::where('isreconiled', true)->count();
+        $data['unreconciledCount'] = Invoice::where('isreconiled', false)->orWhereNull('isreconiled')->count();
+        $data['paidInvoices'] = Invoice::where('status', 'paid')->count();
+        $data['unpaidInvoices'] = Invoice::where('status', '!=', 'paid')->orWhereNull('status')->count();
+        $data['averageAmount'] = Invoice::avg('total_amount') ?: 0;
+
+        // Monthly statistics
+        $thisMonth = now()->startOfMonth();
+        $lastMonth = now()->subMonth()->startOfMonth();
+        $endLastMonth = now()->subMonth()->endOfMonth();
+
+        $data['thisMonthCount'] = Invoice::whereDate('invoice_date', '>=', $thisMonth)->count();
+        $data['thisMonthAmount'] = Invoice::whereDate('invoice_date', '>=', $thisMonth)->sum('total_amount');
+        $data['lastMonthCount'] = Invoice::whereDate('invoice_date', '>=', $lastMonth)
+            ->whereDate('invoice_date', '<=', $endLastMonth)->count();
+        $data['lastMonthAmount'] = Invoice::whereDate('invoice_date', '>=', $lastMonth)
+            ->whereDate('invoice_date', '<=', $endLastMonth)->sum('total_amount');
+
+        // Calculate percentage change
+        $data['countChange'] = $data['lastMonthCount'] > 0
+            ? (($data['thisMonthCount'] - $data['lastMonthCount']) / $data['lastMonthCount']) * 100
+            : 0;
+
+        // Top performers
+        $data['topFornitori'] = Invoice::selectRaw('fornitore, count(*) as count, sum(total_amount) as total_amount')
+            ->groupBy('fornitore')
+            ->orderBy('total_amount', 'desc')
+            ->limit(10)
+            ->get();
+
+        $data['topClienti'] = Invoice::selectRaw('cliente, count(*) as count, sum(total_amount) as total_amount')
+            ->groupBy('cliente')
+            ->orderBy('total_amount', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Recent invoices
+        $data['recentInvoices'] = Invoice::orderBy('invoice_date', 'desc')
+            ->limit(20)
+            ->get();
+
+        // Status breakdown
+        $data['totalByStatus'] = Invoice::selectRaw('status, count(*) as count, sum(total_amount) as total_amount')
+            ->groupBy('status')
+            ->get();
+
+        // Monthly stats for chart
+        $data['monthlyStats'] = Invoice::selectRaw('
+                MONTH(invoice_date) as month,
+                COUNT(*) as count,
+                SUM(total_amount) as total_amount,
+                SUM(tax_amount) as total_tax
+            ')
+            ->whereYear('invoice_date', now()->year)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
 
         return view('invoices.dashboard', $data);
     }

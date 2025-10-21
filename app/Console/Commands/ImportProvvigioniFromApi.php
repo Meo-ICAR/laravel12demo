@@ -225,11 +225,32 @@ class ImportProvvigioniFromApi extends Command
                     $errors++;
                 }
             }
-            // Lancia update da pratiche
-            // import pratiche from api, at the end run update provvigioni p
-            // inner join pratiches k on k.id = p.id_pratica
-            // set p.cognome = k.cognome_cliente, p.nome = k.nome_cliente
-            // where p.cognome is null
+            // Update customer names from pratiche if we have imported any records
+            if ($updated > 0) {
+                $this->info("Updating stato pratica from pratiche...");
+
+                $updatedCount = \DB::update(
+                    "UPDATE provvigioni p
+                    INNER JOIN pratiches k ON k.id = p.id_pratica
+                    SET  p.status_pratica = k.stato_pratica
+                    WHERE p.cognome IS NOT NULL"
+                );
+
+                $this->info("Updated {$updatedCount} records with status from pratiche.");
+            }
+              // Update customer names from pratiche if we have imported any records
+              if ($imported > 0) {
+                $this->info("Updating customer names from pratiche...");
+
+                $updatedCount = \DB::update(
+                    "UPDATE provvigioni p
+                    INNER JOIN pratiches k ON k.id = p.id_pratica
+                    SET p.cognome = k.cognome_cliente, p.nome = k.nome_cliente , p.status_pratica = k.stato_pratica
+                    WHERE p.cognome IS NULL"
+                );
+
+                $this->info("Updated {$updatedCount} records with customer names from pratiche.");
+            }
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;

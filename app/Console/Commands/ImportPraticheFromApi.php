@@ -176,8 +176,8 @@ class ImportPraticheFromApi extends Command
         return [
             'id' => $apiData['ID Pratica'] ?? (string) Str::uuid(),
             'codice_pratica' => $apiData['ID Pratica'] ?? null,
-            'nome_cliente' => $apiData['Nome Cliente'] ?? null,
-            'cognome_cliente' => $apiData['Cognome Cliente'] ?? null,
+            'nome_cliente' => $apiData['Cognome Cliente'] ?? null,
+            'cognome_cliente' => $apiData['Nome Cliente'] ?? null,
             'codice_fiscale' => $apiData['Codice Fiscale'] ?? null,
             'denominazione_agente' => $apiData['Denominazione Agente'] ?? null,
             'partita_iva_agente' => $apiData['Partita IVA Agente'] ?? null,

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('content')
 <div class="container-fluid">
@@ -7,19 +7,16 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">Elenco Pratiche</h3>
-                    <div>
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#importPraticheModal">
-                            <i class="fas fa-file-import mr-1"></i> Importa Pratiche
-                        </button>
-                        <a href="{{ route('pratiches-crud.create') }}" class="btn btn-success">
-                            <i class="fas fa-plus mr-1"></i> Nuova Pratica
+                    <div class="card-tools">
+                        <a href="{{ route('pratiches.import.api.form') }}" class="btn btn-success mr-2">
+                            <i class="fas fa-cloud-download-alt"></i> Importa da MEDIAFACILE
                         </a>
+
                     </div>
+
                 </div>
-                
-                <!-- Include the import modal -->
-                @include('pratiches.import')
-                
+
+
                 @push('scripts')
                 <script src="https://cdn.jsdelivr.net/npm/noty@3.2.0-beta-deprecated/lib/noty.min.js"></script>
                 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/noty@3.2.0-beta-deprecated/lib/noty.css">
