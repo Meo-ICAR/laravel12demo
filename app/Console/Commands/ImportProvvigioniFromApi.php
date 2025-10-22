@@ -214,7 +214,7 @@ class ImportProvvigioniFromApi extends Command
                             $skipped++;
                         }
                     } else {
-                        $provvigioneData->stato='Inserito';
+                      //  $provvigioneData->stato='Inserito';
                         Provvigione::create($provvigioneData);
                         $imported++;
 
