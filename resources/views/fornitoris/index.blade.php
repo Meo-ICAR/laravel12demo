@@ -148,6 +148,17 @@
                                     @endif
                                 </a>
                             </th>
+                            <th>
+                                <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'enasarco', 'sort_direction' => $sortBy === 'enasarco' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
+                                   class="text-dark text-decoration-none">
+                                    ENASARCO
+                                    @if($sortBy === 'enasarco')
+                                        <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="fas fa-sort"></i>
+                                    @endif
+                                </a>
+                            </th>
                             <th>Coordinatore</th>
                             <th>
                                 <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'coordinatore', 'sort_direction' => $sortBy === 'coordinatore' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
@@ -156,7 +167,7 @@
                                     @if($sortBy === 'coordinatore')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }}"></i>
                                     @else
-                                        <i class="fas fa-sort text-muted"></i>
+                                        <i class="fas fa-sort"></i>
                                     @endif
                                 </a>
                             </th>
@@ -168,6 +179,17 @@
                         @forelse($fornitoris as $fornitore)
                             <tr>
                                 <td>{{ $fornitore->name }}</td>
+                                <td>
+                                    @if($fornitore->enasarco === 'monomandatario')
+                                        <span class="badge bg-primary">Monomandatario</span>
+                                    @elseif($fornitore->enasarco === 'plurimandatario')
+                                        <span class="badge bg-success">Plurimandatario</span>
+                                    @elseif($fornitore->enasarco === 'no')
+                                        <span class="badge bg-secondary">No</span>
+                                    @else
+                                        <span class="badge bg-light text-dark">Nessuno</span>
+                                    @endif
+                                </td>
                                 <td>{{ $fornitore->email }}</td>
                                 <td class="text-right">{{ $fornitore->contributo ? '€ ' . number_format($fornitore->contributo, 2, ',', '.') : '-' }}</td>
                                 <td class="text-right text-danger">{{ $fornitore->anticipo ? '€ ' . number_format($fornitore->anticipo, 2, ',', '.') : '-' }}</td>

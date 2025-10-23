@@ -45,7 +45,7 @@ class FornitoriController extends Controller
         $sortDirection = $request->get('sort_direction', 'asc');
 
         // Validate sort parameters
-        $allowedSortBy = ['name', 'codice', 'coge', 'piva', 'email', 'anticipo', 'contributo', 'regione', 'citta', 'coordinatore', 'created_at'];
+        $allowedSortBy = ['name', 'codice', 'coge', 'piva', 'email', 'anticipo', 'contributo', 'regione', 'citta', 'coordinatore', 'enasarco', 'created_at'];
         $allowedDirections = ['asc', 'desc'];
 
         if (!in_array($sortBy, $allowedSortBy)) {

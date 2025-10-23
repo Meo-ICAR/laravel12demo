@@ -128,7 +128,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
   //  });
 
     // ENASARCO routes
-    Route::resource('enasarco', 'App\Http\Controllers\EnasarcoController');
+    Route::resource('enasarco', \App\Http\Controllers\EnasarcoController::class);
 
     // Provvigioni routes
     Route::get('provvigioni/proforma-summary', [App\Http\Controllers\ProvvigioneController::class, 'proformaSummary'])->name('provvigioni.proformaSummary');

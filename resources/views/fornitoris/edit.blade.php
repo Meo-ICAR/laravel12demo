@@ -90,6 +90,18 @@
                             @enderror
                         </div>
                         <div class="form-group">
+                            <label for="enasarco">ENASARCO</label>
+                            <select name="enasarco" id="enasarco" class="form-control">
+                                <option value="" {{ old('enasarco', $fornitori->enasarco) == '' ? 'selected' : '' }}>Nessuno</option>
+                                <option value="no" {{ old('enasarco', $fornitori->enasarco) == 'no' ? 'selected' : '' }}>No</option>
+                                <option value="monomandatario" {{ old('enasarco', $fornitori->enasarco) == 'monomandatario' ? 'selected' : '' }}>Monomandatario</option>
+                                <option value="plurimandatario" {{ old('enasarco', $fornitori->enasarco) == 'plurimandatario' ? 'selected' : '' }}>Plurimandatario</option>
+                            </select>
+                            @error('enasarco')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label for="operatore">Operatore</label>
                             <input type="text" name="operatore" class="form-control" value="{{ old('operatore', $fornitori->operatore) }}">
                             @error('operatore')
