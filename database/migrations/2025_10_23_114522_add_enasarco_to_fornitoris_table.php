@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('microsoft_id')->nullable()->after('password');
+        Schema::table('fornitoris', function (Blueprint $table) {
+            $table->enum('enasarco', ['no', 'monomandatario', 'plurimandatario'])->nullable()->after('anticipo');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('microsoft_id');
+        Schema::table('fornitoris', function (Blueprint $table) {
+            $table->dropColumn('enasarco');
         });
     }
 };

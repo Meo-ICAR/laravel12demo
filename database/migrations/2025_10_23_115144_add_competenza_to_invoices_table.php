@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pratiches', function (Blueprint $table) {
-            //
+        Schema::table('invoices', function (Blueprint $table) {
+            $table->year('competenza')->default(date('Y'))->after('id');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pratiches', function (Blueprint $table) {
-            //
+        Schema::table('invoices', function (Blueprint $table) {
+            $table->dropColumn('competenza');
         });
     }
 };

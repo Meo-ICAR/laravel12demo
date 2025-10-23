@@ -127,6 +127,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('fornitoris', FornitoriController::class);
   //  });
 
+    // ENASARCO routes
+    Route::resource('enasarco', 'App\Http\Controllers\EnasarcoController');
+
     // Provvigioni routes
     Route::get('provvigioni/proforma-summary', [App\Http\Controllers\ProvvigioneController::class, 'proformaSummary'])->name('provvigioni.proformaSummary');
     Route::post('provvigioni/send-proforma-email', [App\Http\Controllers\ProvvigioneController::class, 'sendProformaEmail'])->name('provvigioni.sendProformaEmail');
