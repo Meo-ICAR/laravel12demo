@@ -369,10 +369,7 @@ class ImportInvoiceinsCustom extends Command
 
         // Convert date format if needed
         if (!empty($mapped['data_ricezione_fatt'])) {
-            $date = \DateTime::createFromFormat('j/n/Y', $mapped['data_ricezione_fatt']);
-            if ($date) {
-                $mapped['data_ricezione_fatt'] = $date->format('Y-m-d');
-            }
+            $mapped['data_ricezione_fatt'] = $this->formatDate($mapped['data_ricezione_fatt']);
         }
 
         return $mapped;
