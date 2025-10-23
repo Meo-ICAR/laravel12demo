@@ -32,12 +32,14 @@ class InvoiceinImportController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $file = $request->file('file');
+        // Store the uploaded file in the private storage
+        $path = $request->file('file')->store('imports', 'local');
+        $filePath = storage_path('app/private/' . $path);
         $importedCount = 0;
         $skippedCount = 0;
         $errors = [];
 
-        $extension = strtolower($file->getClientOriginalExtension());
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
 
         if (in_array($extension, ['xlsx', 'xls'])) {
             // Handle Excel files
