@@ -22,6 +22,7 @@ class InvoiceinImportController extends Controller
 
     public function import(Request $request)
     {
+        \Log::info('File uploaded successfully IMPORT');
         $validator = Validator::make($request->all(), [
             'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:20480',
         ], [
@@ -31,15 +32,54 @@ class InvoiceinImportController extends Controller
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
-
-        // Store the uploaded file in the private storage
         $path = $request->file('file')->store('imports', 'local');
-        $filePath = storage_path('app/private/' . $path);
+        \Log::info('File upload details:', [
+            'original_name' => $request->file('file')->getClientOriginalName(),
+            'stored_path' => $path,
+            'storage_disk' => 'local',
+            'full_storage_path' => storage_path('app/private/' . $path)
+        ]);
+        // Store the uploaded file in the private storage
+
+
+        // Debug: Log the storage path and actual file location
+        \Log::info('File upload details:', [
+            'original_name' => $request->file('file')->getClientOriginalName(),
+            'stored_path' => $path,
+            'storage_disk' => 'local',
+            'full_storage_path' => storage_path('app/private/' . $path)
+        ]);
+
+        // Check if file exists in both possible locations
+        $possiblePaths = [
+            'local_imports' => storage_path('app/imports/' . basename($path)),
+            'private_imports' => storage_path('app/private/imports/' . basename($path)),
+            'direct_path' => storage_path('app/' . $path)
+        ];
+
+        $filePath = null;
+        foreach ($possiblePaths as $type => $possiblePath) {
+            if (file_exists($possiblePath)) {
+                $filePath = $possiblePath;
+                \Log::info("File found in $type: $filePath");
+                break;
+            } else {
+                \Log::info("File not found in $type: $possiblePath");
+            }
+        }
+
+        if (!$filePath) {
+            $error = "Could not locate the uploaded file. Tried paths: " . implode(', ', $possiblePaths);
+            \Log::error($error);
+            return back()->with('error', $error);
+        }
+
         $importedCount = 0;
         $skippedCount = 0;
         $errors = [];
 
         $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        \Log::info("Processing file with extension: $extension");
 
         if (in_array($extension, ['xlsx', 'xls'])) {
             // Handle Excel files
@@ -142,6 +182,7 @@ class InvoiceinImportController extends Controller
 
     public function importCustom(Request $request)
     {
+        \Log::info('File uploaded successfully IMPORT CUSTOM');
         $validator = Validator::make($request->all(), [
             'file' => 'required|file|mimes:csv,xls,xlsx|max:20480',
         ], [
@@ -151,9 +192,12 @@ class InvoiceinImportController extends Controller
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
+        $importPath = storage_path('app/private/imports');
+        \Log::info('---    File upload details:' );
+        \Log::info('---    File name: ' . $request->file('file')->getClientOriginalName());
+        \Log::info('---    File path: ' . $importPath) ;
 
         // Ensure the imports directory exists and is writable
-        $importPath = storage_path('app/imports');
         if (!file_exists($importPath)) {
             $created = mkdir($importPath, 0755, true);
             if (!$created) {
@@ -170,34 +214,41 @@ class InvoiceinImportController extends Controller
         $file = $request->file('file');
         $originalName = $file->getClientOriginalName();
         $extension = strtolower($file->getClientOriginalExtension());
-        
+
         // Generate a unique filename
         $filename = 'invoiceins_' . time() . '_' . uniqid() . '.' . $extension;
-        
+
         try {
             // Store the file with error handling
             $storedPath = $file->storeAs('imports', $filename);
             if ($storedPath === false) {
                 throw new \Exception('Failed to store the uploaded file.');
             }
-            
-            $fullPath = storage_path('app/' . ltrim($storedPath, '/'));
-            
+
+            $fullPath = $importPath.'/'.$filename;
+             // Log successful storage
+             \Log::info('parameters stored import file', [
+                'original_name' => $originalName,
+                'filename' => $filename,
+                'stored_path' => $storedPath,
+                'full_path' => $fullPath,
+              //  'file_size' => filesize($fullPath) . ' bytes',
+           //     'file_type' => mime_content_type($fullPath),
+           //     'is_readable' => is_readable($fullPath) ? 'yes' : 'no',
+           //     'is_writable' => is_writable($fullPath) ? 'yes' : 'no'
+            ]);
+
+            \Log::info('parameters stored import file', [
+                 'file_size' => filesize($fullPath) . ' bytes',
+           //     'file_type' => mime_content_type($fullPath),
+           //     'is_readable' => is_readable($fullPath) ? 'yes' : 'no',
+           //     'is_writable' => is_writable($fullPath) ? 'yes' : 'no'
+            ]);
             // Verify file was stored correctly
             if (!file_exists($fullPath)) {
                 throw new \Exception('File was not stored correctly. Storage path: ' . $fullPath);
             }
-            
-            // Log successful storage
-            \Log::info('Successfully stored import file', [
-                'original_name' => $originalName,
-                'stored_path' => $storedPath,
-                'full_path' => $fullPath,
-                'file_size' => filesize($fullPath) . ' bytes',
-                'file_type' => mime_content_type($fullPath),
-                'is_readable' => is_readable($fullPath) ? 'yes' : 'no',
-                'is_writable' => is_writable($fullPath) ? 'yes' : 'no'
-            ]);
+
 
             // Convert XLS to CSV if needed before passing to the command
             if (in_array($extension, ['xls', 'xlsx'])) {
@@ -225,9 +276,13 @@ class InvoiceinImportController extends Controller
             $this->cleanupFile($fullPath);
 
             if ($exitCode === 0) {
-                return redirect()->route('invoiceins.index')->with('success', 'Import completed.<br><pre>' . e($output) . '</pre>');
+                return redirect()->route('invoiceins.index')->with('success', 'Import completed');
+                ////<br><pre>' . e($output) . '</pre>'
+
             } else {
-                return redirect()->route('invoiceins.index')->with('error', 'Import failed.<br><pre>' . e($output) . '</pre>');
+                return redirect()->route('invoiceins.index')->with('error', 'Import failed.'
+                ////<br><pre>' . e($output) . '</pre>'
+                );
             }
         } catch (\Exception $e) {
             // Clean up the file if there was an error
@@ -252,17 +307,17 @@ class InvoiceinImportController extends Controller
 
             $csvPath = $outputDir . '/converted_' . time() . '.csv';
             $file = fopen($csvPath, 'w');
-            
+
             foreach ($data[0] as $row) {
                 fputcsv($file, $row, ';');
             }
-            
+
             fclose($file);
-            
+
             if (!file_exists($csvPath)) {
                 throw new \Exception('Failed to create CSV file at: ' . $csvPath);
             }
-            
+
             return $csvPath;
         } catch (\Exception $e) {
             \Log::error('Excel to CSV conversion failed', [
@@ -273,7 +328,7 @@ class InvoiceinImportController extends Controller
             throw $e;
         }
     }
-    
+
     /**
      * Safely remove a file if it exists
      */
