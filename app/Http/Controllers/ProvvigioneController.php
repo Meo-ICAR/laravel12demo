@@ -126,7 +126,13 @@ class ProvvigioneController extends Controller
         $query->orderBy($sortField, $sortOrder);
 
         $provvigioni = $query->paginate(15);
-        $statoOptions = ['Inserito', 'Proforma', 'Fatturato', 'Pagato', 'Stornato','Sospeso'];
+        
+        // Get status options from the status_praticas table
+        $statoOptions = \App\Models\StatusPratica::pluck('id')->filter()->unique()->toArray();
+        // Add additional status options that might not be in the status_praticas table yet
+        $additionalStatuses = ['Inserito', 'Proforma', 'Fatturato', 'Pagato', 'Stornato', 'Sospeso'];
+        $statoOptions = array_unique(array_merge($statoOptions, $additionalStatuses));
+        sort($statoOptions);
 
         // Monthly statistics
         $today = now();

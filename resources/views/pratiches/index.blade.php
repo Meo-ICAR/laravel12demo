@@ -7,12 +7,7 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Pratiche</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('pratiches.import.api.form') }}" class="btn btn-success mr-2">
-                            <i class="fas fa-cloud-download-alt"></i> Importa da APIx
-                        </a>
-
-                    </div>
+                   
                 </div>
                 <div class="card-body">
                     @if(session('success'))
@@ -35,6 +30,7 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Data Inserimento</th>
+                                    <th>Modifica</th>
                                     <th>Cliente</th>
                                     <th>Agente</th>
                                     <th>Tipo</th>
@@ -47,6 +43,8 @@
                                     <tr>
                                         <td>{{ $pratiche->pratica_id }}</td>
                                         <td>{{ $pratiche->Data_inserimento ? $pratiche->Data_inserimento->format('d/m/Y') : '' }}</td>
+                                        <td>{{ $pratiche->updated_at ? $pratiche->updated_at->format('d/m/Y') : '' }}</td>
+                                        
                                         <td>{{ $pratiche->Cliente }}</td>
                                         <td>{{ $pratiche->Agente }}</td>
                                         <td>

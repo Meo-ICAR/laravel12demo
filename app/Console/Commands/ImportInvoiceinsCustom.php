@@ -18,7 +18,7 @@ class ImportInvoiceinsCustom extends Command
         // Convert relative paths to absolute if needed
         if (!file_exists($file) && !is_file($file)) {
             // Try with storage path if only filename is provided
-            $file = storage_path('app/imports/' . basename($file));
+            $file = storage_path('app/private/imports/' . basename($file));
 
             if (!file_exists($file) || !is_file($file)) {
                 $this->error("File not found: " . $this->argument('file'));

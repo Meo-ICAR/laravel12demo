@@ -64,31 +64,16 @@
                         <select name="status_pratica" id="status_pratica" class="form-control">
                             <option value="">All</option>
                             @php
-                                $allStatusPratica = [
-                                    'PERFEZIONATA',
-                                    'CARICATA BANCA',
-                                    'Inserita',
-                                    'RICHIESTA EMISSIONE',
-                                    'PRATICA RESPINTA',
-                                    'DECLINATA',
-                                    'RINUNCIA CLIENTE',
-                                    'SOSPESA',
-                                    'Richiesta Polizza',
-                                    'NOTIFICA',
-                                    'ATTO FISSATO',
-                                    'PERIZIA KO',
-                                    'DELIBERATA',
-                                    'RIENTRO BENESTARE',
-                                    'RIENTRO POLIZZA',
-                                    'LIQUIDATA',
-                                    'PERIZIA OK',
-                                    'INVIO IN ISTRUTTORIA',
-                                ];
-                                $altroStatus = collect($allStatusPratica)->filter(function($v) {
-                                    return $v && $v !== 'PERFEZIONATA';
-                                });
+                                // Get status options from the controller
+                                $statusPraticaOptions = collect($statoOptions)
+                                    ->filter(function($status) {
+                                        return !empty($status) && $status !== 'Inserito' && $status !== 'Proforma' && $status !== 'Fatturato' && $status !== 'Pagato' && $status !== 'Stornato' && $status !== 'Sospeso';
+                                    })
+                                    ->sort()
+                                    ->values()
+                                    ->toArray();
                             @endphp
-                            @foreach($altroStatus as $status)
+                            @foreach($statusPraticaOptions as $status)
                                 <option value="{{ $status }}" {{ request('status_pratica') == $status ? 'selected' : '' }}>&nbsp;&nbsp;{{ $status }}</option>
                             @endforeach
                         </select>
@@ -109,73 +94,7 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <!-- Monthly Statistics Cards -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="card border-primary">
-                <div class="card-body">
-                    <h5 class="card-title text-primary">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        This Month ({{ now()->startOfMonth()->format('d/m/Y') }} - {{ now()->format('d/m/Y') }})
-                    </h5>
-                    <p class="card-text mb-1">
-                        <strong>Records:</strong> {{ number_format($currentMonthCount) }}
-                    </p>
-                    <p class="card-text">
-                        <strong>Total Amount:</strong> € {{ number_format($currentMonthTotal, 2, ',', '.') }}
-                    </p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-info">
-                <div class="card-body">
-                    <h5 class="card-title text-info">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        Last Month ({{ now()->subMonth()->startOfMonth()->format('d/m/Y') }} - {{ now()->subMonth()->endOfMonth()->format('d/m/Y') }})
-                    </h5>
-                    <p class="card-text mb-1">
-                        <strong>Records:</strong> {{ number_format($lastMonthCount) }}
-                    </p>
-                    <p class="card-text">
-                        <strong>Total Amount:</strong> € {{ number_format($lastMonthTotal, 2, ',', '.') }}
-                    </p>
-                </div>
-            </div>
-        </div>
-        <!-- Income (Entrata) Card -->
-        <div class="col-md-3">
-            <div class="card border-success">
-                <div class="card-body">
-                    <h5 class="card-title text-success">
-                        <i class="fas fa-arrow-down mr-2"></i> Income (Entrata)
-                    </h5>
-                    <p class="card-text mb-1">
-                        <strong>Records:</strong> {{ number_format($incomeCount) }}
-                    </p>
-                    <p class="card-text">
-                        <strong>Total Amount:</strong> € {{ number_format($incomeImporto, 2, ',', '.') }}
-                    </p>
-                </div>
-            </div>
-        </div>
-        <!-- Costs (Uscita/Other) Card -->
-        <div class="col-md-3">
-            <div class="card border-danger">
-                <div class="card-body">
-                    <h5 class="card-title text-danger">
-                        <i class="fas fa-arrow-up mr-2"></i> Costs (Uscita/Other)
-                    </h5>
-                    <p class="card-text mb-1">
-                        <strong>Records:</strong> {{ number_format($costCount) }}
-                    </p>
-                    <p class="card-text">
-                        <strong>Total Amount:</strong> € {{ number_format($costImporto, 2, ',', '.') }}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
+ 
 
     <!-- Summary Card -->
     <div class="card mb-3">
@@ -300,9 +219,9 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'tipo', 'order' => request('sort') == 'tipo' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
-                                    Tipo
-                                    @if(request('sort') == 'tipo')
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'updated_at', 'order' => request('sort') == 'updated_at' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                    Modifica
+                                    @if(request('sort') == 'updated_at')
                                         <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
                                     @else
                                         <i class="fas fa-sort ml-1 text-muted"></i>
