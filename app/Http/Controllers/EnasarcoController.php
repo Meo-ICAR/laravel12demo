@@ -52,7 +52,8 @@ class EnasarcoController extends Controller
     public function edit(Enasarco $enasarco)
     {
         $enasarcoTypes = ['monomandatario', 'plurimandatario'];
-        return view('enasarco.edit', compact('enasarco', 'enasarcoTypes'));
+        $currentYear = date('Y');
+        return view('enasarco.edit', compact('enasarco', 'enasarcoTypes', 'currentYear'));
     }
 
     /**

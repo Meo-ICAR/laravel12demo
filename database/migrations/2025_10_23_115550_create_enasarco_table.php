@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('enasarco', function (Blueprint $table) {
+        Schema::create('enasarcos', function (Blueprint $table) {
             $table->id();
             $table->enum('enasarco', ['monomandatario', 'plurimandatario']);
             $table->year('competenza')->default(date('Y'));
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('enasarco');
+        Schema::dropIfExists('enasarcos');
     }
 };
