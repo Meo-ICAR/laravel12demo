@@ -104,6 +104,7 @@
                                     @endif
                                 </a>
                             </th>
+
                             <th>
                                 <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'email', 'sort_direction' => $sortBy === 'email' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
@@ -126,6 +127,7 @@
                                     @endif
                                 </a>
                             </th>
+
                             <th>
                                 <a href="{{ request()->fullUrlWithQuery(array_merge(['sort_by' => 'anticipo', 'sort_direction' => $sortBy === 'anticipo' && $sortDirection === 'asc' ? 'desc' : 'asc'], array_filter(request()->only(['name', 'coordinatore'])))) }}"
                                    class="text-dark text-decoration-none">
@@ -179,17 +181,7 @@
                         @forelse($fornitoris as $fornitore)
                             <tr>
                                 <td>{{ $fornitore->name }}</td>
-                                <td>
-                                    @if($fornitore->enasarco === 'monomandatario')
-                                        <span class="badge bg-primary">Monomandatario</span>
-                                    @elseif($fornitore->enasarco === 'plurimandatario')
-                                        <span class="badge bg-success">Plurimandatario</span>
-                                    @elseif($fornitore->enasarco === 'no')
-                                        <span class="badge bg-secondary">No</span>
-                                    @else
-                                        <span class="badge bg-light text-dark">Nessuno</span>
-                                    @endif
-                                </td>
+
                                 <td>{{ $fornitore->email }}</td>
                                 <td class="text-right">{{ $fornitore->contributo ? '€ ' . number_format($fornitore->contributo, 2, ',', '.') : '-' }}</td>
                                 <td class="text-right text-danger">{{ $fornitore->anticipo ? '€ ' . number_format($fornitore->anticipo, 2, ',', '.') : '-' }}</td>
@@ -198,6 +190,19 @@
                                         <a href="{{ route('fornitoris.invoices.show', $fornitore->id) }}">{{ $fornitore->coge }}</a>
                                     @else
                                         -
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($fornitore->enasarco === 'monomandatario')
+                                        <span class="badge bg-primary">Monomandatario</span>
+                                    @elseif($fornitore->enasarco === 'plurimandatario')
+                                        <span class="badge bg-success">Plurimandatario</span>
+                                    @elseif($fornitore->enasarco === 'no')
+                                        <span class="badge bg-secondary">No</span>
+                                        @elseif($fornitore->enasarco === 'societa')
+                                        <span class="badge bg-info">Societa</span>
+                                    @else
+                                        <span class="badge bg-light text-dark">Nessuno</span>
                                     @endif
                                 </td>
                                 <td>{{ $fornitore->coordinatore }}</td>

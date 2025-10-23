@@ -105,7 +105,7 @@ class InvoiceService
                 'fornitore_piva' => $invoicein->partita_iva,
                 'fornitore' => $invoicein->nome_fornitore,
                 'invoice_number' => $invoicein->nr_documento,
-                'invoice_date' => $invoicein->data_ricezione_fatt,
+                'invoice_date' => $invoicein->data_ora_invio_ricezione,
                 'total_amount' => $invoicein->importo_totale_fornitore,
                 'tax_amount' => $invoicein->importo_iva,
                 'coge' => $invoicein->nr_cliente_fornitore,

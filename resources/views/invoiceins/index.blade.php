@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -29,8 +30,8 @@
                                     <select name="tipo_di_documento" id="tipo_di_documento" class="form-control">
                                         <option value="">All Types</option>
                                         <option value="Fattura" {{ request('tipo_di_documento') == 'Fattura' ? 'selected' : '' }}>Fattura</option>
-                                        <option value="Nota di Credito" {{ request('tipo_di_documento') == 'Nota di Credito' ? 'selected' : '' }}>Nota di Credito</option>
-                                        <option value="Nota di Debito" {{ request('tipo_di_documento') == 'Nota di Debito' ? 'selected' : '' }}>Nota di Debito</option>
+                                        <option value="Nota credito" {{ request('tipo_di_documento') ==  'Nota credito' ? 'selected' : '' }}>Nota Credito</option>
+                                        <option value="Nota debito" {{ request('tipo_di_documento') == 'Nota debito' ? 'selected' : '' }}>Nota Debito</option>
                                     </select>
                                 </div>
                             </div>
@@ -49,53 +50,7 @@
                 </div>
             </div>
 
-            <!-- Summary Cards -->
-            <div class="row mb-3">
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-info">
-                        <div class="inner">
-                            <h3>{{ number_format($invoiceins->total()) }}</h3>
-                            <p>Total Invoiceins</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-success">
-                        <div class="inner">
-                            <h3>{{ number_format($invoiceins->where('tipo_di_documento', 'Fattura')->count()) }}</h3>
-                            <p>Fatture</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-receipt"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-warning">
-                        <div class="inner">
-                            <h3>{{ number_format($invoiceins->where('tipo_di_documento', 'Nota di Credito')->count()) }}</h3>
-                            <p>Note di Credito</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-credit-card"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-danger">
-                        <div class="inner">
-                            <h3>{{ number_format($invoiceins->where('tipo_di_documento', 'Nota di Debito')->count()) }}</h3>
-                            <p>Note di Debito</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -112,7 +67,7 @@
                         <form action="{{ route('fornitoris.importInvoiceinsToInvoices') }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to import all eligible Invoiceins to Invoices?');">
                             @csrf
                             <button type="submit" class="btn btn-success btn-sm">
-                                <i class="fas fa-random"></i> Import to Invoices
+                                <i class="fas fa-random"></i> Filtra e trasferisci in Invoices
                             </button>
                         </form>
                     </div>
@@ -141,8 +96,9 @@
                                     <th>Partita IVA</th>
                                     <th>Tipo Documento</th>
                                     <th>Nr Documento</th>
-                                    <th>Data Documento</th>
+                                    <th>Data Ricezione</th>
                                     <th class="text-right">Importo</th>
+                                    <th class="text-center">Stato Importazione</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -161,20 +117,29 @@
                                         </td>
                                         <td>{{ $inv->nr_documento ?: 'N/A' }}</td>
                                         <td>
-                                            @if($inv->data_documento)
+                                            @if($inv->data_ora_invio_ricezione)
                                                 <i class="fas fa-calendar-alt mr-1"></i>
-                                                {{ \Carbon\Carbon::parse($inv->data_documento)->format('d/m/Y') }}
+                                                {{ \Carbon\Carbon::parse($inv->data_ora_invio_ricezione)->format('d/m/Y') }}
                                             @else
                                                 N/A
                                             @endif
                                         </td>
                                         <td class="text-right">
                                             @if($inv->importo)
-                                                <span class="text-success font-weight-bold">
-                                                    € {{ number_format($inv->importo, 2, ',', '.') }}
-                                                </span>
+                                                <strong class="text-success">€ {{ number_format($inv->importo, 2, ',', '.') }}</strong>
                                             @else
                                                 N/A
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            @if($inv->is_imported)
+                                                <span class="badge badge-success" data-toggle="tooltip" title="Importato in Fatture">
+                                                    <i class="fas fa-check-circle"></i> Importato
+                                                </span>
+                                            @else
+                                                <span class="badge badge-secondary" data-toggle="tooltip" title="Non ancora importato">
+                                                    <i class="fas fa-times-circle"></i> Non importato
+                                                </span>
                                             @endif
                                         </td>
                                         <td class="text-center">
@@ -208,9 +173,7 @@
                             Showing {{ $invoiceins->firstItem() ?? 0 }} to {{ $invoiceins->lastItem() ?? 0 }} of {{ $invoiceins->total() }} entries
                         </p>
                     </div>
-                    <div class="float-right">
-                        {{ $invoiceins->withQueryString()->links() }}
-                    </div>
+
                 </div>
             </div>
         </div>

@@ -52,4 +52,20 @@ class Invoicein extends Model
     {
         return $this->data_documento_fornitore;
     }
+
+    /**
+     * Get the invoice associated with this invoicein (if imported)
+     */
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class, 'invoice_number', 'nr_documento');
+    }
+
+    /**
+     * Check if this invoicein has been imported to invoices
+     */
+    public function getIsImportedAttribute()
+    {
+        return $this->invoice !== null;
+    }
 }

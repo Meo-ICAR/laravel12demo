@@ -9,10 +9,14 @@ class InvoiceinController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Invoicein::query();
+        $query = Invoicein::with('invoice');
         if ($request->filled('nome_fornitore')) {
             $nome = $request->input('nome_fornitore');
             $query->where('nome_fornitore', 'LIKE', "%$nome%");
+        }
+        if ($request->filled('tipo_di_documento')) {
+            $tipo_di_documento = $request->input('tipo_di_documento');
+            $query->where('tipo_di_documento',  $tipo_di_documento);
         }
         $invoiceins = $query->paginate(20);
         return view('invoiceins.index', compact('invoiceins'));

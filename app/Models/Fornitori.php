@@ -41,6 +41,7 @@ class Fornitori extends Model
         'company_id',
         'coge',
         'anticipo_residuo',
+        'enasarco'
     ];
 
     public static function importFromInvoices()

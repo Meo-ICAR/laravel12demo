@@ -14,19 +14,7 @@
             </ol>
         </div>
     </div>
-    <div class="row mb-2">
-        <div class="col-sm-12">
-            <a href="{{ route('invoices.reconciliation') }}" class="btn btn-warning">
-                <i class="fas fa-balance-scale mr-1"></i> Reconciliation Dashboard
-            </a>
-            <a href="{{ route('invoiceins.import') }}" class="btn btn-primary">
-                <i class="fas fa-upload mr-1"></i> Import from CSV/Excel
-            </a>
-            <a href="{{ route('invoices.dashboard') }}" class="btn btn-info">
-                <i class="fas fa-chart-line mr-1"></i> Dashboard
-            </a>
-        </div>
-    </div>
+
 @stop
 
 @section('content')
@@ -137,41 +125,6 @@
         </div>
     </div>
 
-    <!-- Monthly Statistics Cards -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="card border-primary">
-                <div class="card-body">
-                    <h5 class="card-title text-primary">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        This Month ({{ now()->startOfMonth()->format('d/m/Y') }} - {{ now()->format('d/m/Y') }})
-                    </h5>
-                    <p class="card-text mb-1">
-                        <strong>Records:</strong> {{ number_format($current_month_count) }}
-                    </p>
-                    <p class="card-text">
-                        <strong>Total Amount:</strong> € {{ number_format($current_month_total, 2, ',', '.') }}
-                    </p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-info">
-                <div class="card-body">
-                    <h5 class="card-title text-info">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        Last Month ({{ now()->subMonth()->startOfMonth()->format('d/m/Y') }} - {{ now()->subMonth()->endOfMonth()->format('d/m/Y') }})
-                    </h5>
-                    <p class="card-text mb-1">
-                        <strong>Records:</strong> {{ number_format($last_month_count) }}
-                    </p>
-                    <p class="card-text">
-                        <strong>Total Amount:</strong> € {{ number_format($last_month_total, 2, ',', '.') }}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="row">
         <div class="col-12">
