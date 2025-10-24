@@ -59,14 +59,6 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                        <div class="form-group">
-                            <label for="cf">CF</label>
-                            <input type="text" name="cf" class="form-control" value="{{ old('cf', $fornitori->cf) }}" maxlength="16">
-                            @error('cf')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-
 
                         <div class="form-group">
                             <label for="email">Email</label>
@@ -115,7 +107,13 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-
+                        <div class="form-group">
+                            <label for="cf">CF</label>
+                            <input type="text" name="cf" class="form-control" value="{{ old('cf', $fornitori->cf) }}" maxlength="16">
+                            @error('cf')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
 
                     </div>
                     <div class="col-md-6">
