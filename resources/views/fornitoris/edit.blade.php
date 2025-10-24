@@ -47,6 +47,7 @@
                                 <option value="no" {{ old('enasarco', $fornitori->enasarco) == 'no' ? 'selected' : '' }}>No</option>
                                 <option value="monomandatario" {{ old('enasarco', $fornitori->enasarco) == 'monomandatario' ? 'selected' : '' }}>Monomandatario</option>
                                 <option value="plurimandatario" {{ old('enasarco', $fornitori->enasarco) == 'plurimandatario' ? 'selected' : '' }}>Plurimandatario</option>
+                                   <option value="plurimandatario" {{ old('enasarco', $fornitori->enasarco) == 'società' ? 'selected' : '' }}>Societa</option>
                             </select>
                             @error('enasarco')
                                 <span class="text-danger">{{ $message }}</span>
