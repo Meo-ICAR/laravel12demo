@@ -27,6 +27,13 @@
                             @enderror
                         </div>
                         <div class="form-group">
+                            <label for="nome">Nome</label>
+                            <input type="text" name="nome" class="form-control" value="{{ old('nome', $fornitori->nome) }}">
+                            @error('nome')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label for="piva">P.IVA</label>
                             <input type="text" name="piva" class="form-control" value="{{ old('piva', $fornitori->piva) }}">
                             @error('piva')
