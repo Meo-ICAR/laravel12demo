@@ -38,6 +38,13 @@ class ReconcileInvoices extends Command
             ->orderBy('invoice_date')
             ->get();
 
+        $this->info("Found {$invoices->count()} invoices with status 'imported'");
+        
+        if ($invoices->isEmpty()) {
+            $this->info('No invoices to process. Exiting.');
+            return 0;
+        }
+
         $reconciledCount = 0;
         $skippedCount = 0;
         $errorCount = 0;
@@ -60,10 +67,12 @@ class ReconcileInvoices extends Command
                     ->get();
 
                 if ($provvigioni->isEmpty()) {
-                    $this->info("No provvigioni found for invoice {$invoice->invoice_number}");
+                    $this->warn("No provvigioni found for invoice {$invoice->invoice_number} (Fornitore ID: {$invoice->fornitori_id}, Data: {$invoice->invoice_date})");
                     $skippedCount++;
                     continue;
                 }
+                
+                $this->info("Found {$provvigioni->count()} provvigioni for invoice {$invoice->invoice_number}");
 
                 $totalProvvigioni = $provvigioni->sum('importo');
 
