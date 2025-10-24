@@ -261,6 +261,13 @@ class ImportProvvigioniFromApi extends Command
             );
             $this->info("Inserted {$insertedClientiCount} records into mandatarie.");
 
+            $insertedFornitoriCount = \DB::update("update provvigioni p inner join fornitoris f on f.name = p.denominazione_riferimento set p.fornitori_id = f.id");
+            $this->info("Updated {$insertedFornitoriCount} records with fornitori_id from fornitori.");
+
+            $insertedClientiCount = \DB::update("update provvigioni p inner join clientis c on c.name = p.denominazione_riferimento set p.clientis_id = c.id");
+            $this->info("Updated {$insertedClientiCount} records with clientis_id from clientis.");
+
+
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;
         } catch (\Illuminate\Http\Client\RequestException $e) {

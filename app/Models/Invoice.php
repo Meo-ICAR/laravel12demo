@@ -12,8 +12,10 @@ class Invoice extends Model
     protected $fillable = [
         'fornitore_piva',
         'fornitore',
+        'fornitori_id',
         'cliente_piva',
         'cliente',
+        'clienti_id',
         'invoice_number',
         'invoice_date',
         'total_amount',
@@ -49,5 +51,21 @@ class Invoice extends Model
     public function getFormattedTaxAmountAttribute(): string
     {
         return number_format($this->tax_amount, 2) . ' ' . $this->currency;
+    }
+
+    /**
+     * Get the fornitore that owns the invoice.
+     */
+    public function fornitore()
+    {
+        return $this->belongsTo(\App\Models\Fornitori::class, 'fornitori_id');
+    }
+
+    /**
+     * Get the cliente that owns the invoice.
+     */
+    public function cliente()
+    {
+        return $this->belongsTo(\App\Models\Clienti::class, 'clienti_id');
     }
 }

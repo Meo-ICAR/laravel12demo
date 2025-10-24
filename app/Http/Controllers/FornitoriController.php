@@ -234,6 +234,15 @@ class FornitoriController extends Controller
                 $message .= " Update errors: " . implode('; ', $updateResult['errors']);
             }
 
+           $updateInvoiceCount = \DB::update("update invoices  set nome = name where nome is null");
+            $this->info("Updated {$updateInvoiceCount} records cloning nome from name.");
+
+            $insertedFornitoriCount = \DB::update("update invoices p inner join fornitoris f on f.nome = p.fornitore set p.fornitori_id = f.id");
+            $this->info("Updated {$insertedFornitoriCount} records with fornitori_id from fornitori.");
+
+            $insertedClientiCount = \DB::update("update provvigioni p inner join clientis c on c.nome = p.cliente set p.clientis_id = c.id");
+            $this->info("Updated {$insertedClientiCount} records with clientis_id from clientis.");
+
             return redirect()->route('fornitoris.index')->with('success', $message);
         } catch (\Exception $e) {
             return redirect()->route('fornitoris.index')->with('error', 'Error during transfer: ' . $e->getMessage());
