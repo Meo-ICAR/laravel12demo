@@ -25,9 +25,7 @@
                 <i class="fas fa-filter"></i> Filter Calls
             </h5>
             <div class="d-flex align-items-center">
-                <button type="button" class="btn btn-primary btn-sm mr-2" data-bs-toggle="modal" data-bs-target="#importEsitiModal">
-                    <i class="fas fa-file-import"></i> Importa da SIDIAL
-                </button>
+
                 <button class="btn btn-link text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
                     <i class="fas fa-chevron-down"></i> Show Filters
                 </button>
