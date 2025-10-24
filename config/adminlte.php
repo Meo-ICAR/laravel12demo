@@ -430,39 +430,6 @@ return [
             ],
         ],
         // Sidebar items:
-        [
-            'text' => 'DASHBOARD',
-            'icon' => 'fas fa-chart-pie',
-            'submenu' => [
-                [
-                    'text' => 'Main Dashboard',
-                    'url' => 'dashboard',
-                    'icon' => 'far fa-circle',
-                ],
-                [
-                    'text' => 'Invoices Dashboard',
-                    'url' => 'invoices/dashboard',
-                    'icon' => 'far fa-circle',
-                ],
-                [
-                    'text' => 'Provvigioni Dashboard',
-                    'url' => 'provvigioni/dashboard',
-                    'icon' => 'far fa-circle',
-                ],
-                [
-                    'text' => 'Calls Dashboard',
-                    'url' => 'calls/dashboard',
-                    'icon' => 'far fa-circle',
-                ],
-                [
-                    'text' => 'Leads Dashboard',
-                    'url' => 'leads/dashboard',
-                    'icon' => 'far fa-circle',
-                ],
-                  // Filament Admin Panel link
-
-            ],
-        ],
          [
             'header' => 'PROFORMA',
         ],
@@ -487,11 +454,6 @@ return [
                     'text' => 'Proforma',
                     'url' => 'proformas',
                     'icon' => 'fas fa-file-alt',
-                ],
-                [
-                    'text' => 'Invoiceins Import',
-                    'url' => 'invoiceins/import',
-                    'icon' => 'fas fa-file-import',
                 ],
                 [
                     'text' => 'Invoices',
@@ -541,6 +503,17 @@ return [
                     'url' => 'clientis',
                     'icon' => 'fas fa-users',
                 ],
+                [
+                    'text' => 'Pratiche',
+                    'url' => 'pratiches',
+                    'icon' => 'fas fa-folder-open',
+                ],
+
+                [
+                    'text' => 'Invoiceins',
+                    'url' => 'invoiceins',
+                    'icon' => 'fas fa-file-invoice',
+                ],
             ],
         ],
            [
@@ -549,6 +522,40 @@ return [
             'icon' => 'fas fa-book',
             'target' => '_blank',
         ],
+        [
+            'text' => 'DASHBOARD',
+            'icon' => 'fas fa-chart-pie',
+            'submenu' => [
+                [
+                    'text' => 'Main Dashboard',
+                    'url' => 'dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+                [
+                    'text' => 'Invoices Dashboard',
+                    'url' => 'invoices/dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+                [
+                    'text' => 'Provvigioni Dashboard',
+                    'url' => 'provvigioni/dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+                [
+                    'text' => 'Calls Dashboard',
+                    'url' => 'calls/dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+                [
+                    'text' => 'Leads Dashboard',
+                    'url' => 'leads/dashboard',
+                    'icon' => 'far fa-circle',
+                ],
+                  // Filament Admin Panel link
+
+            ],
+        ],
+
         [
             'header' => 'USER SETTINGS',
         ],
@@ -596,21 +603,7 @@ return [
                 ],
             ],
         ],
-        [
-            'header' => 'PRATICHE',
-        ],
-        [
-            'text' => 'Pratiche',
-            'url' => 'pratiches',
-            'icon' => 'fas fa-folder-open',
-        ],
-
-        [
-            'text' => 'Invoiceins',
-            'url' => 'invoiceins',
-            'icon' => 'fas fa-file-invoice',
-        ],
-    ],
+      ],
 
     /*
     |--------------------------------------------------------------------------

@@ -26,6 +26,7 @@ class Provvigione extends Model
         'quota',
         'stato',
         'denominazione_riferimento',
+        'fornitori_id',
         'entrata_uscita',
         'cognome',
         'nome',
@@ -36,6 +37,7 @@ class Provvigione extends Model
         'data_inserimento_pratica',
         'data_stipula',
         'istituto_finanziario',
+        'clienti_id',
         'prodotto',
         'macrostatus',
         'status_pratica',
@@ -181,5 +183,21 @@ class Provvigione extends Model
     public function proformas()
     {
         return $this->belongsToMany(Proforma::class, 'proforma_provvigione', 'provvigione_id', 'proforma_id');
+    }
+
+    /**
+     * Get the fornitore that owns the provvigione.
+     */
+    public function fornitore()
+    {
+        return $this->belongsTo(Fornitori::class, 'fornitori_id');
+    }
+
+    /**
+     * Get the cliente that owns the provvigione.
+     */
+    public function cliente()
+    {
+        return $this->belongsTo(Clienti::class, 'clienti_id');
     }
 }
