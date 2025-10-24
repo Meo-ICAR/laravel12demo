@@ -20,14 +20,14 @@
                             @enderror
                         </div>
                         <div class="form-group">
-                            <label for="name">Name</label>
+                            <label for="name">Nome su provvigioni</label>
                             <input type="text" name="name" class="form-control" value="{{ old('name', $fornitori->name) }}" required>
                             @error('name')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                         <div class="form-group">
-                            <label for="nome">Nome</label>
+                            <label for="nome">Nome su fatture</label>
                             <input type="text" name="nome" class="form-control" value="{{ old('nome', $fornitori->nome) }}">
                             @error('nome')
                                 <span class="text-danger">{{ $message }}</span>
@@ -40,6 +40,25 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+                         <div class="form-group">
+                            <label for="enasarco">ENASARCO</label>
+                            <select name="enasarco" id="enasarco" class="form-control">
+                                <option value="" {{ old('enasarco', $fornitori->enasarco) == '' ? 'selected' : '' }}>Nessuno</option>
+                                <option value="no" {{ old('enasarco', $fornitori->enasarco) == 'no' ? 'selected' : '' }}>No</option>
+                                <option value="monomandatario" {{ old('enasarco', $fornitori->enasarco) == 'monomandatario' ? 'selected' : '' }}>Monomandatario</option>
+                                <option value="plurimandatario" {{ old('enasarco', $fornitori->enasarco) == 'plurimandatario' ? 'selected' : '' }}>Plurimandatario</option>
+                            </select>
+                            @error('enasarco')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="coge">Conto Coge</label>
+                            <input type="text" name="coge" class="form-control" value="{{ old('coge', $fornitori->coge) }}">
+                            @error('coge')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
                         <div class="form-group">
                             <label for="cf">CF</label>
                             <input type="text" name="cf" class="form-control" value="{{ old('cf', $fornitori->cf) }}" maxlength="16">
@@ -47,20 +66,8 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                        <div class="form-group">
-                            <label for="nomecoge">Nome Coge</label>
-                            <input type="text" name="nomecoge" class="form-control" value="{{ old('nomecoge', $fornitori->nomecoge) }}">
-                            @error('nomecoge')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label for="nomefattura">Nome Fattura</label>
-                            <input type="text" name="nomefattura" class="form-control" value="{{ old('nomefattura', $fornitori->nomefattura) }}">
-                            @error('nomefattura')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
+
+
                         <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" name="email" class="form-control" value="{{ old('email', $fornitori->email) }}">
@@ -76,11 +83,15 @@
                             @enderror
                         </div>
                         <div class="form-group">
-                            <label for="anticipo_description">Anticipo Description</label>
+                            <label for="anticipo_description">Anticipo Descrizione</label>
                             <input type="text" name="anticipo_description" class="form-control" value="{{ old('anticipo_description', $fornitori->anticipo_description) }}">
                             @error('anticipo_description')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
+                        </div>
+                                               <div class="form-group">
+                            <label for="anticipo_residuo">Anticipo Residuo</label>
+                            <input type="number" step="0.01" class="form-control" id="anticipo_residuo" name="anticipo_residuo" value="{{ old('anticipo_residuo', $fornitori->anticipo_residuo) }}">
                         </div>
                         <div class="form-group">
                             <label for="contributo">Contributo</label>
@@ -96,18 +107,7 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                        <div class="form-group">
-                            <label for="enasarco">ENASARCO</label>
-                            <select name="enasarco" id="enasarco" class="form-control">
-                                <option value="" {{ old('enasarco', $fornitori->enasarco) == '' ? 'selected' : '' }}>Nessuno</option>
-                                <option value="no" {{ old('enasarco', $fornitori->enasarco) == 'no' ? 'selected' : '' }}>No</option>
-                                <option value="monomandatario" {{ old('enasarco', $fornitori->enasarco) == 'monomandatario' ? 'selected' : '' }}>Monomandatario</option>
-                                <option value="plurimandatario" {{ old('enasarco', $fornitori->enasarco) == 'plurimandatario' ? 'selected' : '' }}>Plurimandatario</option>
-                            </select>
-                            @error('enasarco')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
+
                         <div class="form-group">
                             <label for="operatore">Operatore</label>
                             <input type="text" name="operatore" class="form-control" value="{{ old('operatore', $fornitori->operatore) }}">
@@ -115,17 +115,8 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                        <div class="form-group">
-                            <label for="coge">Coge</label>
-                            <input type="text" name="coge" class="form-control" value="{{ old('coge', $fornitori->coge) }}">
-                            @error('coge')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label for="anticipo_residuo">Anticipo Residuo</label>
-                            <input type="number" step="0.01" class="form-control" id="anticipo_residuo" name="anticipo_residuo" value="{{ old('anticipo_residuo', $fornitori->anticipo_residuo) }}">
-                        </div>
+
+
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
