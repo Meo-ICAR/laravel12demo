@@ -127,11 +127,8 @@ class ProvvigioneController extends Controller
 
         $provvigioni = $query->paginate(15);
         
-        // Get status options from the status_praticas table
-        $statoOptions = \App\Models\StatusPratica::pluck('id')->filter()->unique()->toArray();
-        // Add additional status options that might not be in the status_praticas table yet
-        $additionalStatuses = ['Inserito', 'Proforma', 'Fatturato', 'Pagato', 'Stornato', 'Sospeso'];
-        $statoOptions = array_unique(array_merge($statoOptions, $additionalStatuses));
+        // Get status options from the provvigioni_statos table
+        $statoOptions = \App\Models\ProvvigioniStato::pluck('stato')->toArray();
         sort($statoOptions);
 
         // Monthly statistics
@@ -196,15 +193,19 @@ class ProvvigioneController extends Controller
     public function edit($id)
     {
         $provvigione = Provvigione::findOrFail($id);
-        $statoOptions = ['Inserito', 'Proforma', 'Fatturato', 'Pagato', 'Stornato','Sospeso'];
+        $statoOptions = \App\Models\ProvvigioniStato::pluck('stato')->toArray();
+        sort($statoOptions);
         return view('provvigioni.edit', compact('provvigione', 'statoOptions'));
     }
 
     public function update(Request $request, $id)
     {
         try {
+            // Get valid statuses from the database
+            $validStatuses = \App\Models\ProvvigioniStato::pluck('stato')->toArray();
+            
             $request->validate([
-                'stato' => 'required|in:Inserito,Proforma,Fatturato,Pagato,Stornato,Sospeso',
+                'stato' => ['required', 'string', 'in:' . implode(',', $validStatuses)],
                 'invoice_number' => 'nullable|string|max:255',
                 'sended_at' => 'nullable|date',
                 'received_at' => 'nullable|date',
@@ -269,8 +270,11 @@ class ProvvigioneController extends Controller
     public function updateStato(Request $request, $id)
     {
         try {
+            // Get valid statuses from the database
+            $validStatuses = \App\Models\ProvvigioniStato::pluck('stato')->toArray();
+            
             $request->validate([
-                'stato' => 'required|in:Inserito,Proforma,Fatturato,Pagato,Stornato,Sospeso',
+                'stato' => ['required', 'string', 'in:' . implode(',', $validStatuses)],
             ]);
 
             $provvigione = Provvigione::findOrFail($id);

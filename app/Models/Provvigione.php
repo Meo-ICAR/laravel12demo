@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use App\Models\Fornitori;
 use App\Models\Clienti;
 use App\Models\Proforma;
+use App\Models\ProvvigioniStato;
 
 class Provvigione extends Model
 {
@@ -24,7 +25,7 @@ class Provvigione extends Model
         'importo',
         'importo_effettivo',
         'quota',
-        'stato',
+        'stato', // This is the foreign key to provvigioni_statos
         'denominazione_riferimento',
         'fornitori_id',
         'entrata_uscita',
@@ -49,6 +50,14 @@ class Provvigione extends Model
         'paided_at',
         'invoice_number',
     ];
+
+    /**
+     * Get the status associated with the provvigione.
+     */
+    public function statoRel()
+    {
+        return $this->belongsTo(ProvvigioniStato::class, 'stato', 'stato');
+    }
 
     protected $casts = [
         'sended_at' => 'datetime',
