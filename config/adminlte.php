@@ -325,7 +325,7 @@ return [
 
                    [
                     'text' => 'Provvigioni',
-                    'url' => 'provvigioni',
+                     'url' => 'provvigioni?status_pratica=PERFEZIONATA',
                     'icon' => 'fas fa-money-bill-wave',
                 ],
                 [
