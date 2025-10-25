@@ -218,7 +218,7 @@ class ImportProvvigioniFromApi extends Command
                         Provvigione::create($provvigioneData);
                         $imported++;
 
-                        $this->info("Imported new provvigione: {$provvigioneData['id']}");
+                       // $this->info("Imported new provvigione: {$provvigioneData['id']}");
                     }
                 } catch (\Exception $e) {
                     $this->error("Error processing item: " . $e->getMessage());
@@ -264,7 +264,7 @@ class ImportProvvigioniFromApi extends Command
             $insertedFornitoriCount = \DB::update("update provvigioni p inner join fornitoris f on f.name = p.denominazione_riferimento set p.fornitori_id = f.id");
             $this->info("Updated {$insertedFornitoriCount} records with fornitori_id from fornitori.");
 
-            $insertedClientiCount = \DB::update("update provvigioni p inner join clientis c on c.name = p.denominazione_riferimento set p.clientis_id = c.id");
+            $insertedClientiCount = \DB::update("update provvigioni p inner join clientis c on c.name = p.denominazione_riferimento set p.clienti_id = c.id");
             $this->info("Updated {$insertedClientiCount} records with clientis_id from clientis.");
 
 

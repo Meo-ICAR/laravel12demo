@@ -31,7 +31,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // Run the daily imports at 2:00 AM
-        $schedule->command('import:daily')->dailyAt('02:00');
+        $schedule->command('import:daily')
+    ->dailyAt('02:00')
+    ->appendOutputTo(storage_path('logs/scheduler.log'));
 
         // Keep the existing schedule for backward compatibility
        // $schedule->command('sidial:import-esiti')->dailyAt('02:15');
