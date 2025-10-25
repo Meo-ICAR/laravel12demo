@@ -25,19 +25,20 @@ class ImportDailyData extends Command
 
         $commands = [
             [
-                'command' => 'provvigioni:import-api',
-                'params' => [
-                    '--start-date' => $startDate,
-                    '--end-date' => $endDate,
-                ]
-            ],
-            [
                 'command' => 'pratiche:import-api',
                 'params' => [
                     '--start-date' => $startDate,
                     '--end-date' => $endDate,
                 ]
             ],
+            [
+                'command' => 'provvigioni:import-api',
+                'params' => [
+                    '--start-date' => $startDate,
+                    '--end-date' => $endDate,
+                ]
+            ],
+     /*
             [
                 'command' => 'sidial:import-leads',
                 'params' => [
@@ -54,7 +55,7 @@ class ImportDailyData extends Command
                 ]
             ],
 
-
+*/
 
 
         ];
