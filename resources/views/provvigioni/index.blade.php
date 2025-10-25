@@ -62,19 +62,11 @@
                     <div class="col-md-2">
                         <label for="status_pratica">Stato Pratica:</label>
                         <select name="status_pratica" id="status_pratica" class="form-control">
-                            <option value="">All</option>
-                            @php
-                                // Get status options from the controller
-                                $statusPraticaOptions = collect($statoOptions)
-                                    ->filter(function($status) {
-                                        return !empty($status) && $status !== 'Inserito' && $status !== 'Proforma' && $status !== 'Fatturato' && $status !== 'Pagato' && $status !== 'Stornato' && $status !== 'Sospeso';
-                                    })
-                                    ->sort()
-                                    ->values()
-                                    ->toArray();
-                            @endphp
-                            @foreach($statusPraticaOptions as $status)
-                                <option value="{{ $status }}" {{ request('status_pratica') == $status ? 'selected' : '' }}>&nbsp;&nbsp;{{ $status }}</option>
+                            <option value="">Tutti</option>
+                            @foreach($praticaStatoOptions as $status)
+                                <option value="{{ $status }}" {{ request('status_pratica') == $status ? 'selected' : '' }}>
+                                    {{ $status }}
+                                </option>
                             @endforeach
                         </select>
                     </div>

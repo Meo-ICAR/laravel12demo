@@ -251,13 +251,21 @@ class ImportProvvigioniFromApi extends Command
 
                 $this->info("Updated {$updatedCount} records with customer names from pratiche.");
             }
+               $updatedCount = \DB::update(
+                    "UPDATE provvigioni p
+
+                    SET  p.stato = 'Inserito'
+                    WHERE p.stato IS  NULL and p.status_pratica = 'PERFEZIONATA'"
+                );
+                $this->info("Updated {$updatedCount} records with stato from pratiche.");
+
             $insertedFornitoriCount = \DB::insert(
-                    "insert into fornitoris (id,name) select uuid(),denominazione_riferimento from vwfornitorinew"
+                    "insert into fornitoris (id,name,nome) select uuid(),denominazione_riferimento,denominazione_riferimento from vwfornitorinew"
             );
             $this->info("Inserted {$insertedFornitoriCount} records into produttori.");
 
             $insertedClientiCount = \DB::insert(
-                "insert into clientis (id,name) select uuid(),denominazione_riferimento from vwclientinew"
+                "insert into clientis (id,name,nome) select uuid(),denominazione_riferimento,denominazione_riferimento from vwclientinew"
             );
             $this->info("Inserted {$insertedClientiCount} records into mandatarie.");
 

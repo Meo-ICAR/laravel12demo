@@ -50,6 +50,11 @@ class ProvvigioneController extends Controller
             $query->where('provvigioni.cognome', 'like', '%' . $request->cognome . '%');
         }
 
+        // Filter by status_pratica if provided
+        if ($request->has('status_pratica') && $request->status_pratica !== '') {
+            $query->where('provvigioni.status_pratica', $request->status_pratica);
+        }
+
         // Filter by fonte if provided
         if ($request->has('fonte') && $request->fonte !== '') {
             $query->where('provvigioni.fonte', 'like', '%' . $request->fonte . '%');
@@ -130,6 +135,9 @@ class ProvvigioneController extends Controller
         // Get status options from the provvigioni_statos table
         $statoOptions = \App\Models\ProvvigioniStato::pluck('stato')->toArray();
         sort($statoOptions);
+        
+        // Get pratica status options from the pratiches_statos table
+        $praticaStatoOptions = \App\Models\PraticheStato::orderBy('stato_pratica')->pluck('stato_pratica')->toArray();
 
         // Monthly statistics
         $today = now();
@@ -155,6 +163,7 @@ class ProvvigioneController extends Controller
         return view('provvigioni.index', compact(
             'provvigioni',
             'statoOptions',
+            'praticaStatoOptions',
             'totalCount',
             'totalImporto',
             'totalUnfilteredCount',

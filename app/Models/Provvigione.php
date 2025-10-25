@@ -8,6 +8,7 @@ use App\Models\Fornitori;
 use App\Models\Clienti;
 use App\Models\Proforma;
 use App\Models\ProvvigioniStato;
+use App\Models\PraticheStato;
 
 class Provvigione extends Model
 {
@@ -57,6 +58,14 @@ class Provvigione extends Model
     public function statoRel()
     {
         return $this->belongsTo(ProvvigioniStato::class, 'stato', 'stato');
+    }
+
+    /**
+     * Get the pratica status associated with the provvigione.
+     */
+    public function praticaStato()
+    {
+        return $this->belongsTo(PraticheStato::class, 'status_pratica', 'stato_pratica');
     }
 
     protected $casts = [
