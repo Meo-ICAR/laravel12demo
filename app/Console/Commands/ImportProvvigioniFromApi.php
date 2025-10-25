@@ -254,7 +254,7 @@ class ImportProvvigioniFromApi extends Command
                $updatedCount = \DB::update(
                     "UPDATE provvigioni p
 
-                    SET  p.stato = 'Inserito'
+                    SET  p.stato = 'Inserito', p.deleted_at = NULL
                     WHERE p.stato IS  NULL and p.status_pratica = 'PERFEZIONATA'"
                 );
                 $this->info("Updated {$updatedCount} records with stato from pratiche.");

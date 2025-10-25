@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use App\Models\Fornitori;
 use App\Models\Clienti;
@@ -12,6 +13,8 @@ use App\Models\PraticheStato;
 
 class Provvigione extends Model
 {
+    use SoftDeletes;
+    
     protected $table = 'provvigioni';
     protected $primaryKey = 'id';
     public $incrementing = false;
@@ -28,6 +31,7 @@ class Provvigione extends Model
         'quota',
         'stato', // This is the foreign key to provvigioni_statos
         'denominazione_riferimento',
+        'deleted_at',
         'fornitori_id',
         'entrata_uscita',
         'cognome',
