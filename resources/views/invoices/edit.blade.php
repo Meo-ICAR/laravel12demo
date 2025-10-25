@@ -52,6 +52,17 @@
                         </div>
                     </div>
                 </div>
+                   <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="competenza">Competenza </label>
+                            <input type="number" step="0.01" class="form-control @error('competenza') is-invalid @enderror" id="competenza" name="competenza" value="{{ old('competenza', $invoice->competenza) }}">
+                            @error('competenza')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
 
                 <div class="row">
                     <div class="col-md-4">
@@ -123,11 +134,7 @@
                     <button type="submit" class="btn btn-primary">Update Invoice</button>
                 </div>
             </form>
-            <form action="{{ route('invoices.destroy', $invoice->id) }}" method="POST" style="display:inline-block; margin-top: 1rem;">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this invoice? This action can be undone from the trash.')">Delete Invoice</button>
-            </form>
+
         </div>
     </div>
 </div>
