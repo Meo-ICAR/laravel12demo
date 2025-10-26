@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('invoices', function (Blueprint $table) {
-            $table->softDeletes();
+            $table->decimal('importo_iva', 10, 2)->nullable()->after('tax_amount');
+            $table->decimal('importo_totale_fornitore', 10, 2)->nullable()->after('importo_iva');
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('invoices', function (Blueprint $table) {
-            $table->dropSoftDeletes();
+            $table->dropColumn(['importo_iva', 'importo_totale_fornitore']);
         });
     }
 };

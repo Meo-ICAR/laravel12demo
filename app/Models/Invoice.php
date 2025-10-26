@@ -30,6 +30,8 @@ class Invoice extends Model
         'xml_data',
         'delta',
         'coge',
+        'importo_iva',
+        'importo_totale_fornitore',
     ];
 
     protected $casts = [
@@ -39,6 +41,8 @@ class Invoice extends Model
         'sended2_at' => 'datetime',
         'total_amount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
+        'importo_iva' => 'decimal:2',
+        'importo_totale_fornitore' => 'decimal:2',
         'invoice_number' => 'string',
         'isreconiled' => 'boolean'
     ];
