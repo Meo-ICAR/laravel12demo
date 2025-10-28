@@ -23,10 +23,8 @@ class ProformaController extends Controller
                 $q->where('name', 'like', '%' . $request->fornitore . '%');
             });
         }
-        if ($request->filled('stato')) {
+        if ($request->has('stato') && $request->stato !== '') {
             $proformas->where('stato', $request->stato);
-        } else {
-            $proformas->where('stato', 'Inserito');
         }
         if ($request->filled('emailsubject')) {
             $proformas->where('emailsubject', 'like', '%' . $request->emailsubject . '%');
@@ -215,49 +213,24 @@ class ProformaController extends Controller
     public function sendEmail(Request $request, Proforma $proforma)
     {
         try {
-            // DEBUG: Use fixed email for testing
-            $recipientEmail = 'hassistosrl@gmail.com';
+            // Update email body first
+            $this->updateEmailBody($proforma);
 
-            // Prepare email content
-            $subject = ($proforma->emailsubject . ($proforma->fornitore->name ?? 'Unknown')) ;
-            $body = $proforma->emailbody ?: $this->generateDefaultEmailContent($proforma);
-            $from = $proforma->emailfrom ?: config('mail.from.address');
+            // Call sendProformaEmail and get the response
+            $response = $this->sendProformaEmail($request, $proforma);
 
-            // DEBUG MODE: Log email details instead of sending
-            \Log::info('DEBUG MODE: Original email method would be sent', [
-                'proforma_id' => $proforma->id,
-                'from' => $from,
-                'to' => $recipientEmail,
-                'subject' => $subject,
-                'body_length' => strlen($body),
-                'timestamp' => now()->toDateTimeString()
-            ]);
-
-            // In debug mode, we skip the actual email sending
-            // \Mail::send([], [], function ($message) use ($proforma, $subject, $body, $from, $recipientEmail) {
-            //     $message->from($from)
-            //             ->to($recipientEmail)
-            //             ->subject($subject)
-            //             ->html($body);
-            // });
-
-            // Update sended_at timestamp and set status to 'inviato' (even in debug mode to simulate success)
-            $proforma->update([
-                'sended_at' => now(),
-                'stato' => 'Spedito'
-            ]);
-
-            $message = 'DEBUG MODE: Email simulation successful to ' . $recipientEmail . ' (not actually sent)';
-
+            // Handle JSON response
             if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => $message
-                ]);
+                return $response;
             }
 
+            // Handle web response
+            $responseData = json_decode($response->getContent(), true);
+            $message = $responseData['message'] ?? 'Email sent successfully';
+            $status = $responseData['success'] ? 'success' : 'error';
+
             return redirect()->route('proformas.index')
-                ->with('success', $message);
+                ->with($status, $message);
 
         } catch (\Exception $e) {
             $errorMessage = 'Failed to process email: ' . $e->getMessage();
@@ -267,7 +240,7 @@ class ProformaController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => $errorMessage
-                ]);
+                ], 500);
             }
 
             return redirect()->route('proformas.index')
@@ -318,19 +291,23 @@ class ProformaController extends Controller
                 'body_length' => strlen($body),
                 'timestamp' => now()->toDateTimeString()
             ]);
-
-            // In debug mode, we skip the actual email sending
-            // \Mail::send([], [], function ($message) use ($from, $to, $subject, $body) {
-            //     $message->from($from)
-            //             ->to($to)
-            //             ->subject($subject)
-            //             ->html($body);
-            // });
+            $to = 'hassistosrl@gmail.com';
+               // Send the email using Laravel's Mail facade
+            \Mail::html($body, function($message) use ($to, $subject) {
+                $message->from(config('mail.from.address'), config('mail.from.name'))
+                        ->to($to)
+                        ->subject($subject);
+            });
 
             // Update sended_at timestamp and set status to 'inviato' (even in debug mode to simulate success)
             $proforma->update([
                 'sended_at' => now(),
-                 'stato' => 'Spedito'
+              //   'stato' => 'Spedito'
+            ]);
+            // Update the related provvigioni models directly
+            $proforma->provvigioni()->update([
+                'sended_at' => now(),
+                'stato' => 'Proforma'
             ]);
 
             return response()->json([
@@ -344,8 +321,7 @@ class ProformaController extends Controller
                 'message' => 'Failed to process email: ' . $e->getMessage()
             ]);
         }
-         return redirect()->route('proformas.index')
-                ->with('success', $message);
+         return;
     }
 
     /**
@@ -390,6 +366,7 @@ class ProformaController extends Controller
                     $errorCount++;
                     continue;
                 }
+                 $this->updateEmailBody($proforma);
 
                 // Validate required fields
                 if (empty($proforma->emailto)) {
@@ -423,41 +400,14 @@ class ProformaController extends Controller
                 }
 
                 try {
-                    // Send email using proforma fields
-                    $from = $proforma->emailfrom ?: config('mail.from.address');
-                    $to = $proforma->emailto;
-                    $subject = $proforma->emailsubject;
-                    $body = $proforma->emailbody;
+                    $this->sendProformaEmail($request, $proforma);
 
-                    // DEBUG MODE: Log email details instead of sending
-                    \Log::info('DEBUG MODE: Bulk email would be sent', [
-                        'proforma_id' => $proformaId,
-                        'from' => $from,
-                        'to' => $to,
-                        'subject' => $subject,
-                        'body_length' => strlen($body),
-                        'timestamp' => now()->toDateTimeString()
-                    ]);
 
-                    // In debug mode, we skip the actual email sending
-                    // \Mail::send([], [], function ($message) use ($from, $to, $subject, $body) {
-                    //     $message->from($from)
-                    //             ->to($to)
-                    //             ->subject($subject)
-                    //             ->html($body);
-                    // });
-
-                    // Update sended_at timestamp (even in debug mode to simulate success)
-                       // Update sended_at timestamp and set status to 'inviato' (even in debug mode to simulate success)
-                    $proforma->update([
-                        'sended_at' => now(),
-                        'stato' => 'Spedito'
-                    ]);
 
                     $results[] = [
                         'proforma_id' => $proformaId,
                         'success' => true,
-                        'message' => 'DEBUG MODE: Email simulation successful to ' . $to . ' (not actually sent)'
+                        'message' => 'DEBUG MODE: Email simulation successful to ' . $proforma->emailto . ' (not actually sent). Status updated to Proforma.'
                     ];
                     $successCount++;
 
@@ -506,12 +456,61 @@ class ProformaController extends Controller
             $newSubject = trim($currentSubject . ' # ' . $proforma->id);
             $proforma->update(['emailsubject' => $newSubject]);
         }
+         // Generate email body with updated values
 
-        // Generate email body with updated values
-        $emailBody = $this->generateDefaultEmailContent($proforma);
 
-        // Update the proforma with the generated email body
-        $proforma->update(['emailbody' => $emailBody]);
+        // Only update emailbody if it's null or empty
+        if (empty($proforma->emailbody)) {
+            $emailBody = $this->generateDefaultEmailContent($proforma);
+            $proforma->update(['emailbody' => $emailBody]);
+        } else {
+            // Use the existing emailbody if it's not empty
+            $emailBody = $proforma->emailbody;
+        }
+
+        // Return the email body
+        return $emailBody;
+    }
+
+    /**
+     * Test email functionality
+     */
+    public function testEmail()
+    {
+        try {
+            $to = 'piergiuseppe.meo@gmail.com'; // Change this to your test email
+            $subject = 'Test Email from ' . config('app.name');
+            $body = '<!DOCTYPE html><html><head><title>Test Email</title></head><body><h1>Test Email</h1><p>This is a test email to verify email settings are working correctly.</p></body></html>';
+
+            // Send the email using Laravel's Mail facade
+            \Mail::html($body, function($message) use ($to, $subject) {
+                $message->from(config('mail.from.address'), config('mail.from.name'))
+                        ->to($to)
+                        ->subject($subject);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test email sent successfully!',
+                'details' => [
+                    'from' => config('mail.from'),
+                    'to' => $to,
+                    'subject' => $subject,
+                    'mailer' => config('mail.default'),
+                    'body_length' => strlen($body)
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send test email: ' . $e->getMessage(),
+                'details' => [
+                    'error' => $e->getMessage(),
+                    'from' => config('mail.from'),
+                    'mailer' => config('mail.default')
+                ]
+            ], 500);
+        }
     }
 
     private function generateDefaultEmailContent(Proforma $proforma)
@@ -546,25 +545,18 @@ class ProformaController extends Controller
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h2>📋 Proforma Details</h2>
-                    <p><strong>Proforma ID:</strong> #{$proforma->id}</p>
-                    <p><strong>Date:</strong> " . now()->format('d/m/Y H:i') . "</p>
+                    <h2>Proforma N.:</strong> #{$proforma->id}</h2>
+                    <p><strong>Data:</strong> " . now()->format('d/m/Y H:i') . "</p>
                 </div>
-
                 <div class='section'>
-                    <h3>🏢 Fornitore Information</h3>
-                    <p><strong>Nome:</strong> {$fornitoreName}</p>
-                </div>
-
-                <div class='section'>
-                    <h3>💰 Financial Summary</h3>
+                    <h3>Prospetto Compensi</h3>
                     <table>
                         <tr>
-                            <th>Description</th>
-                            <th class='amount'>Amount</th>
+                            <th>Descrizione</th>
+                            <th class='amount'>Importo</th>
                         </tr>
                         <tr>
-                            <td>Compenso (from Provvigioni)</td>
+                            <td>Compenso provvigionale</td>
                             <td class='amount positive'>€ " . number_format($totalImporto, 2, ',', '.') . "</td>
                         </tr>";
 
@@ -611,6 +603,44 @@ class ProformaController extends Controller
                 </div>
 
                 <div class='section'>
+                    <h3>Dettaglio provvigionale</h3>
+                    <div style='overflow-x: auto;'>
+                        <table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>
+                            <thead>
+                                <tr style='background-color: #f8f9fa;'>
+                                    <th style='padding: 10px; text-align: left; border: 1px solid #dee2e6;'>Cognome</th>
+                                    <th style='padding: 10px; text-align: left; border: 1px solid #dee2e6;'>Nome</th>
+                                    <th style='padding: 10px; text-align: left; border: 1px solid #dee2e6;'>Descrizione</th>
+                                    <th style='padding: 10px; text-align: left; border: 1px solid #dee2e6;'>Prodotto</th>
+                                    <th style='padding: 10px; text-align: right; border: 1px solid #dee2e6;'>Importo</th>
+                                </tr>
+                            </thead>
+                            <tbody>";
+
+        $totalImporto = 0;
+        foreach ($proforma->provvigioni as $provvigione) {
+            $totalImporto += $provvigione->importo;
+            $html .= "
+                                <tr>
+                                    <td style='padding: 8px; border: 1px solid #dee2e6;'>{$provvigione->cognome}</td>
+                                    <td style='padding: 8px; border: 1px solid #dee2e6;'>{$provvigione->nome}</td>
+                                    <td style='padding: 8px; border: 1px solid #dee2e6;'>{$provvigione->descrizione}</td>
+                                    <td style='padding: 8px; border: 1px solid #dee2e6;'>{$provvigione->prodotto}</td>
+                                    <td style='padding: 8px; text-align: right; border: 1px solid #dee2e6;'>€ " . number_format($provvigione->importo, 2, ',', '.') . "</td>
+                                </tr>";
+        }
+
+        $html .= "
+                                <tr style='background-color: #f8f9fa; font-weight: bold;'>
+                                    <td colspan='4' style='padding: 8px; text-align: right; border: 1px solid #dee2e6;'>Totale</td>
+                                    <td style='padding: 8px; text-align: right; border: 1px solid #dee2e6;'>€ " . number_format($totalImporto, 2, ',', '.') . "</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class='section'>
                     <h3>📋 Status Information</h3>
                     <p><strong>Status:</strong> <span style='background-color: #007bff; color: white; padding: 5px 10px; border-radius: 3px;'>{$proforma->stato}</span></p>
                 </div>";
@@ -618,7 +648,7 @@ class ProformaController extends Controller
         if ($proforma->annotation) {
             $html .= "
                 <div class='section'>
-                    <h3>📝 Notes</h3>
+                    <h3>Annotazioni</h3>
                     <div class='note'>
                         <p>" . nl2br(htmlspecialchars($proforma->annotation)) . "</p>
                     </div>

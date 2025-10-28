@@ -184,7 +184,8 @@
                                         <td>
                                             <a href="{{ route('provvigioni.index', [
                                                 'denominazione_riferimento' => $summary->denominazione_riferimento,
-                                                'sended_at' => $summary->sent_date
+                                                'sended_at' => $summary->sent_date,
+                                                'fornitore' => $summary->fornitori_id ?? ''
                                             ]) }}"
                                                class="text-primary font-weight-bold"
                                                title="Click to view Provvigioni for {{ $summary->denominazione_riferimento }} sent on {{ \Carbon\Carbon::parse($summary->sent_date)->format('d/m/Y') }}">
@@ -289,7 +290,11 @@
                                         <td>{{ $invoice->invoice_date ? $invoice->invoice_date->format('d/m/Y') : 'N/A' }}</td>
                                         <td>
                                             @if($invoice->invoice_number)
-                                                <a href="{{ route('invoices.edit', $invoice->id) }}"
+                                                <a href="{{ route('proformas.index', [
+                                                'stato' => 'Spedito', 
+                                                'fornitore' => $invoice->fornitori_id,
+                                                'fornitori_id' => $invoice->fornitori_id
+                                            ]) }}"
                                                    class="text-primary font-weight-bold"
                                                    title="Click to edit invoice {{ $invoice->invoice_number }}">
                                                     <strong>{{ Str::limit($invoice->invoice_number, 10, '...') }}</strong>

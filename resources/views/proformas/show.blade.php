@@ -12,6 +12,7 @@
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="#">Home</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('proformas.index') }}">Proformas</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('proformas.sendEmail', $proforma) }}">Reinvia Email</a></li>
                         <li class="breadcrumb-item active">Details</li>
                     </ol>
                 </div>
@@ -169,9 +170,7 @@
                                             </button>
                                             @endif
                                 </a>
-                                    <button type="button" class="btn btn-info" onclick="sendProformaEmail()">
-                                        <i class="fas fa-envelope mr-1"></i> Send Email
-                                    </button>
+
 
                                 <a href="{{ route('proformas.index') }}" class="btn btn-secondary">
                                     <i class="fas fa-arrow-left mr-1"></i> Back
@@ -231,40 +230,58 @@
     </section>
 </div>
 
+<form id="sendEmailForm" action="{{ route('proformas.sendEmail', $proforma) }}" method="POST" style="display: inline;">
+    @csrf
+    <button type="submit" class="btn btn-success btn-sm" onclick="return">
+        <i class="fas fa-paper-plane mr-1"></i> Reinvia Email
+    </button>
+</form>
+
+@push('scripts')
 <script>
-function sendProformaEmail() {
-    if (confirm('Send email to {{ $proforma->emailto }}?')) {
-        // Create form data
-        const formData = new FormData();
-        formData.append('_token', '{{ csrf_token() }}');
-        formData.append('proforma_id', '{{ $proforma->id }}');
+document.getElementById('sendEmailForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (confirm('Reinvio email a {{ $proforma->emailto }}?')) {
+        const form = this;
+        const btn = form.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
 
         // Show loading state
-        const btn = event.target;
-        const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Sending...';
         btn.disabled = true;
 
-        fetch('{{ route("proformas.sendEmail", $proforma) }}', {
+        fetch(form.action, {
             method: 'POST',
-            body: formData
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: new FormData(form)
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 alert('Email sent successfully!');
+                // Optional: Reload the page to update the UI if needed
+                window.location.reload();
             } else {
                 alert('Error: ' + data.message);
             }
         })
         .catch(error => {
-            alert('Error sending email: ' + error.message);
+            console.error('Error:', error);
+            alert('Error sending email: ' + (error.message || 'Unknown error occurred'));
         })
         .finally(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
     }
-}
+
+    return false;
+});
 </script>
+@endpush
 @endsection

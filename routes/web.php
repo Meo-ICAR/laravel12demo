@@ -256,3 +256,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Test email route (temporary for debugging)
+Route::get('/test-email', [\App\Http\Controllers\ProformaController::class, 'testEmail'])->name('test.email');

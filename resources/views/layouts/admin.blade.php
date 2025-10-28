@@ -62,6 +62,7 @@
             console.log('Bootstrap version:', $.fn.tooltip ? $.fn.tooltip.Constructor.VERSION : 'Bootstrap not loaded');
         });
     </script>
+    @stack('scripts')
 @stop
 
 @section('footer')

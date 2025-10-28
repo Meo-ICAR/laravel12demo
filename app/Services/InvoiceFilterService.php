@@ -21,7 +21,7 @@ class InvoiceFilterService
         // Apply filters
         $filterConfig = [
             'date_field' => 'invoice_date',
-            'status_field' => 'status',
+            'status_field' => 'status', // Database column name is 'status'
             'custom_filters' => [
                 'fornitore' => [
                     'field' => 'fornitore',
@@ -29,6 +29,11 @@ class InvoiceFilterService
                 ]
             ]
         ];
+        
+        // Manually apply status filter to handle the 'stato' parameter
+        if ($request->filled('stato')) {
+            $query->where('status', $request->stato);
+        }
 
         $this->applyCommonFilters($query, $request, $filterConfig);
 
@@ -77,6 +82,11 @@ class InvoiceFilterService
         if ($request->filled('denominazione_riferimento')) {
             $unreconciledInvoicesQuery->where('fornitore', 'like', '%' . $request->denominazione_riferimento . '%');
         }
+        
+        // Filter by fornitore ID if provided
+        if ($request->filled('fornitore_id')) {
+            $unreconciledInvoicesQuery->where('fornitori_id', $request->fornitore_id);
+        }
 
         $unreconciledInvoices = $unreconciledInvoicesQuery
             ->orderBy('invoice_date', 'desc')
@@ -90,6 +100,11 @@ class InvoiceFilterService
 
         if ($request->filled('denominazione_riferimento')) {
             $provvigioniQuery->where('denominazione_riferimento', 'like', '%' . $request->denominazione_riferimento . '%');
+        }
+        
+        // Filter by fornitore ID if provided
+        if ($request->filled('fornitore')) {
+            $provvigioniQuery->where('fornitori_id', $request->fornitore);
         }
 
         if ($request->filled('email_date_from')) {

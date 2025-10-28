@@ -39,14 +39,17 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
-            'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'host' => 'ssl0.ovh.net',
+            'port' => 465,
+            'encryption' => 'ssl',
+            'username' => 'proforma@hassisto.eu',
+            'password' => 'Demo1234@',
+            'timeout' => 30,
+            'auth_mode' => 'login',
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true,
+            'local_domain' => 'hassisto.eu',
         ],
 
         'ses' => [
@@ -111,8 +114,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'proforma@hassisto.eu'),
+        'name' => env('MAIL_FROM_NAME', 'Proforma RACES'),
     ],
 
 ];
