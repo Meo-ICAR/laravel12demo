@@ -39,17 +39,17 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'host' => 'ssl0.ovh.net',
-            'port' => 465,
-            'encryption' => 'ssl',
-            'username' => 'proforma@hassisto.eu',
-            'password' => 'Demo1234@',
-            'timeout' => 30,
-            'auth_mode' => 'login',
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-            'allow_self_signed' => true,
-            'local_domain' => 'hassisto.eu',
+            'host' => env('MAIL_HOST', 'ssl0.ovh.net'),
+            'port' => env('MAIL_PORT', 465),
+            'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
+            'username' => env('MAIL_USERNAME'),
+            'password' => env('MAIL_PASSWORD'),
+            'timeout' => env('MAIL_TIMEOUT', 30),
+            'auth_mode' => env('MAIL_AUTH_MODE', 'login'),
+            'verify_peer' => env('MAIL_VERIFY_PEER', false),
+            'verify_peer_name' => env('MAIL_VERIFY_PEER_NAME', false),
+            'allow_self_signed' => env('MAIL_ALLOW_SELF_SIGNED', true),
+            'local_domain' => env('MAIL_LOCAL_DOMAIN', 'hassisto.eu'),
         ],
 
         'ses' => [
