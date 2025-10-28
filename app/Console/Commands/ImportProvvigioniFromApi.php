@@ -208,7 +208,7 @@ class ImportProvvigioniFromApi extends Command
                         if (empty($existing->sended_at) && empty($existing->received_at) && empty($existing->paided_at)) {
                             $existing->update($provvigioneData);
                             $updated++;
-                            $this->info("Updated provvigione: {$provvigioneData['id']}");
+                           // $this->info("Updated provvigione: {$provvigioneData['id']}");
                         } else {
                             $this->info("Skipped update for provvigione {$provvigioneData['id']} - timestamps sended, received paide dalready set");
                             $skipped++;
