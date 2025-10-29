@@ -54,6 +54,12 @@ class Provvigione extends Model
         'received_at',
         'paided_at',
         'invoice_number',
+        'data_pagamento',
+        'n_fattura',
+        'data_fattura',
+        'data_status',
+        'piva',
+        'cf',
     ];
 
     /**
@@ -80,6 +86,9 @@ class Provvigione extends Model
         'data_inserimento_pratica' => 'datetime',
         'data_stipula' => 'datetime',
         'data_status_pratica' => 'datetime',
+        'data_pagamento' => 'datetime',
+        'data_fattura' => 'date',
+        'data_status' => 'date',
         'importo' => 'decimal:2',
         'importo_effettivo' => 'decimal:2',
         'quota' => 'decimal:2',

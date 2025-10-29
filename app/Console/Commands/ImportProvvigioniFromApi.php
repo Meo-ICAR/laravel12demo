@@ -317,24 +317,39 @@ class ImportProvvigioniFromApi extends Command
 
     protected function mapApiToModel(array $apiData): array
     {
-        $dataInserimento = null;
-        $dataInserimentoValue = $apiData['Data Inserimento Compenso'] ?? $apiData['Data Inserimento'] ?? null;
-
-        if (!empty($dataInserimentoValue)) {
+        // Helper function to parse dates from API
+        $parseDate = function($dateValue) {
+            if (empty($dateValue)) return null;
+            
             try {
-                $dateParts = explode('/', $dataInserimentoValue);
-                if (count($dateParts) === 3) {
-                    $dataInserimento = Carbon::createFromFormat('d/m/Y', $dataInserimentoValue);
+                if (str_contains($dateValue, '/')) {
+                    $dateParts = explode('/', $dateValue);
+                    if (count($dateParts) === 3) {
+                        return Carbon::createFromFormat('d/m/Y', $dateValue);
+                    }
+                } elseif (strtotime($dateValue)) {
+                    return Carbon::parse($dateValue);
                 }
             } catch (\Exception $e) {
-                // If parsing fails, leave as null
-                $this->warn("Failed to parse date: " . $dataInserimentoValue);
+                $this->warn("Failed to parse date: " . $dateValue);
             }
-        }
+            return null;
+        };
+
+        $dataInserimento = $parseDate($apiData['Data Inserimento Compenso'] ?? $apiData['Data Inserimento'] ?? null);
+        $dataPagamento = $parseDate($apiData['Data Pagamento'] ?? null);
+        $dataFattura = $parseDate($apiData['Data Fattura'] ?? null);
+        $dataStatus = $parseDate($apiData['Data Status'] ?? null);
 
         return [
             'id' => $apiData['ID Compenso'] ?? null,
             'data_inserimento_compenso' => $dataInserimento,
+            'data_pagamento' => $dataPagamento,
+            'n_fattura' => $apiData['Numero Fattura'] ?? $apiData['N. Fattura'] ?? null,
+            'data_fattura' => $dataFattura,
+            'data_status' => $dataStatus,
+            'piva' => $apiData['P.IVA'] ?? $apiData['PIVA'] ?? null,
+            'cf' => $apiData['Codice Fiscale'] ?? $apiData['CF'] ?? null,
             'descrizione' => $apiData['Descrizione'] ?? null,
             'tipo' => $apiData['Tipo'] ?? 'provvigione',
             'importo' => is_numeric($apiData['Importo']) ? $apiData['Importo'] : (is_string($apiData['Importo']) ? (float) str_replace(',', '.', $apiData['Importo']) : 0),

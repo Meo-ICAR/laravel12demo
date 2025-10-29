@@ -60,6 +60,21 @@ class ProvvigioneResource extends Resource
                         TextInput::make('invoice_number')
                             ->maxLength(255)
                             ->label('Invoice Number'),
+                        DatePicker::make('data_pagamento')
+                            ->label('Payment Date'),
+                        TextInput::make('n_fattura')
+                            ->maxLength(20)
+                            ->label('Invoice Number (n_fattura)'),
+                        DatePicker::make('data_fattura')
+                            ->label('Invoice Date'),
+                        DatePicker::make('data_status')
+                            ->label('Status Date'),
+                        TextInput::make('piva')
+                            ->maxLength(20)
+                            ->label('VAT Number'),
+                        TextInput::make('cf')
+                            ->maxLength(20)
+                            ->label('Tax Code'),
                     ])->columns(2),
 
                 Forms\Components\Section::make('Personal Information')
@@ -149,6 +164,23 @@ class ProvvigioneResource extends Resource
                 TextColumn::make('invoice_number')
                     ->searchable()
                     ->label('Invoice #')
+                    ->toggleable(),
+                    
+                TextColumn::make('n_fattura')
+                    ->searchable()
+                    ->label('N. Fattura')
+                    ->toggleable(),
+                    
+                TextColumn::make('data_fattura')
+                    ->date()
+                    ->sortable()
+                    ->label('Data Fattura')
+                    ->toggleable(),
+                    
+                TextColumn::make('data_pagamento')
+                    ->date()
+                    ->sortable()
+                    ->label('Data Pagamento')
                     ->toggleable(),
             ])
             ->filters([
