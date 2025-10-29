@@ -25,6 +25,7 @@ class Invoice extends Model
         'status',
         'paid_at',
         'isreconiled',
+        'is_notenasarco',
         'sended_at',
         'sended2_at',
         'xml_data',
@@ -44,7 +45,8 @@ class Invoice extends Model
         'importo_iva' => 'decimal:2',
         'importo_totale_fornitore' => 'decimal:2',
         'invoice_number' => 'string',
-        'isreconiled' => 'boolean'
+        'isreconiled' => 'boolean',
+        'is_notenasarco' => 'boolean'
     ];
 
     public function getFormattedTotalAmountAttribute(): string

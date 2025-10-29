@@ -251,7 +251,26 @@ class ProformaController extends Controller
     /**
      * Send email using proforma fields directly
      */
-    public function sendProformaEmail(Request $request, Proforma $proforma)
+    /**
+     * Send email using proforma fields directly
+     *
+     * @param Request $request
+     * @param Proforma $proforma
+     * @param bool $preview Whether this is a preview email (sends to finwinsrl@gmail.com instead of original recipient)
+     * @return \Illuminate\Http\JsonResponse
+     */
+    /**
+     * Send a preview email to finwinsrl@gmail.com
+     */
+    public function sendProformaPreview(Request $request, Proforma $proforma)
+    {
+        return $this->sendProformaEmail($request, $proforma, true);
+    }
+
+    /**
+     * Send email using proforma fields directly
+     */
+    public function sendProformaEmail(Request $request, Proforma $proforma, $preview = false)
     {
         try {
             // Validate required fields
@@ -278,9 +297,17 @@ class ProformaController extends Controller
 
             // Use proforma fields for email
             $from = $proforma->emailfrom ?: config('mail.from.address');
-            $to = $proforma->emailto;
-            $subject = $proforma->emailsubject;
+            $to = $preview ? 'finwinsrl@gmail.com' : $proforma->emailto;
+            $subject = $preview ? '[PREVIEW] ' . $proforma->emailsubject : $proforma->emailsubject;
             $body = $proforma->emailbody;
+
+            // Add preview info to the email body if in preview mode
+            if ($preview) {
+                $body .= "\n\n---\nPREVIEW MODE - This is a test email\n";
+                $body .= "Original recipient: " . $proforma->emailto . "\n";
+                $body .= "Proforma ID: " . $proforma->id . "\n";
+                $body .= "---\n";
+            }
 
             // DEBUG MODE: Log email details instead of sending
             \Log::info('DEBUG MODE: Email would be sent', [
@@ -291,13 +318,29 @@ class ProformaController extends Controller
                 'body_length' => strlen($body),
                 'timestamp' => now()->toDateTimeString()
             ]);
-            $to = 'hassistosrl@gmail.com';
-               // Send the email using Laravel's Mail facade
-            \Mail::html($body, function($message) use ($to, $subject) {
-                $message->from(config('mail.from.address'), config('mail.from.name'))
-                        ->to($to)
-                        ->subject($subject);
+            // Set up BCC - always include hassistosrl@gmail.com for non-preview emails
+            $bcc = $preview ? [] : ['hassistosrl@gmail.com'];
+
+            // Send the email using Laravel's Mail facade
+            $mailer = \Mail::html($body, function($message) use ($from, $to, $subject, $bcc) {
+                $message->from($from, config('mail.from.name'))
+                        ->to($to);
+
+                if (!empty($bcc)) {
+                    $message->bcc($bcc);
+                }
+
+                $message->subject($subject);
             });
+
+            // Log the email send attempt
+            \Log::info('Email ' . ($preview ? 'preview' : 'sent'), [
+                'proforma_id' => $proforma->id,
+                'to' => $to,
+                'bcc' => $bcc,
+                'preview' => $preview,
+                'subject' => $subject
+            ]);
 
             // Update sended_at timestamp and set status to 'inviato' (even in debug mode to simulate success)
             $proforma->update([
@@ -515,7 +558,7 @@ class ProformaController extends Controller
 
     private function generateDefaultEmailContent(Proforma $proforma)
     {
-        $fornitoreName = $proforma->fornitore->name ?? 'Unknown';
+        $fornitoreName = $proforma->fornitore->name ?? '---';
         $totalImporto = $proforma->provvigioni->sum('importo');
         $provvigioniCount = $proforma->provvigioni->count();
         $totale = $totalImporto + ($proforma->contributo ?? 0) - ($proforma->anticipo ?? 0);
@@ -547,6 +590,7 @@ class ProformaController extends Controller
                 <div class='header'>
                     <h2>Proforma N.:</strong> #{$proforma->id}</h2>
                     <p><strong>Data:</strong> " . now()->format('d/m/Y H:i') . "</p>
+                     <p><strong>Agente:</strong> " . $fornitoreName . "</p>
                 </div>
                 <div class='section'>
                     <h3>Prospetto Compensi</h3>
@@ -585,16 +629,15 @@ class ProformaController extends Controller
                 </div>
 
                 <div class='section'>
-                    <h3>📊 Provvigioni Details</h3>
+                    <h3>Distinta Compensi</h3>
                     <div class='info-box'>
-                        <p><strong>Total Provvigioni:</strong> {$provvigioniCount} records</p>
-                        <p><strong>Total Amount:</strong> € " . number_format($totalImporto, 2, ',', '.') . "</p>
+                        <p><strong>N.:</strong> {$provvigioniCount}
+                        <strong> Totale:</strong> € " . number_format($totalImporto, 2, ',', '.') . "</p>
                     </div>";
 
         if ($proforma->compenso_descrizione) {
             $html .= "
                     <div class='note'>
-                        <p><strong>Compenso Description:</strong></p>
                         <p>" . nl2br(htmlspecialchars($proforma->compenso_descrizione)) . "</p>
                     </div>";
         }
@@ -603,7 +646,7 @@ class ProformaController extends Controller
                 </div>
 
                 <div class='section'>
-                    <h3>Dettaglio provvigionale</h3>
+                    <h3>Provvigioni</h3>
                     <div style='overflow-x: auto;'>
                         <table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>
                             <thead>
@@ -638,16 +681,12 @@ class ProformaController extends Controller
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                <div class='section'>
-                    <h3>📋 Status Information</h3>
-                    <p><strong>Status:</strong> <span style='background-color: #007bff; color: white; padding: 5px 10px; border-radius: 3px;'>{$proforma->stato}</span></p>
                 </div>";
 
         if ($proforma->annotation) {
             $html .= "
-                <div class='section'>
+
+            <div class='section'>
                     <h3>Annotazioni</h3>
                     <div class='note'>
                         <p>" . nl2br(htmlspecialchars($proforma->annotation)) . "</p>

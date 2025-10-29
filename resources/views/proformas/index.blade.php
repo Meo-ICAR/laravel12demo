@@ -90,6 +90,9 @@
                         <button type="button" class="btn btn-success btn-sm" onclick="sendBulkEmails()" id="bulkEmailBtn" disabled>
                             <i class="fas fa-envelope"></i> Invia tutte le Email
                         </button>
+                        <button type="button" class="btn btn-info btn-sm" onclick="sendBulkPreviewEmails()" id="bulkEmailPreviewBtn" disabled>
+                            <i class="fas fa-envelope-open"></i> Email Preview
+                        </button>
                     </div>
                 </div>
                 <div class="card-body table-responsive p-0">

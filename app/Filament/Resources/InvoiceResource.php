@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Filament\Resources\InvoiceResource\RelationManagers;
 use App\Models\Invoice;
+use App\Models\Fornitore;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -109,6 +110,9 @@ class InvoiceResource extends Resource
                         Toggle::make('isreconiled')
                             ->label('Reconciled')
                             ->default(false),
+                        Toggle::make('is_notenasarco')
+                            ->label('Nota Senasarco')
+                            ->default(false),
                         TextInput::make('delta')
                             ->numeric()
                             ->label('Delta Amount')
@@ -166,6 +170,12 @@ class InvoiceResource extends Resource
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
 
+                IconColumn::make('is_notenasarco')
+                    ->boolean()
+                    ->label('Nota Senasarco')
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle'),
+
                 TextColumn::make('paid_at')
                     ->date()
                     ->sortable()
@@ -194,6 +204,21 @@ class InvoiceResource extends Resource
                         '0' => 'Not Reconciled',
                     ])
                     ->label('Reconciliation Status'),
+
+                Filter::make('fornitori')
+                    ->form([
+                        Select::make('fornitore_id')
+                            ->label('Fornitore')
+                            ->options(Fornitore::all()->pluck('name', 'id'))
+                            ->searchable(),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['fornitore_id'],
+                                fn (Builder $query, $fornitoreId): Builder => $query->where('fornitori_id', $fornitoreId),
+                            );
+                    }),
 
                 Filter::make('amount_range')
                     ->form([
