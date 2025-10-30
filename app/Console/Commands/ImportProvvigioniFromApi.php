@@ -18,6 +18,10 @@ class ImportProvvigioniFromApi extends Command
 
     public function handle()
     {
+        /*
+        ID Compenso	Data Inserimento	Descrizione	Tipo	Importo	Importo Effettivo	Stato	Data Pagamento	N. Fattura	Data Fattura	Data Status	Status Compenso	Denominazione Riferimento	Entrata Uscita	ID Pratica	Agente	Istituto finanziario	Partita IVA Agente	Codice Fiscale Agente
+
+        */
         $endDate = $this->option('end-date') ? Carbon::parse($this->option('end-date')) : now();
         $startDate = $this->option('start-date')
             ? Carbon::parse($this->option('start-date'))
@@ -100,6 +104,59 @@ class ImportProvvigioniFromApi extends Command
             $headers = $this->parseLine($lines[0]);
             $data = [];
             $headerCount = count($headers);
+
+            // Define required headers in the exact expected order
+            $requiredHeaders = [
+                'ID Compenso',
+                'Data Inserimento',
+                'Descrizione',
+                'Tipo',
+                'Importo',
+                'Importo Effettivo',
+                'Stato',
+                'Data Pagamento',
+                'N. Fattura',
+                'Data Fattura',
+                'Data Status',
+                'Status Compenso',
+                'Denominazione Riferimento',
+                'Entrata Uscita',
+                'ID Pratica',
+                'Agente',
+                'Istituto finanziario',
+                'Partita IVA Agente',
+                'Codice Fiscale Agente'
+            ];
+
+            // Check if all required headers are present in the response
+            $missingHeaders = array_diff($requiredHeaders, $headers);
+            if (!empty($missingHeaders)) {
+                $this->error('Missing required headers in API response:');
+                foreach ($missingHeaders as $missing) {
+                    $this->error(" - $missing");
+                }
+                $this->error('Actual headers received: ' . implode(', ', $headers));
+                return 1;
+            }
+
+            // Verify the order of headers matches exactly
+            if ($headers !== $requiredHeaders) {
+                $this->warn('Warning: Headers are not in the expected order.');
+                $this->warn('Expected order: ' . implode('\t', $requiredHeaders));
+                $this->warn('Actual order:   ' . implode('\t', $headers));
+                
+                // Reorder the headers to match the expected order
+                $reorderedHeaders = [];
+                $headerMap = array_flip($headers);
+                foreach ($requiredHeaders as $required) {
+                    if (isset($headerMap[$required])) {
+                        $reorderedHeaders[] = $required;
+                    }
+                }
+                $headers = $reorderedHeaders;
+                $headerCount = count($headers);
+                $this->info('Headers have been reordered to match expected format.');
+            }
 
             // Debug: Log the headers
             \Log::debug('Headers:', ['headers' => $headers, 'count' => $headerCount]);
@@ -336,20 +393,41 @@ class ImportProvvigioniFromApi extends Command
             return null;
         };
 
-        $dataInserimento = $parseDate($apiData['Data Inserimento Compenso'] ?? $apiData['Data Inserimento'] ?? null);
+        // Map the API field names to our database field names
+        $dataInserimento = $parseDate($apiData['Data Inserimento'] ?? null);
         $dataPagamento = $parseDate($apiData['Data Pagamento'] ?? null);
         $dataFattura = $parseDate($apiData['Data Fattura'] ?? null);
         $dataStatus = $parseDate($apiData['Data Status'] ?? null);
+
+        $requiredFields = [
+            'ID Compenso',
+            'Data Inserimento',
+            'Descrizione',
+            'Tipo',
+            'Importo',
+            'Stato',
+            'Denominazione Riferimento',
+            'Entrata Uscita',
+            'ID Pratica',
+            'Agente',
+            'Istituto finanziario'
+        ];
+
+        foreach ($requiredFields as $field) {
+            if (!isset($apiData[$field])) {
+                throw new \Exception("Missing required field: $field");
+            }
+        }
 
         return [
             'id' => $apiData['ID Compenso'] ?? null,
             'data_inserimento_compenso' => $dataInserimento,
             'data_pagamento' => $dataPagamento,
-            'n_fattura' => $apiData['Numero Fattura'] ?? $apiData['N. Fattura'] ?? null,
+            'n_fattura' => $apiData['N. Fattura'] ?? null,
             'data_fattura' => $dataFattura,
             'data_status' => $dataStatus,
-            'piva' => $apiData['P.IVA'] ?? $apiData['PIVA'] ?? null,
-            'cf' => $apiData['Codice Fiscale'] ?? $apiData['CF'] ?? null,
+            'piva' => $apiData['Partita IVA Agente'] ?? null,
+            'cf' => $apiData['Codice Fiscale Agente'] ?? null,
             'descrizione' => $apiData['Descrizione'] ?? null,
             'tipo' => $apiData['Tipo'] ?? 'provvigione',
             'importo' => is_numeric($apiData['Importo']) ? $apiData['Importo'] : (is_string($apiData['Importo']) ? (float) str_replace(',', '.', $apiData['Importo']) : 0),
