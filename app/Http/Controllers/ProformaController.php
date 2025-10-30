@@ -348,10 +348,12 @@ class ProformaController extends Controller
               //   'stato' => 'Spedito'
             ]);
             // Update the related provvigioni models directly
-            $proforma->provvigioni()->update([
-                'sended_at' => now(),
-                'stato' => 'Proforma'
-            ]);
+            if ($preview) {
+                $proforma->provvigioni()->update([
+                    'sended_at' => now(),
+                    'stato' => 'Proforma'
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
