@@ -87,12 +87,13 @@
                 <div class="card-header">
                     <h3 class="card-title">Lista Proforma</h3>
                     <div class="card-tools">
-                        <button type="button" class="btn btn-success btn-sm" onclick="sendBulkEmails()" id="bulkEmailBtn" disabled>
-                            <i class="fas fa-envelope"></i> Invia tutte le Email
-                        </button>
                         <button type="button" class="btn btn-info btn-sm" onclick="sendBulkPreviewEmails()" id="bulkEmailPreviewBtn" disabled>
                             <i class="fas fa-envelope-open"></i> Email Preview
                         </button>
+                        <button type="button" class="btn btn-success btn-sm" onclick="sendBulkEmails()" id="bulkEmailBtn" disabled>
+                            <i class="fas fa-envelope"></i> Invia tutte le Email
+                        </button>
+                   
                     </div>
                 </div>
                 <div class="card-body table-responsive p-0">
@@ -282,6 +283,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    
+    // Initialize button states on page load
+    updateBulkEmailButton();
 });
 
 function saveCompensoDescrizione(proformaId) {
@@ -414,18 +418,29 @@ function toggleSelectAll() {
     updateBulkEmailButton();
 }
 
-// Function to update bulk email button state
+// Function to update bulk email buttons state
 function updateBulkEmailButton() {
     const selectedCheckboxes = document.querySelectorAll('.select-proforma:checked');
     const bulkEmailBtn = document.getElementById('bulkEmailBtn');
+    const bulkEmailPreviewBtn = document.getElementById('bulkEmailPreviewBtn');
+    const count = selectedCheckboxes.length;
+    const hasSelection = count > 0;
 
-    if (selectedCheckboxes.length > 0) {
-        bulkEmailBtn.disabled = false;
-        bulkEmailBtn.textContent = `Send Bulk Emails (${selectedCheckboxes.length})`;
-    } else {
-        bulkEmailBtn.disabled = true;
-        bulkEmailBtn.innerHTML = '<i class="fas fa-envelope"></i> Send Bulk Emails';
-    }
+    // Update both buttons' disabled state
+    bulkEmailBtn.disabled = !hasSelection;
+    bulkEmailPreviewBtn.disabled = !hasSelection;
+
+    // Update button text to show count
+    const updateButtonText = (btn, baseText, iconClass) => {
+        if (hasSelection) {
+            btn.innerHTML = `<i class="${iconClass}"></i> ${baseText} (${count})`;
+        } else {
+            btn.innerHTML = `<i class="${iconClass}"></i> ${baseText}`;
+        }
+    };
+
+    updateButtonText(bulkEmailBtn, 'Invia tutte le Email', 'fas fa-envelope');
+    updateButtonText(bulkEmailPreviewBtn, 'Email Preview', 'fas fa-envelope-open');
 }
 
 // Function to send bulk emails
