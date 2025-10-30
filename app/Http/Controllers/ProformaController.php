@@ -310,14 +310,7 @@ class ProformaController extends Controller
             }
 
             // DEBUG MODE: Log email details instead of sending
-            \Log::info('DEBUG MODE: Email would be sent', [
-                'proforma_id' => $proforma->id,
-                'from' => $from,
-                'to' => $to,
-                'subject' => $subject,
-                'body_length' => strlen($body),
-                'timestamp' => now()->toDateTimeString()
-            ]);
+         
             // Set up BCC - always include hassistosrl@gmail.com for non-preview emails
             $bcc = $preview ? [] : ['hassistosrl@gmail.com'];
 
@@ -348,18 +341,21 @@ class ProformaController extends Controller
               //   'stato' => 'Spedito'
             ]);
             // Update the related provvigioni models directly
-            if ($preview) {
+            if (!$preview) {
                 $proforma->provvigioni()->update([
                     'sended_at' => now(),
                     'stato' => 'Proforma'
                 ]);
-            }
-
-            return response()->json([
+                 return response()->json([
+                'success' => true,
+                'message' => ' Email sended to ' . $to 
+            ]);
+            } else {
+                return response()->json([
                 'success' => true,
                 'message' => 'DEBUG MODE: Email simulation successful to ' . $to . ' (not actually sent)'
             ]);
-
+ }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
