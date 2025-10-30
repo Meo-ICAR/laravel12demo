@@ -240,17 +240,6 @@
                                     @endif
                                 </a>
                             </th>
-                            <th>
-                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'sended_at', 'order' => request('sort') == 'sended_at' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
-                                    Sended At
-                                    @if(request('sort') == 'sended_at')
-                                        <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
-                                    @else
-                                        <i class="fas fa-sort ml-1 text-muted"></i>
-                                    @endif
-                                </a>
-                            </th>
-                            <th>Invoice</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -293,8 +282,9 @@
                                 </td>
                                 <td>{{ $item->cognome }}</td>
                                 <td>{{ $item->nome }}</td>
-                                   <td>{{ $item->data_status }}</td>
-                                <td>
+                                <td>{{ $item->data_status ? \Carbon\Carbon::parse($item->data_status)->format('d/m/Y') : 'N/A' }}</td>
+                         
+                                   <td>
                                     @if($item->istituto_finanziario)
                                         <a href="{{ route('clientis.index', ['name' => $item->istituto_finanziario]) }}">
                                             {{ $item->istituto_finanziario }}
@@ -306,8 +296,6 @@
                                 <td>
                                 {{ $item->status_pratica }}
                                 </td>
-                                <td>{{ $item->sended_at ? \Carbon\Carbon::parse($item->sended_at)->format('d/m/Y') : 'N/A' }}</td>
-                                <td>{{ Str::limit($item->invoice_number, 6) ?: 'N/A' }}</td>
                                 <td>
                                     <div class="btn-group" role="group">
 
