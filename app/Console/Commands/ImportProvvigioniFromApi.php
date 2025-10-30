@@ -126,7 +126,7 @@ class ImportProvvigioniFromApi extends Command
                 'Istituto finanziario',
                 'Partita IVA Agente',
                 'Codice Fiscale Agente'
-            ];
+               ];
 
             // Check if all required headers are present in the response
             $missingHeaders = array_diff($requiredHeaders, $headers);
@@ -207,29 +207,28 @@ class ImportProvvigioniFromApi extends Command
             if (!empty($data)) {
                 $firstItem = $data[0];
                 $expectedHeaders = [
-                    'ID Compenso',
-                    'Data Inserimento',
-                    'Descrizione',
-                    'Tipo',
-                    'Importo',
-                    'Importo Effettivo',
-                    'Stato',
-                    'Denominazione Riferimento',
-                    'Entrata Uscita',
-                    'ID Pratica',
-                    'Agente',
-                    'Istituto finanziario'
+                'ID Compenso',
+                'Data Inserimento',
+                'Descrizione',
+                'Tipo',
+                'Importo',
+                'Importo Effettivo',
+                'Stato',
+                'Data Pagamento',
+                'N. Fattura',
+                'Data Fattura',
+                'Data Status',
+                'Status Compenso',
+                'Denominazione Riferimento',
+                'Entrata Uscita',
+                'ID Pratica',
+                'Agente',
+                'Istituto finanziario',
+                'Partita IVA Agente',
+                'Codice Fiscale Agente'
                 ];
 
                 $actualHeaders = array_keys($firstItem);
-
-                // Check if all expected headers exist in the response
-                $missingHeaders = array_diff($expectedHeaders, $actualHeaders);
-                if (!empty($missingHeaders)) {
-                    $this->error('Missing expected headers: ' . implode(', ', $missingHeaders));
-                    $this->warn('Actual headers: ' . implode(', ', $actualHeaders));
-                    return 1;
-                }
 
                 // Check if headers are in the correct order
                 $matchingHeaders = array_intersect($expectedHeaders, $actualHeaders);
@@ -256,10 +255,9 @@ class ImportProvvigioniFromApi extends Command
                     }
 
                     // Ensure we have the ID Compenso in our data
-                    $provvigioneData['id'] = $item['ID Compenso'];
+          //          $provvigioneData['id'] = $item['ID Compenso'];
 
                     $existing = Provvigione::where('id', $provvigioneData['id'])->first();
-
                     if ($existing) {
                         // Check if any of the timestamp fields are already set
                         if (empty($existing->sended_at) && empty($existing->received_at) && empty($existing->paided_at)) {
@@ -267,7 +265,7 @@ class ImportProvvigioniFromApi extends Command
                             $updated++;
                            // $this->info("Updated provvigione: {$provvigioneData['id']}");
                         } else {
-                            $this->info("Skipped update for provvigione {$provvigioneData['id']} - timestamps sended, received paide dalready set");
+                            $this->info("Skipped update for provvigione {$provvigioneData['id']} - timestamps sended, received paide dal ready set");
                             $skipped++;
                         }
                     } else {
@@ -312,7 +310,7 @@ class ImportProvvigioniFromApi extends Command
                     "UPDATE provvigioni p
 
                     SET  p.stato = 'Inserito', p.deleted_at = NULL
-                    WHERE p.stato IS  NULL and p.status_pratica = 'PERFEZIONATA'"
+                    WHERE p.stato IS  NULL and (p.status_pratica = 'PERFEZIONATA' or p.status_pratica = 'IN AMMORTAMENTO')"
                 );
                 $this->info("Updated {$updatedCount} records with stato from pratiche.");
 
@@ -379,65 +377,72 @@ class ImportProvvigioniFromApi extends Command
             if (empty($dateValue)) return null;
             
             try {
-                if (str_contains($dateValue, '/')) {
-                    $dateParts = explode('/', $dateValue);
-                    if (count($dateParts) === 3) {
-                        return Carbon::createFromFormat('d/m/Y', $dateValue);
-                    }
-                } elseif (strtotime($dateValue)) {
+                // Handle DD/MM/YYYY format
+                if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $dateValue)) {
+                    return Carbon::createFromFormat('d/m/Y', $dateValue)->startOfDay();
+                }
+                // Handle other date formats
+                if (strtotime($dateValue)) {
                     return Carbon::parse($dateValue);
                 }
             } catch (\Exception $e) {
-                $this->warn("Failed to parse date: " . $dateValue);
+                $this->warn("Failed to parse date '" . $dateValue . "': " . $e->getMessage());
             }
             return null;
         };
 
-        // Map the API field names to our database field names
+
+
+        $requiredFields = [
+                'ID Compenso',
+                'Data Inserimento',
+                'Descrizione',
+                'Tipo',
+                'Importo',
+                'Importo Effettivo',
+                'Stato',
+                'Data Pagamento',
+                'N. Fattura',
+                'Data Fattura',
+                'Data Status',
+                'Status Compenso',
+                'Denominazione Riferimento',
+                'Entrata Uscita',
+                'ID Pratica',
+                'Agente',
+                'Istituto finanziario',
+                'Partita IVA Agente',
+                'Codice Fiscale Agente'
+              ];
+
+
+        // Parse all date fields
         $dataInserimento = $parseDate($apiData['Data Inserimento'] ?? null);
         $dataPagamento = $parseDate($apiData['Data Pagamento'] ?? null);
         $dataFattura = $parseDate($apiData['Data Fattura'] ?? null);
         $dataStatus = $parseDate($apiData['Data Status'] ?? null);
-
-        $requiredFields = [
-            'ID Compenso',
-            'Data Inserimento',
-            'Descrizione',
-            'Tipo',
-            'Importo',
-            'Stato',
-            'Denominazione Riferimento',
-            'Entrata Uscita',
-            'ID Pratica',
-            'Agente',
-            'Istituto finanziario'
-        ];
-
-        foreach ($requiredFields as $field) {
-            if (!isset($apiData[$field])) {
-                throw new \Exception("Missing required field: $field");
-            }
-        }
-
+      
+        
         return [
             'id' => $apiData['ID Compenso'] ?? null,
-            'data_inserimento_compenso' => $dataInserimento,
-            'data_pagamento' => $dataPagamento,
-            'n_fattura' => $apiData['N. Fattura'] ?? null,
-            'data_fattura' => $dataFattura,
-            'data_status' => $dataStatus,
-            'piva' => $apiData['Partita IVA Agente'] ?? null,
-            'cf' => $apiData['Codice Fiscale Agente'] ?? null,
+            'data_inserimento_compenso' => $dataInserimento ? $dataInserimento->toDateTimeString() : null,
             'descrizione' => $apiData['Descrizione'] ?? null,
             'tipo' => $apiData['Tipo'] ?? 'provvigione',
             'importo' => is_numeric($apiData['Importo']) ? $apiData['Importo'] : (is_string($apiData['Importo']) ? (float) str_replace(',', '.', $apiData['Importo']) : 0),
             'importo_effettivo' => is_numeric($apiData['Importo Effettivo'] ?? null) ? $apiData['Importo Effettivo'] : (is_string($apiData['Importo Effettivo'] ?? null) ? (float) str_replace(',', '.', $apiData['Importo Effettivo']) : null),
-            'status_pratica' => $apiData['Stato'] ?? '',
+            'status_pagamento' => $apiData['Stato'] ?? '',
+            'data_pagamento' => $dataPagamento ? $dataPagamento->toDateTimeString() : null,
+            'n_fattura' => $apiData['N. Fattura'] ?? null,
+            'data_fattura' => $dataFattura ? $dataFattura->toDateTimeString() : null,
+            'data_status' => $dataStatus ? $dataStatus->toDateTimeString() : null,
+            'status_compenso' => $apiData['Status Compenso'] ?? null,
             'denominazione_riferimento' => $apiData['Denominazione Riferimento'] ?? null,
             'entrata_uscita' => $apiData['Entrata Uscita'] ?? null,
             'id_pratica' => $apiData['ID Pratica'] ?? null,
-            'segnalatore' => $apiData['Agente'] ?? null,
-            'istituto_finanziario' => $apiData['Istituto finanziario'] ?? null,
+            'segnalatore' => $apiData['Agente'] ?? null, 
+            'istituto_finanziario' => $apiData['Istituto finanziario'] ?? null,          
+            'piva' => $apiData['Partita IVA Agente'] ?? null,
+            'cf' => $apiData['Codice Fiscale Agente'] ?? null,
             'fonte' => 'api',
         ];
     }

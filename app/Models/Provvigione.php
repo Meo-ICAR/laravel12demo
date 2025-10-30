@@ -20,6 +20,9 @@ class Provvigione extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
+      
+
+
     protected $fillable = [
         'id',
         'legacy_id',
@@ -29,25 +32,30 @@ class Provvigione extends Model
         'importo',
         'importo_effettivo',
         'quota',
-        'stato', // This is the foreign key to provvigioni_statos
+        'status_pratica',
+        'data_status_pratica',
+         'status_compenso',
         'denominazione_riferimento',
         'deleted_at',
         'fornitori_id',
         'entrata_uscita',
+         'id_pratica',
         'cognome',
         'nome',
         'segnalatore',
+        'istituto_finanziario',
         'fonte',
+          'data_pagamento',
         'id_pratica',
         'tipo_pratica',
         'data_inserimento_pratica',
         'data_stipula',
-        'istituto_finanziario',
+
         'clienti_id',
         'prodotto',
         'macrostatus',
-        'status_pratica',
-        'data_status_pratica',
+   'stato', // This is the foreign key to provvigioni_statos
+  
         'montante',
         'importo_erogato',
         'sended_at',
@@ -118,7 +126,7 @@ class Provvigione extends Model
 
         foreach ($names as $name) {
             if (!$name) continue;
-            $exists = Fornitori::where('name', $name)->exists();
+            $exists = Fornitori::where('nome', $name)->exists();
             if (!$exists) {
                 Fornitori::create([
                     'id' => (string) Str::uuid(),
@@ -161,6 +169,7 @@ class Provvigione extends Model
                         'name' => $denominazione,
                         'codice' => null,
                         'piva' => null,
+                        
                         'email' => null,
                         'operatore' => null,
                         'iscollaboratore' => false,
