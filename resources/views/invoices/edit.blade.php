@@ -62,6 +62,20 @@
                             @enderror
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="is_notenasarco">Is Notenasarco</label>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="is_notenasarco" name="is_notenasarco" value="1"
+                                       {{ old('is_notenasarco', $invoice->is_notenasarco) ? 'checked' : '' }}>
+                                <label class="custom-control-label" for="is_notenasarco">Escludi da ENASARCO</label>
+                            </div>
+                            @error('isreconiled')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                
+                    </div>
                 </div>
 
                 <div class="row">

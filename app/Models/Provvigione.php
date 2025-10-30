@@ -55,7 +55,7 @@ class Provvigione extends Model
         'prodotto',
         'macrostatus',
    'stato', // This is the foreign key to provvigioni_statos
-  
+  'status_pagamento',
         'montante',
         'importo_erogato',
         'sended_at',
@@ -169,7 +169,7 @@ class Provvigione extends Model
                         'name' => $denominazione,
                         'codice' => null,
                         'piva' => null,
-                        
+
                         'email' => null,
                         'operatore' => null,
                         'iscollaboratore' => false,
