@@ -17,6 +17,22 @@ class ProformaController extends Controller
     {
         $proformas = Proforma::with(['company', 'fornitore', 'provvigioni']);
 
+        // Apply sorting if sort and order parameters are provided
+        if ($request->has('sort') && $request->has('order')) {
+            $sortField = $request->get('sort');
+            $sortOrder = $request->get('order');
+            
+            // Validate sort field to prevent SQL injection
+            $allowedSortFields = ['id', 'stato', 'emailsubject', 'sended_at', 'paid_at', 'created_at', 'updated_at', 'data_status'];
+            if (in_array($sortField, $allowedSortFields)) {
+                $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
+                $proformas->orderBy($sortField, $sortOrder);
+            }
+        } else {
+            // Default sorting
+            $proformas->orderBy('created_at', 'desc');
+        }
+
         // Filtri testo
         if ($request->filled('fornitore')) {
             $proformas->whereHas('fornitore', function($q) use ($request) {
@@ -34,6 +50,14 @@ class ProformaController extends Controller
         }
         if ($request->filled('paid_at')) {
             $proformas->whereDate('paid_at', $request->paid_at);
+        }
+
+        // Filter by data_status range
+        if ($request->filled('data_status_from')) {
+            $proformas->whereDate('data_status', '>=', $request->data_status_from);
+        }
+        if ($request->filled('data_status_to')) {
+            $proformas->whereDate('data_status', '<=', $request->data_status_to);
         }
 
         // Range compenso

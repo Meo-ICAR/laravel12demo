@@ -211,9 +211,9 @@
                                 </a>
                             </th>
                             <th>
-                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'updated_at', 'order' => request('sort') == 'updated_at' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
+                                <a href="{{ route('provvigioni.index', array_merge(request()->query(), ['sort' => 'data_status', 'order' => request('sort') == 'data_status' && request('order') == 'asc' ? 'desc' : 'asc'])) }}" class="text-dark text-decoration-none sortable-header">
                                     Modifica
-                                    @if(request('sort') == 'updated_at')
+                                    @if(request('sort') == 'data_status')
                                         <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }} ml-1"></i>
                                     @else
                                         <i class="fas fa-sort ml-1 text-muted"></i>
@@ -293,7 +293,7 @@
                                 </td>
                                 <td>{{ $item->cognome }}</td>
                                 <td>{{ $item->nome }}</td>
-                                <td>{{ Str::limit($item->tipo, 20) }}</td>
+                                   <td>{{ $item->data_status }}</td>
                                 <td>
                                     @if($item->istituto_finanziario)
                                         <a href="{{ route('clientis.index', ['name' => $item->istituto_finanziario]) }}">

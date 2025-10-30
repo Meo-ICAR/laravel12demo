@@ -54,6 +54,14 @@
                                 <input type="text" name="paid_at" id="paid_at" class="form-control" value="{{ request('paid_at') }}" placeholder="YYYY-MM-DD">
                             </div>
                             <div class="form-group col-md-2">
+                                <label for="data_status_from">Data Status Da</label>
+                                <input type="date" name="data_status_from" id="data_status_from" class="form-control" value="{{ request('data_status_from') }}">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="data_status_to">Data Status A</label>
+                                <input type="date" name="data_status_to" id="data_status_to" class="form-control" value="{{ request('data_status_to') }}">
+                            </div>
+                            <div class="form-group col-md-2">
                                 <label for="compenso_min">Compenso Min</label>
                                 <input type="number" step="0.01" name="compenso_min" class="form-control" value="{{ request('compenso_min') }}">
                             </div>
