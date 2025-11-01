@@ -449,6 +449,7 @@ where v.minimo < v.maximo");
             'istituto_finanziario' => $apiData['Istituto finanziario'] ?? null,
             'piva' => $apiData['Partita IVA Agente'] ?? null,
             'cf' => $apiData['Codice Fiscale Agente'] ?? null,
+               'annullato' => $apiData['ANNULLATA'] ?? null,
             'fonte' => 'api',
         ];
     }
