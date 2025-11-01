@@ -45,7 +45,7 @@ Route::middleware('guest')->group(function () {
 // All other routes require authentication
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', function () {
-        return redirect()->route('dashboard');
+        return redirect()->route('provvigioni/proforma-summary');
     });
 
     // Profile routes
