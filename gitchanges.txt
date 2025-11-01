@@ -1,0 +1,20 @@
+ app/Console/Commands/ImportProvvigioniFromApi.php |  28 ++++++++++++++++++++++++----
+ app/Http/Controllers/ProformaController.php       |   1 +
+ config/adminlte.php                               |  32 +++++++++++++++++++++++++++++---
+ public/favicon.2ico                               |   0
+ public/favicon.ico                                | Bin 0 -> 15086 bytes
+ public/favicon.jpg                                | Bin 0 -> 9232 bytes
+ public/{favicon.png => favicon2.png}              | Bin
+ public/images/favicon.jpg                         | Bin 0 -> 9232 bytes
+ resources/views/calls/index.blade.php             |  11 +++++++++++
+ resources/views/fornitoris/index.blade.php        |   2 +-
+ resources/views/layouts/admin.blade.php           |   2 +-
+ resources/views/layouts/app.blade.php             |   4 ++--
+ resources/views/layouts/guest.blade.php           |   2 +-
+ resources/views/layouts/menu.blade.php            |   2 +-
+ resources/views/proformas/index.blade.php         |  78 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 15 files changed, 149 insertions(+), 13 deletions(-)
+ create mode 100644 public/favicon.2ico
+ create mode 100644 public/favicon.jpg
+ rename public/{favicon.png => favicon2.png} (100%)
+ create mode 100644 public/images/favicon.jpg
