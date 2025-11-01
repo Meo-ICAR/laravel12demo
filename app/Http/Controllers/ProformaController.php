@@ -685,7 +685,7 @@ class ProformaController extends Controller
                 </div>
 
                 <div class='section'>
-                    <h3>Provvigioni</h3>
+                    <h3>Lista Provvigionale</h3>
                     <div style='overflow-x: auto;'>
                         <table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>
                             <thead>
