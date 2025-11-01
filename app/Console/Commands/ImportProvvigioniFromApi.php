@@ -125,7 +125,8 @@ class ImportProvvigioniFromApi extends Command
                 'Agente',
                 'Istituto finanziario',
                 'Partita IVA Agente',
-                'Codice Fiscale Agente'
+                'Codice Fiscale Agente',
+                'ANNULLATA'
                ];
 
             // Check if all required headers are present in the response
@@ -144,7 +145,7 @@ class ImportProvvigioniFromApi extends Command
                 $this->warn('Warning: Headers are not in the expected order.');
                 $this->warn('Expected order: ' . implode('\t', $requiredHeaders));
                 $this->warn('Actual order:   ' . implode('\t', $headers));
-                
+
                 // Reorder the headers to match the expected order
                 $reorderedHeaders = [];
                 $headerMap = array_flip($headers);
@@ -225,7 +226,8 @@ class ImportProvvigioniFromApi extends Command
                 'Agente',
                 'Istituto finanziario',
                 'Partita IVA Agente',
-                'Codice Fiscale Agente'
+                'Codice Fiscale Agente',
+                   'ANNULLATA'
                 ];
 
                 $actualHeaders = array_keys($firstItem);
@@ -331,6 +333,9 @@ class ImportProvvigioniFromApi extends Command
             $this->info("Updated {$insertedClientiCount} records with clientis_id from clientis.");
 
 
+ $insertedClientiCount = \DB::update("UPDATE provvigioni p inner join vwprovvdoppie v on v.minimo = p.id set deleted_at = data_status, stato = 'Annullato', sended_at = null, paided_at= null, received_at = null
+where v.minimo < v.maximo");
+ $this->info("Deleted {$insertedClientiCount} records with duplicated provvigioni.");
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;
         } catch (\Illuminate\Http\Client\RequestException $e) {
@@ -375,7 +380,7 @@ class ImportProvvigioniFromApi extends Command
         // Helper function to parse dates from API
         $parseDate = function($dateValue) {
             if (empty($dateValue)) return null;
-            
+
             try {
                 // Handle DD/MM/YYYY format
                 if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $dateValue)) {
@@ -412,7 +417,8 @@ class ImportProvvigioniFromApi extends Command
                 'Agente',
                 'Istituto finanziario',
                 'Partita IVA Agente',
-                'Codice Fiscale Agente'
+                'Codice Fiscale Agente',
+                'ANNULLATA'
               ];
 
 
@@ -421,8 +427,8 @@ class ImportProvvigioniFromApi extends Command
         $dataPagamento = $parseDate($apiData['Data Pagamento'] ?? null);
         $dataFattura = $parseDate($apiData['Data Fattura'] ?? null);
         $dataStatus = $parseDate($apiData['Data Status'] ?? null);
-      
-        
+
+
         return [
             'id' => $apiData['ID Compenso'] ?? null,
             'data_inserimento_compenso' => $dataInserimento ? $dataInserimento->toDateTimeString() : null,
@@ -439,8 +445,8 @@ class ImportProvvigioniFromApi extends Command
             'denominazione_riferimento' => $apiData['Denominazione Riferimento'] ?? null,
             'entrata_uscita' => $apiData['Entrata Uscita'] ?? null,
             'id_pratica' => $apiData['ID Pratica'] ?? null,
-            'segnalatore' => $apiData['Agente'] ?? null, 
-            'istituto_finanziario' => $apiData['Istituto finanziario'] ?? null,          
+            'segnalatore' => $apiData['Agente'] ?? null,
+            'istituto_finanziario' => $apiData['Istituto finanziario'] ?? null,
             'piva' => $apiData['Partita IVA Agente'] ?? null,
             'cf' => $apiData['Codice Fiscale Agente'] ?? null,
             'fonte' => 'api',
