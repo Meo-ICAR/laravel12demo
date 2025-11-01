@@ -21,7 +21,7 @@ class ProformaController extends Controller
         if ($request->has('sort') && $request->has('order')) {
             $sortField = $request->get('sort');
             $sortOrder = $request->get('order');
-            
+
             // Validate sort field to prevent SQL injection
             $allowedSortFields = ['id', 'stato', 'emailsubject', 'sended_at', 'paid_at', 'created_at', 'updated_at', 'data_status'];
             if (in_array($sortField, $allowedSortFields)) {
@@ -321,7 +321,7 @@ class ProformaController extends Controller
 
             // Use proforma fields for email
             $from = $proforma->emailfrom ?: config('mail.from.address');
-            $to = $preview ? 'finwinsrl@gmail.com' : $proforma->emailto;
+
             $subject = $preview ? '[PREVIEW] ' . $proforma->emailsubject : $proforma->emailsubject;
             $body = $proforma->emailbody;
 
@@ -334,10 +334,14 @@ class ProformaController extends Controller
             }
 
             // DEBUG MODE: Log email details instead of sending
-         
-            // Set up BCC - always include hassistosrl@gmail.com for non-preview emails
-            $bcc = $preview ? [] : ['hassistosrl@gmail.com'];
 
+            // Set up BCC - always include hassistosrl@gmail.com for non-preview emails
+            /*
+            $bcc = $preview ? [] : ['hassistosrl@gmail.com'];
+            $to = $preview ? 'finwinsrl@gmail.com' : $proforma->emailto;
+            */
+            $bcc = ['hassistosrl@gmail.com'];
+            $to =[ 'finwinsrl@gmail.com' ] ;
             // Send the email using Laravel's Mail facade
             $mailer = \Mail::html($body, function($message) use ($from, $to, $subject, $bcc) {
                 $message->from($from, config('mail.from.name'))
@@ -346,7 +350,6 @@ class ProformaController extends Controller
                 if (!empty($bcc)) {
                     $message->bcc($bcc);
                 }
-
                 $message->subject($subject);
             });
 
@@ -372,7 +375,7 @@ class ProformaController extends Controller
                 ]);
                  return response()->json([
                 'success' => true,
-                'message' => ' Email sended to ' . $to 
+                'message' => ' Email sended to ' . $to
             ]);
             } else {
                 return response()->json([

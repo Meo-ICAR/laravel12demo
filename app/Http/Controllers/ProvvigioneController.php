@@ -131,11 +131,11 @@ class ProvvigioneController extends Controller
         $query->orderBy($sortField, $sortOrder);
 
         $provvigioni = $query->paginate(15);
-        
+
         // Get status options from the provvigioni_statos table
         $statoOptions = \App\Models\ProvvigioniStato::pluck('stato')->toArray();
         sort($statoOptions);
-        
+
         // Get pratica status options from the pratiches_statos table
         $praticaStatoOptions = \App\Models\PraticheStato::orderBy('stato_pratica')->pluck('stato_pratica')->toArray();
 
@@ -212,7 +212,7 @@ class ProvvigioneController extends Controller
         try {
             // Get valid statuses from the database
             $validStatuses = \App\Models\ProvvigioniStato::pluck('stato')->toArray();
-            
+
             $request->validate([
                 'stato' => ['required', 'string', 'in:' . implode(',', $validStatuses)],
                 'invoice_number' => 'nullable|string|max:255',
@@ -281,7 +281,7 @@ class ProvvigioneController extends Controller
         try {
             // Get valid statuses from the database
             $validStatuses = \App\Models\ProvvigioniStato::pluck('stato')->toArray();
-            
+
             $request->validate([
                 'stato' => ['required', 'string', 'in:' . implode(',', $validStatuses)],
             ]);
@@ -482,7 +482,7 @@ class ProvvigioneController extends Controller
 
         // Update emailsubject with the actual proforma ID
         $proforma->update([
-            'emailsubject' => 'Proforma # ' . $proforma->id
+            'emailsubject' => 'Proforma # ' . $proforma->id. ' - '.$fornitore->nome
         ]);
 
         $provvigioni = \App\Models\Provvigione::where('denominazione_riferimento', $denominazione)->where('stato', 'Inserito')->get();
