@@ -28,6 +28,16 @@ class Proforma extends Model
         'emailfrom',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'sended_at' => 'datetime',
+        'paid_at' => 'datetime',
+    ];
+
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');

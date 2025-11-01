@@ -340,8 +340,8 @@ class ProformaController extends Controller
             $bcc = $preview ? [] : ['hassistosrl@gmail.com'];
             $to = $preview ? 'finwinsrl@gmail.com' : $proforma->emailto;
             */
-            $bcc = ['hassistosrl@gmail.com'];
-            $to =[ 'finwinsrl@gmail.com' ] ;
+            $bcc = 'hassistosrl@gmail.com';
+            $to = 'finwinsrl@gmail.com'  ;
             // Send the email using Laravel's Mail facade
             $mailer = \Mail::html($body, function($message) use ($from, $to, $subject, $bcc) {
                 $message->from($from, config('mail.from.name'))
