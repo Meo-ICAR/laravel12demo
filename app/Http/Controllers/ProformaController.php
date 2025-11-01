@@ -356,7 +356,7 @@ class ProformaController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send test email: ' . $e->getMessage(),
+                'message' => 'Failed to send email: ' . $e->getMessage(),
                 'details' => [
                     'error' => $e->getMessage(),
                     'from' => config('mail.from'),
@@ -629,7 +629,15 @@ class ProformaController extends Controller
                     <p><strong>Data:</strong> " . now()->format('d/m/Y H:i') . "</p>
                      <p><strong>Agente:</strong> " . $fornitoreName . "</p>
                 </div>
-                <div class='section'>
+                ";
+
+        if ($proforma->compenso_descrizione) {
+            $html .= "
+                    <div class='note'>
+                        <p>" . nl2br(htmlspecialchars($proforma->compenso_descrizione)) . "
+                        <strong> ".$proforma->emailsubject."   </strong> </p>  </div>";
+        }
+            $html .= "      <div class='section'>
                     <h3>Prospetto Compensi</h3>
                     <table>
                         <tr>
@@ -672,12 +680,6 @@ class ProformaController extends Controller
                         <strong> Totale:</strong> € " . number_format($totalImporto, 2, ',', '.') . "</p>
                     </div>";
 
-        if ($proforma->compenso_descrizione) {
-            $html .= "
-                    <div class='note'>
-                        <p>" . nl2br(htmlspecialchars($proforma->compenso_descrizione)) . "</p>
-                    </div>";
-        }
 
         $html .= "
                 </div>
