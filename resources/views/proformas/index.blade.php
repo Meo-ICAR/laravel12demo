@@ -451,6 +451,28 @@ function updateBulkEmailButton() {
     updateButtonText(bulkEmailPreviewBtn, 'Email Preview', 'fas fa-envelope-open');
 }
 
+// Function to show preview of bulk emails
+function sendBulkPreviewEmails() {
+    const selectedCheckboxes = document.querySelectorAll('.select-proforma:checked');
+
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one proforma to preview.');
+        return;
+    }
+
+    // Show the first selected proforma's preview
+    const firstSelectedId = selectedCheckboxes[0].dataset.id;
+    const modalId = 'emailSimModal-' + firstSelectedId;
+    const modal = new bootstrap.Modal(document.getElementById(modalId));
+    
+    if (modal) {
+        modal.show();
+    } else {
+        console.error('Preview modal not found');
+        alert('Could not open preview. Please try again.');
+    }
+}
+
 // Function to send bulk emails
 function sendBulkEmails() {
     const selectedCheckboxes = document.querySelectorAll('.select-proforma:checked');
