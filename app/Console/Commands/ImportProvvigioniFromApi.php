@@ -317,7 +317,7 @@ class ImportProvvigioniFromApi extends Command
                 $this->info("Updated {$updatedCount} records with stato from pratiche.");
 
             $insertedFornitoriCount = \DB::insert(
-                    "insert into fornitoris (id,name,nome) select uuid(),denominazione_riferimento,denominazione_riferimento from vwfornitorinew"
+                    "insert into fornitoris (id,name,nome, piva, cf ) select uuid(),denominazione_riferimento,denominazione_riferimento, piva, cf from vwfornitorinew"
             );
             $this->info("Inserted {$insertedFornitoriCount} records into produttori.");
 
@@ -333,7 +333,7 @@ class ImportProvvigioniFromApi extends Command
             $this->info("Updated {$insertedClientiCount} records with clientis_id from clientis.");
 
 
- $insertedClientiCount = \DB::update("UPDATE provvigioni p inner join vwprovvdoppie v on v.minimo = p.id set deleted_at = data_status, stato = 'Annullato', sended_at = null, paided_at= null, received_at = null
+ $insertedClientiCount = \DB::update("UPDATE provvigioni p inner join vwprovvdoppie v on v.minimo = p.id set  stato = 'Annullato', sended_at = null, paided_at= null, received_at = null, annullato = true
 where v.minimo < v.maximo");
  $this->info("Deleted {$insertedClientiCount} records with duplicated provvigioni.");
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");

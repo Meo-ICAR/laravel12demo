@@ -224,7 +224,7 @@
                                             $lastProforma = $fornitore->proformas->first();
                                         @endphp
                                         <div class="small">
-                                            {{ $lastProforma->sended_at ? $lastProforma->sended_at->format('d/m/Y') : '-' }}
+                                            {{ $lastProforma->sended_at ? \Carbon\Carbon::parse($lastProforma->sended_at)->format('d/m/Y') : '-' }}
                                         </div>
                                     @else
                                         <span class="text-muted">-</span>
