@@ -258,7 +258,7 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'dashboard',
+    'dashboard_url' => 'provvigioni/proforma-summary',
     'logout_url' => 'logout',
     'login_url' => 'login',
     'register_url' => 'register',
@@ -442,7 +442,7 @@ return [
 
                 [
                     'text' => 'Provvigioni',
-                    'url' => 'provvigioni',
+                    'url' => 'provvigioni?status_pratica=PERFEZIONATA',
                     'icon' => 'fas fa-money-bill-wave',
                 ],
                 [
