@@ -342,6 +342,7 @@ class ProformaController extends Controller
             */
             $bcc = 'hassistosrl@gmail.com';
             $to = 'finwinsrl@gmail.com'  ;
+            try {
             // Send the email using Laravel's Mail facade
             $mailer = \Mail::html($body, function($message) use ($from, $to, $subject, $bcc) {
                 $message->from($from, config('mail.from.name'))
@@ -352,6 +353,17 @@ class ProformaController extends Controller
                 }
                 $message->subject($subject);
             });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send test email: ' . $e->getMessage(),
+                'details' => [
+                    'error' => $e->getMessage(),
+                    'from' => config('mail.from'),
+                    'mailer' => config('mail.default')
+                ]
+            ], 500);
+        }
 
             // Log the email send attempt
             \Log::info('Email ' . ($preview ? 'preview' : 'sent'), [
