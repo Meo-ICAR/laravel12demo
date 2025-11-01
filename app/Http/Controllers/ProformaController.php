@@ -645,7 +645,7 @@ class ProformaController extends Controller
                             <th class='amount'>Importo</th>
                         </tr>
                         <tr>
-                            <td>Compenso provvigionale</td>
+                            <td>N. {$provvigioniCount} compensi provvigionali</td>
                             <td class='amount positive'>€ " . number_format($totalImporto, 2, ',', '.') . "</td>
                         </tr>";
 
@@ -671,18 +671,11 @@ class ProformaController extends Controller
                             <td class='amount " . ($totale >= 0 ? 'positive' : 'negative') . "'><strong>€ " . number_format($totale, 2, ',', '.') . "</strong></td>
                         </tr>
                     </table>
-                </div>
-
-                <div class='section'>
-                    <h3>Distinta Compensi</h3>
-                    <div class='info-box'>
-                        <p><strong>N.:</strong> {$provvigioniCount}
-                        <strong> Totale:</strong> € " . number_format($totalImporto, 2, ',', '.') . "</p>
-                    </div>";
+                </div> ";
 
 
         $html .= "
-                </div>
+
 
                 <div class='section'>
                     <h3>Lista Provvigionale</h3>
