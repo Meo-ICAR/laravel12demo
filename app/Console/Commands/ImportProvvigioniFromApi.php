@@ -296,7 +296,7 @@ class ImportProvvigioniFromApi extends Command
                 $this->info("Updated {$updatedCount} records with status from pratiche.");
             }
               // Update customer names from pratiche if we have imported any records
-              if ($imported > 0) {
+              if ($imported + $updatedCount> 0) {
                 $this->info("Updating customer names from pratiche...");
 
                 $updatedCount = \DB::update(
