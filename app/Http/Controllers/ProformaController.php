@@ -344,15 +344,6 @@ class ProformaController extends Controller
 $cc = $preview  ? ['rino.muscetti@races.it'] : array_filter(explode(',', $company->email_cc ?? ''));
 $bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company->email_bcc ?? 'piergiuseppe.meo@gmail.com'));
 
-            $cc =  'rino.muscetti@races.it';
-            if ($preview) {
-               $bcc = 'hassistosrl@gmail.com';
-               $to = 'finwinsrl@gmail.com'  ;
-            } else {
-              $cc =  $proforma->email_cc;
-              $bcc = $proforma->email_bcc;
-              $to =  $proforma->emailto;
-            }
             try {
             // Send the email using Laravel's Mail facade
             $mailer = \Mail::html($body, function($message) use ($from, $to, $subject, $bcc) {
@@ -377,15 +368,6 @@ $bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company
                 ]
             ], 500);
         }
-
-            // Log the email send attempt
-            \Log::info('Email ' . ($preview ? 'preview' : 'sent'), [
-                'proforma_id' => $proforma->id,
-                'to' => $to,
-                'bcc' => $bcc,
-                'preview' => $preview,
-                'subject' => $subject
-            ]);
 
             // Update sended_at timestamp and set status to 'inviato' (even in debug mode to simulate success)
             $proforma->update([
