@@ -337,17 +337,30 @@ class ProformaController extends Controller
 
             // Set up BCC - always include hassistosrl@gmail.com for non-preview emails
             /*
-            $bcc = $preview ? [] : ['hassistosrl@gmail.com'];
-            $to = $preview ? 'finwinsrl@gmail.com' : $proforma->emailto;
+
             */
-            $bcc = 'hassistosrl@gmail.com';
-            $to = 'finwinsrl@gmail.com'  ;
+            $company = $proforma->company; // Assuming you have this relationship
+            $to = $preview  ? ['hassistosrl@gmail.com'] : $proforma->emailto;
+$cc = $preview  ? ['rino.muscetti@races.it'] : array_filter(explode(',', $company->email_cc ?? ''));
+$bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company->email_bcc ?? 'piergiuseppe.meo@gmail.com'));
+
+            $cc =  'rino.muscetti@races.it';
+            if ($preview) {
+               $bcc = 'hassistosrl@gmail.com';
+               $to = 'finwinsrl@gmail.com'  ;
+            } else {
+              $cc =  $proforma->email_cc;
+              $bcc = $proforma->email_bcc;
+              $to =  $proforma->emailto;
+            }
             try {
             // Send the email using Laravel's Mail facade
             $mailer = \Mail::html($body, function($message) use ($from, $to, $subject, $bcc) {
                 $message->from($from, config('mail.from.name'))
                         ->to($to);
-
+                 if (!empty($cc)) {
+                    $message->cc($cc);
+                }
                 if (!empty($bcc)) {
                     $message->bcc($bcc);
                 }
@@ -482,14 +495,7 @@ class ProformaController extends Controller
                 try {
                     $this->sendProformaEmail($request, $proforma);
 
-
-
-                    $results[] = [
-                        'proforma_id' => $proformaId,
-                        'success' => true,
-                        'message' => 'DEBUG MODE: Email simulation successful to ' . $proforma->emailto . ' (not actually sent). Status updated to Proforma.'
-                    ];
-                    $successCount++;
+                   $successCount++;
 
                 } catch (\Exception $e) {
                     $results[] = [
@@ -503,7 +509,7 @@ class ProformaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Bulk email operation completed. Success: {$successCount}, Errors: {$errorCount}",
+                'message' => "Email operation completed. Success: {$successCount}, Errors: {$errorCount}",
                 'results' => $results,
                 'summary' => [
                     'total' => count($proformaIds),
