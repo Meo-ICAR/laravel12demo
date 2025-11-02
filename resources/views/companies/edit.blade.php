@@ -190,10 +190,29 @@
                                                             <span class="input-group-text"><i class="fas fa-link"></i></span>
                                                         </div>
                                                         <input type="url" name="crm" id="crm" class="form-control @error('crm') is-invalid @enderror" 
-                                                               value="{{ old('crm', $company->crm) }}" placeholder="https://">
+                                                           value="{{ old('crm', $company->crm) }}" placeholder="https://">
+                                                    <div class="input-group-append">
+                                                        <button type="button" class="btn btn-outline-secondary update-timestamp" data-target="crm_last_activation">
+                                                            <i class="fas fa-sync-alt"></i> Update Now
+                                                        </button>
                                                     </div>
-                                                    <small class="form-text text-muted">URL or identifier for CRM system</small>
-                                                    @error('crm')
+                                                </div>
+                                                <small class="form-text text-muted">URL or identifier for CRM system</small>
+                                                @error('crm')
+                                                    <span class="error invalid-feedback">{{ $message }}</span>
+                                                @enderror
+                                                <div class="form-group mt-2">
+                                                    <label for="crm_last_activation">Last CRM Activation</label>
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text"><i class="far fa-clock"></i></span>
+                                                        </div>
+                                                        <input type="datetime-local" name="crm_last_activation" id="crm_last_activation" 
+                                                               class="form-control @error('crm_last_activation') is-invalid @enderror"
+                                                               value="{{ old('crm_last_activation', $company->crm_last_activation ? $company->crm_last_activation->format('Y-m-d\TH:i') : '') }}">
+                                                    </div>
+                                                    <small class="form-text text-muted">Last time the CRM was activated/synced</small>
+                                                    @error('crm_last_activation')
                                                         <span class="error invalid-feedback">{{ $message }}</span>
                                                     @enderror
                                                 </div>
@@ -206,10 +225,29 @@
                                                             <span class="input-group-text"><i class="fas fa-phone"></i></span>
                                                         </div>
                                                         <input type="text" name="callcenter" id="callcenter" class="form-control @error('callcenter') is-invalid @enderror" 
-                                                               value="{{ old('callcenter', $company->callcenter) }}" placeholder="URL or identifier">
+                                                           value="{{ old('callcenter', $company->callcenter) }}" placeholder="URL or identifier">
+                                                    <div class="input-group-append">
+                                                        <button type="button" class="btn btn-outline-secondary update-timestamp" data-target="call_last_activation">
+                                                            <i class="fas fa-sync-alt"></i> Update Now
+                                                        </button>
                                                     </div>
-                                                    <small class="form-text text-muted">URL or identifier for Call Center system</small>
-                                                    @error('callcenter')
+                                                </div>
+                                                <small class="form-text text-muted">URL or identifier for Call Center system</small>
+                                                @error('callcenter')
+                                                    <span class="error invalid-feedback">{{ $message }}</span>
+                                                @enderror
+                                                <div class="form-group mt-2">
+                                                    <label for="call_last_activation">Last Call Center Activation</label>
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text"><i class="far fa-clock"></i></span>
+                                                        </div>
+                                                        <input type="datetime-local" name="call_last_activation" id="call_last_activation" 
+                                                               class="form-control @error('call_last_activation') is-invalid @enderror"
+                                                               value="{{ old('call_last_activation', $company->call_last_activation ? $company->call_last_activation->format('Y-m-d\TH:i') : '') }}">
+                                                    </div>
+                                                    <small class="form-text text-muted">Last time the Call Center was activated/synced</small>
+                                                    @error('call_last_activation')
                                                         <span class="error invalid-feedback">{{ $message }}</span>
                                                     @enderror
                                                 </div>
@@ -250,6 +288,32 @@
         </div>
     </div>
 @stop
+
+@push('js')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle update timestamp buttons
+        document.querySelectorAll('.update-timestamp').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetField = this.getAttribute('data-target');
+                const now = new Date();
+                // Format as YYYY-MM-DDThh:mm (local time)
+                const formattedDate = now.toISOString().slice(0, 16);
+                
+                // Update the corresponding datetime-local input
+                document.getElementById(targetField).value = formattedDate;
+                
+                // Show feedback
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Updated!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+    });
+</script>
+@endpush
 
 @push('css')
 <style>

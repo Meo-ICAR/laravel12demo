@@ -20,7 +20,9 @@ class Company extends Model
         'name',
         'piva',
         'crm',
+        'crm_last_activation',
         'callcenter',
+        'call_last_activation',
         'email',
         'email_cc',
         'email_bcc',
@@ -40,6 +42,8 @@ class Company extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'crm_last_activation' => 'datetime',
+        'call_last_activation' => 'datetime',
         'aibackground' => 'array',
     ];
 
