@@ -33,8 +33,9 @@ Route::middleware('guest')->group(function () {
     Route::get('login/microsoft', [\App\Http\Controllers\Auth\AzureAuthController::class, 'redirect'])->name('microsoft.login');
     Route::get('login/microsoft/callback', [\App\Http\Controllers\Auth\AzureAuthController::class, 'callback']);
 
+    // Registration is disabled
     Route::get('register', function () {
-        return view('auth.register');
+        return redirect()->route('login')->with('status', 'Registration is currently disabled.');
     })->name('register');
 
     Route::get('forgot-password', function () {
