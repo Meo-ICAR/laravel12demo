@@ -321,38 +321,39 @@ return [
             'text' => 'FATTURAZIONE',
             'topnav' => true,
             'submenu' => [
-
-
-                   [
-                    'text' => 'Provvigioni',
-                     'url' => 'provvigioni?stato=Inserito',
-                    'icon' => 'fas fa-money-bill-wave',
-                ],
-                [
+    [
                     'text' => 'Summary',
                     'url' => 'provvigioni/proforma-summary',
                     'icon' => 'fas fa-table',
                 ],
-                [
-                    'text' => 'Proforma',
-                    'url' => 'proformas',
-                    'icon' => 'fas fa-file-alt',
-                ],
-                [
+ [
                     'text' => 'Invoiceins Import',
                     'url' => 'invoiceins/import',
                     'icon' => 'fas fa-file-import',
+                ],
+                         [
+                    'text' => 'Riconciliazione',
+                    'url' => 'invoices/reconciliation',
+                    'icon' => 'fas fa-balance-scale',
                 ],
                 [
                     'text' => 'Invoices',
                     'url' => 'invoices',
                     'icon' => 'fas fa-file-invoice',
                 ],
-                [
-                    'text' => 'Riconciliazione',
-                    'url' => 'invoices/reconciliation',
-                    'icon' => 'fas fa-balance-scale',
+                   [
+                    'text' => 'Provvigioni',
+                     'url' => 'provvigioni?stato=Inserito',
+                    'icon' => 'fas fa-money-bill-wave',
                 ],
+
+                [
+                    'text' => 'Proforma',
+                    'url' => 'proformas',
+                    'icon' => 'fas fa-file-alt',
+                ],
+
+
             ],
         ],
         [
@@ -439,31 +440,36 @@ return [
             'icon' => 'fas fa-file-invoice-dollar',
             'submenu' => [
 
-
-                [
-                    'text' => 'Provvigioni',
-                    'url' => 'provvigioni?stato=Inserito',
-                    'icon' => 'fas fa-money-bill-wave',
-                ],
-                [
+  [
                     'text' => 'Summary',
                     'url' => 'provvigioni/proforma-summary',
                     'icon' => 'fas fa-table',
                 ],
-                [
-                    'text' => 'Proforma',
-                    'url' => 'proformas',
-                    'icon' => 'fas fa-file-alt',
+ [
+                    'text' => 'Invoiceins Import',
+                    'url' => 'invoiceins/import',
+                    'icon' => 'fas fa-file-import',
+                ],
+                         [
+                    'text' => 'Riconciliazione',
+                    'url' => 'invoices/reconciliation',
+                    'icon' => 'fas fa-balance-scale',
                 ],
                 [
                     'text' => 'Invoices',
                     'url' => 'invoices',
                     'icon' => 'fas fa-file-invoice',
                 ],
+                   [
+                    'text' => 'Provvigioni',
+                     'url' => 'provvigioni?stato=Inserito',
+                    'icon' => 'fas fa-money-bill-wave',
+                ],
+
                 [
-                    'text' => 'Riconciliazione',
-                    'url' => 'invoices/reconciliation',
-                    'icon' => 'fas fa-balance-scale',
+                    'text' => 'Proforma',
+                    'url' => 'proformas',
+                    'icon' => 'fas fa-file-alt',
                 ],
             ],
         ],
