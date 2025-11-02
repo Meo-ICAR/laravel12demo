@@ -44,9 +44,7 @@ Route::middleware('guest')->group(function () {
 
 // All other routes require authentication
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('provvigioni/proforma-summary');
-    });
+
 
     // Profile routes
     Route::prefix('profile')->group(function () {
@@ -254,6 +252,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // FornitoriInvoice routes
     Route::get('fornitoris-invoices', [App\Http\Controllers\FornitoriInvoiceController::class, 'index'])->name('fornitoris.invoices.index');
     Route::get('fornitoris-invoices/{id}', [App\Http\Controllers\FornitoriInvoiceController::class, 'show'])->name('fornitoris.invoices.show');
+
+        Route::get('/', function () {
+        return redirect()->route('provvigioni/proforma-summary');
+    });
 });
 
 require __DIR__.'/auth.php';
