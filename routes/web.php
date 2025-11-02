@@ -254,7 +254,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('fornitoris-invoices/{id}', [App\Http\Controllers\FornitoriInvoiceController::class, 'show'])->name('fornitoris.invoices.show');
 
         Route::get('/', function () {
-        return redirect()->route('provvigioni/proforma-summary');
+        return redirect()->route('provvigioni.proformaSummary');
     });
 });
 
