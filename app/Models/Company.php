@@ -11,27 +11,64 @@ class Company extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'name',
         'piva',
         'crm',
         'callcenter',
-        'updated_by',
-        'deleted_by',
         'email',
+        'email_cc',
+        'email_bcc',
         'emailsubject',
         'compenso_descrizione',
+        'aibackground',
+        'updated_by',
+        'deleted_by',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'aibackground' => 'array',
     ];
 
-    public $incrementing = false;
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'deleted_at',
+    ];
+
+    /**
+     * The "type" of the primary key ID.
+     *
+     * @var string
+     */
     protected $keyType = 'string';
 
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * The "booting" method of the model.
+     */
     protected static function boot()
     {
         parent::boot();
@@ -43,6 +80,9 @@ class Company extends Model
         });
     }
 
+    /**
+     * Get the users for the company.
+     */
     public function users()
     {
         return $this->hasMany(User::class);
