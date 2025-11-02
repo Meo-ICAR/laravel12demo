@@ -114,7 +114,7 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'images/primanota-logo.png',
+            'path' => 'images/primanota_logo.jpg',
             'alt' => 'Proforma Preloader Image',
             'effect' => 'animation__shake',
             'width' => 60,
