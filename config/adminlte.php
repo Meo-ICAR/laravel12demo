@@ -87,7 +87,7 @@ return [
     'auth_logo' => [
         'enabled' => true,
         'img' => [
-            'path' => 'images/primanota-logo.png',
+            'path' => 'favicon.jpg',
             'alt' => 'Proforma Logo',
             'class' => '',
             'width' => 50,
