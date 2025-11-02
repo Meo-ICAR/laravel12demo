@@ -77,20 +77,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Roles and Permissions Routes
+    // Allow all authenticated users to view roles
+    Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+    
+    // Protect other role management actions
     Route::middleware(['permission:role_management'])->group(function () {
-        Route::resource('roles', RoleController::class);
+        Route::resource('roles', RoleController::class)->except(['index']);
     });
 
+    // Allow all authenticated users to view permissions
+    Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
+    
+    // Protect other permission management actions
     Route::middleware(['permission:permission_management'])->group(function () {
-        Route::resource('permissions', PermissionController::class);
+        Route::resource('permissions', PermissionController::class)->except(['index']);
     });
 
-    // User Management Routes
+    // Users Routes
+    // Allow all authenticated users to view users
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    
+    // Protect other user management actions
     Route::middleware(['permission:user_management'])->group(function () {
         Route::get('users/import', [UserController::class, 'import'])->name('users.import');
         Route::post('users/import', [UserController::class, 'importStore'])->name('users.import.store');
         Route::get('users/export', [UserController::class, 'export'])->name('users.export');
-        Route::resource('users', UserController::class);
+        Route::resource('users', UserController::class)->except(['index']);
         Route::get('users/trashed', [UserController::class, 'trashed'])->name('users.trashed');
         Route::post('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore');
         Route::delete('users/{user}/force-delete', [UserController::class, 'forceDelete'])->name('users.force-delete');

@@ -570,11 +570,6 @@ return [
             'icon' => 'fas fa-user-cog',
             'submenu' => [
                 [
-                    'text' => 'Customer Types',
-                    'url' => 'customertypes',
-                    'icon' => 'fas fa-tags',
-                ],
-                [
                     'text' => 'User Management',
                     'icon' => 'fas fa-users',
                     'submenu' => [
