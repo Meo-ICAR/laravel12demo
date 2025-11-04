@@ -15,11 +15,14 @@ class ReconciliationWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        // Unreconciled invoices
-        $unreconciledInvoices = Invoice::where(function($query) {
-            $query->where('isreconiled', false)
-                  ->orWhereNull('isreconiled');
-        });
+        // Unreconciled invoices (excluding those with is_notenasarco = true and not reconciled)
+        $unreconciledInvoices = Invoice::where('is_notenasarco', false)
+            ->where(function($query) {
+                $query->where('status', '!=', 'reconciled')
+                      ->orWhereNull('status')
+                      ->orWhere('isreconiled', false)
+                      ->orWhereNull('isreconiled');
+            });
 
         $unreconciledInvoicesCount = $unreconciledInvoices->count();
         $unreconciledInvoicesAmount = $unreconciledInvoices->sum('total_amount');

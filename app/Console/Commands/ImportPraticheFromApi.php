@@ -51,13 +51,7 @@ class ImportPraticheFromApi extends Command
             })
             ->get($apiUrl, $queryParams);
 
-            // Log the request and response for debugging
-            \Log::info('Pratiche API Request', [
-                'url' => $apiUrl,
-                'params' => $queryParams,
-                'status' => $response->status(),
-                'response_size' => strlen($response->body()),
-            ]);
+
 
             if (!$response->successful()) {
                 \Log::error('Pratiche API Error', [

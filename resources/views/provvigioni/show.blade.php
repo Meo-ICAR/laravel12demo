@@ -51,6 +51,13 @@
                                     </span>
                                 </dd>
 
+                                <dt class="col-sm-4">Status Compenso</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge badge-{{ $provvigione->status_compenso ? 'info' : 'secondary' }}">
+                                        {{ $provvigione->status_compenso ?? 'Non specificato' }}
+                                    </span>
+                                </dd>
+
                                 <dt class="col-sm-4">Descrizione</dt>
                                 <dd class="col-sm-8">{{ $provvigione->descrizione ?? '-' }}</dd>
 

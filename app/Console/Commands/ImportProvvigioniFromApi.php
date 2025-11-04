@@ -78,12 +78,7 @@ class ImportProvvigioniFromApi extends Command
                 return 1;
             }
 
-            // Log complete API response
-            \Log::info('Complete API response:', [
-                'response' => $responseBody,
-                'total_bytes' => strlen($responseBody),
-                'line_count' => count(explode("\n", $responseBody))
-            ]);
+
 
             // Process lines
             $lines = explode("\n", $responseBody);
@@ -267,7 +262,7 @@ class ImportProvvigioniFromApi extends Command
                             $updated++;
                            // $this->info("Updated provvigione: {$provvigioneData['id']}");
                         } else {
-                            $this->info("Skipped update for provvigione {$provvigioneData['id']} - timestamps sended, received paide dal ready set");
+
                             $skipped++;
                         }
                     } else {
@@ -284,7 +279,7 @@ class ImportProvvigioniFromApi extends Command
             }
             // Update customer names from pratiche if we have imported any records
             if ($updated > 0) {
-                $this->info("Updating stato pratica from pratiche...");
+
 
                 $updatedCount = \DB::update(
                     "UPDATE provvigioni p
@@ -332,10 +327,11 @@ class ImportProvvigioniFromApi extends Command
             $insertedClientiCount = \DB::update("update provvigioni p inner join clientis c on c.name = p.denominazione_riferimento set p.clienti_id = c.id");
             $this->info("Updated {$insertedClientiCount} records with clientis_id from clientis.");
 
-
+/*
  $insertedClientiCount = \DB::update("UPDATE provvigioni p inner join vwprovvdoppie v on v.minimo = p.id set  stato = 'Annullato', sended_at = null, paided_at= null, received_at = null, annullato = true
 where v.minimo < v.maximo");
  $this->info("Deleted {$insertedClientiCount} records with duplicated provvigioni.");
+*/
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;
         } catch (\Illuminate\Http\Client\RequestException $e) {

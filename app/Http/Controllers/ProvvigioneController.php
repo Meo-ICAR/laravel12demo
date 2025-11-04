@@ -80,6 +80,15 @@ class ProvvigioneController extends Controller
             $query->whereDate('provvigioni.sended_at', $request->sended_at);
         }
 
+        // Filter by data_status date range if provided
+        if ($request->has('data_status_from') && $request->data_status_from !== '') {
+            $query->whereDate('provvigioni.data_status', '>=', $request->data_status_from);
+        }
+        
+        if ($request->has('data_status_to') && $request->data_status_to !== '') {
+            $query->whereDate('provvigioni.data_status', '<=', $request->data_status_to);
+        }
+
         // Filter by entrata_uscita if provided
         if ($request->has('entrata_uscita') && in_array($request->entrata_uscita, ['Entrata', 'Uscita'])) {
             $query->where('provvigioni.entrata_uscita', $request->entrata_uscita);

@@ -51,6 +51,20 @@
                         <input type="date" name="sended_at" id="sended_at"
                                class="form-control" value="{{ request('sended_at') }}">
                     </div>
+                    <div class="col-md-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <label for="data_status_from">Data Status From:</label>
+                                <input type="date" name="data_status_from" id="data_status_from"
+                                       class="form-control" value="{{ request('data_status_from') }}">
+                            </div>
+                            <div class="col-6">
+                                <label for="data_status_to">To:</label>
+                                <input type="date" name="data_status_to" id="data_status_to"
+                                       class="form-control" value="{{ request('data_status_to') }}">
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-md-2">
                         <label for="entrata_uscita">Entrata/Uscita:</label>
                         <select name="entrata_uscita" id="entrata_uscita" class="form-control" onchange="document.getElementById('filterForm').submit();">
@@ -95,7 +109,7 @@
                 <div class="col-md-6">
                     <h5 class="card-title">
                         Summary
-                        @if(request()->has('stato') || request()->has('denominazione_riferimento') || request()->has('istituto_finanziario') || request()->has('cognome') || request()->has('data_status_pratica_from') || request()->has('data_status_pratica_to') || request()->has('sended_at'))
+                        @if(request()->has('stato') || request()->has('denominazione_riferimento') || request()->has('istituto_finanziario') || request()->has('cognome') || request()->has('data_status_pratica_from') || request()->has('data_status_pratica_to') || request()->has('sended_at') || request()->has('data_status_from') || request()->has('data_status_to'))
                             <span class="badge badge-info ml-2">Filtered Results</span>
                         @endif
                     </h5>
@@ -103,7 +117,7 @@
                         <strong>Total Records:</strong> {{ number_format($totalCount) }} |
                         <strong>Total Importo:</strong> € {{ number_format($totalImporto, 2, ',', '.') }}
                     </p>
-                    @if(request()->has('stato') || request()->has('denominazione_riferimento') || request()->has('istituto_finanziario') || request()->has('cognome') || request()->has('data_status_pratica_from') || request()->has('data_status_pratica_to') || request()->has('sended_at'))
+                    @if(request()->has('stato') || request()->has('denominazione_riferimento') || request()->has('istituto_finanziario') || request()->has('cognome') || request()->has('data_status_pratica_from') || request()->has('data_status_pratica_to') || request()->has('sended_at') || request()->has('data_status_from') || request()->has('data_status_to'))
                         <p class="card-text">
                             <small class="text-muted">
                                 <i class="fas fa-filter mr-1"></i>
@@ -114,6 +128,11 @@
                                 @if(request('cognome')) <span class="badge badge-secondary">Cognome: {{ request('cognome') }}</span> @endif
                                 @if(request('status_pratica')) <span class="badge badge-secondary">Status Pratica: {{ request('status_pratica') }}</span> @endif
                                 @if(request('sended_at')) <span class="badge badge-secondary">Sended At: {{ request('sended_at') }}</span> @endif
+                                @if(request('data_status_from') || request('data_status_to'))
+                                    <span class="badge badge-secondary">
+                                        Data Status: {{ request('data_status_from') ?: 'Start' }} - {{ request('data_status_to') ?: 'End' }}
+                                    </span>
+                                @endif
                             </small>
                         </p>
                         <p class="card-text">
