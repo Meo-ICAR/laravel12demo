@@ -239,6 +239,7 @@ class ImportProvvigioniFromApi extends Command
             $imported = 0;
             $updated = 0;
             $errors = 0;
+            $skipped = 0;
 
             foreach ($data as $item) {
                 try {
