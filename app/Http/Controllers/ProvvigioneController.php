@@ -50,8 +50,8 @@ class ProvvigioneController extends Controller
             $query->where('provvigioni.cognome', 'like', '%' . $request->cognome . '%');
         }
 
-        // Filter by status_pratica if provided
-        if ($request->has('status_pratica') && $request->status_pratica !== '') {
+        // Filter by status_pratica if provided and not empty
+        if ($request->filled('status_pratica')) {
             $query->where('provvigioni.status_pratica', $request->status_pratica);
         }
 
@@ -94,8 +94,8 @@ class ProvvigioneController extends Controller
             $query->where('provvigioni.entrata_uscita', $request->entrata_uscita);
         }
 
-        // Filter by status_pratica if provided
-        if ($request->has('status_pratica') && $request->status_pratica !== '') {
+        // Filter by status_pratica if provided and not empty
+        if ($request->filled('status_pratica')) {
             $query->where('provvigioni.status_pratica', $request->status_pratica);
         }
         // Filter by status_pratica if provided
