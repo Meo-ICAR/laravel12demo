@@ -399,7 +399,11 @@ class ProvvigioneController extends Controller
         }
 
         $query = Provvigione::where('stato', 'Inserito')
-            ->where('status_pratica', 'PERFEZIONATA')
+            ->where(function($q) {
+                $q->where('status_pratica', 'PERFEZIONATA')
+                  ->orWhere('status_pratica', 'IN AMMORTAMENTO');
+            })
+            ->where('annullato', 0)
             ->leftJoin('fornitoris', 'provvigioni.denominazione_riferimento', '=', 'fornitoris.name')
             ->selectRaw('
                 provvigioni.denominazione_riferimento,
