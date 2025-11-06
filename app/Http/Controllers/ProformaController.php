@@ -23,10 +23,24 @@ class ProformaController extends Controller
             $sortOrder = $request->get('order');
 
             // Validate sort field to prevent SQL injection
-            $allowedSortFields = ['id', 'stato', 'emailsubject', 'sended_at', 'paid_at', 'created_at', 'updated_at', 'data_status'];
+            $allowedSortFields = ['id', 'stato', 'emailsubject', 'sended_at', 'paid_at', 'created_at', 'updated_at', 'data_status', 'fornitore', 'compenso'];
             if (in_array($sortField, $allowedSortFields)) {
                 $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
-                $proformas->orderBy($sortField, $sortOrder);
+                
+                // Handle special sorting cases
+                if ($sortField === 'fornitore') {
+                    $proformas->leftJoin('fornitoris', 'proformas.fornitori_id', '=', 'fornitoris.id')
+                             ->orderBy('fornitoris.name', $sortOrder)
+                             ->select('proformas.*');
+                } elseif ($sortField === 'compenso') {
+                    $proformas->leftJoin('proforma_provvigione as pp', 'proformas.id', '=', 'pp.proforma_id')
+                             ->leftJoin('provvigioni as p', 'pp.provvigione_id', '=', 'p.id')
+                             ->groupBy('proformas.id')
+                             ->orderByRaw('COALESCE(SUM(p.importo), 0) ' . $sortOrder)
+                             ->select('proformas.*');
+                } else {
+                    $proformas->orderBy($sortField, $sortOrder);
+                }
             }
         } else {
             // Default sorting

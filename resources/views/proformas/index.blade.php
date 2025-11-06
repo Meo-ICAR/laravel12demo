@@ -91,7 +91,7 @@
     </div>
     <div class="row">
         <div class="col-12">
-            <div class="card">  
+            <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Lista Proforma</h3>
                     <div class="card-tools">
@@ -101,7 +101,7 @@
                         <button type="button" class="btn btn-success btn-sm" onclick="sendBulkEmails()" id="bulkEmailBtn" disabled>
                             <i class="fas fa-envelope"></i> Invia tutte le Email
                         </button>
-                   
+
                     </div>
                 </div>
                 <div class="card-body table-responsive p-0">
@@ -111,10 +111,46 @@
                                 <th>
                                     <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
                                 </th>
-                                <th>ID</th>
-                                <th>Fornitore</th>
-                                <th>Stato</th>
-                                <th class="text-right">Compenso</th>
+                                <th>
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'order' => request('sort') == 'id' && request('order') == 'asc' ? 'desc' : 'asc']) }}">
+                                        ID
+                                        @if(request('sort') == 'id')
+                                            <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }}"></i>
+                                        @else
+                                            <i class="fas fa-sort"></i>
+                                        @endif
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'fornitore', 'order' => request('sort') == 'fornitore' && request('order') == 'asc' ? 'desc' : 'asc']) }}">
+                                        Fornitore
+                                        @if(request('sort') == 'fornitore')
+                                            <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }}"></i>
+                                        @else
+                                            <i class="fas fa-sort"></i>
+                                        @endif
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'stato', 'order' => request('sort') == 'stato' && request('order') == 'asc' ? 'desc' : 'asc']) }}">
+                                        Stato
+                                        @if(request('sort') == 'stato')
+                                            <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }}"></i>
+                                        @else
+                                            <i class="fas fa-sort"></i>
+                                        @endif
+                                    </a>
+                                </th>
+                                <th class="text-right">
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'compenso', 'order' => request('sort') == 'compenso' && request('order') == 'asc' ? 'desc' : 'asc']) }}">
+                                        Compenso
+                                        @if(request('sort') == 'compenso')
+                                            <i class="fas fa-sort-{{ request('order') == 'asc' ? 'up' : 'down' }}"></i>
+                                        @else
+                                            <i class="fas fa-sort"></i>
+                                        @endif
+                                    </a>
+                                </th>
                                 <th class="text-right">Contributo</th>
                                 <th class="text-right">Anticipo</th>
                                 <th class="text-right">Totale</th>
@@ -291,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-    
+
     // Initialize button states on page load
     updateBulkEmailButton();
 });
@@ -464,7 +500,7 @@ function sendBulkPreviewEmails() {
     const firstSelectedId = selectedCheckboxes[0].dataset.id;
     const modalId = 'emailSimModal-' + firstSelectedId;
     const modal = new bootstrap.Modal(document.getElementById(modalId));
-    
+
     if (modal) {
         modal.show();
     } else {

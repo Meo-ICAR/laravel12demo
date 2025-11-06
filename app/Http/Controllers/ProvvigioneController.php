@@ -84,7 +84,7 @@ class ProvvigioneController extends Controller
         if ($request->has('data_status_from') && $request->data_status_from !== '') {
             $query->whereDate('provvigioni.data_status', '>=', $request->data_status_from);
         }
-        
+
         if ($request->has('data_status_to') && $request->data_status_to !== '') {
             $query->whereDate('provvigioni.data_status', '<=', $request->data_status_to);
         }
@@ -98,6 +98,12 @@ class ProvvigioneController extends Controller
         if ($request->has('status_pratica') && $request->status_pratica !== '') {
             $query->where('provvigioni.status_pratica', $request->status_pratica);
         }
+        // Filter by status_pratica if provided
+        if ($request->has('id') && $request->id !== '') {
+            $query->orderBy('provvigioni.id');
+        }
+          // Order by ID in descending order (newest first)
+
 
         // Get total count and total importo before pagination
         $totalCount = $query->count();
