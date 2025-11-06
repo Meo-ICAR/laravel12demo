@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ImportLeadsFromSidialLeads::class,
         \App\Console\Commands\ImportDailyData::class,
         \App\Console\Commands\ReconcileInvoices::class,
+        \App\Console\Commands\ImportOnlyProvvigioni::class,
     ];
 
     /**
