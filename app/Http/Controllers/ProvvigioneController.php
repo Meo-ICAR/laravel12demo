@@ -107,6 +107,13 @@ class ProvvigioneController extends Controller
         if ($request->filled('status_pratica')) {
             $query->where('provvigioni.status_pratica', $request->status_pratica);
         }
+
+        // Filter by coordinamento if checked
+        if ($request->has('coordinamento') && $request->coordinamento == '1') {
+            $query->join('pratica_compensos', 'provvigioni.descrizione', '=', 'pratica_compensos.id')
+                  ->where('pratica_compensos.iscoordinamento', 1);
+        }
+
         // Filter by status_pratica if provided
         if ($request->has('id') && $request->id !== '') {
             $query->orderBy('provvigioni.id');

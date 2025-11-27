@@ -144,7 +144,8 @@
                                     <form action="{{ route('provvigioni.createProformaFromSummary') }}" method="POST" style="display:inline;">
                                         @csrf
                                         <input type="hidden" name="denominazione_riferimento" value="{{ $item->denominazione_riferimento }}">
-                                        <button type="submit" class="btn btn-sm btn-success" @if(empty($item->email) || $item->totale == 0) disabled @endif>
+                                        <button type="submit" class="btn btn-sm btn-success" @if(empty($item->email) || $item->totale == 0 || $item->totale < 500) disabled @endif
+                                            @if($item->totale < 500) title="Minimum amount of €500 required" @endif>
                                             <i class="fas fa-file-invoice"></i> Proforma
                                         </button>
                                     </form>

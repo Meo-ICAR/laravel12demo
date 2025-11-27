@@ -84,6 +84,17 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-2">
+                        <div class="form-check mt-4 pt-2">
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   id="coordinamento"
+                                   name="coordinamento"
+                                   value="1"
+                                   {{ request('coordinamento') == '1' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="coordinamento">Solo Coordinamento</label>
+                        </div>
+                    </div>
                     <div class="col-md-12 mt-3">
                         <button type="submit" class="btn btn-info mr-2">Filter</button>
                         <button type="button" class="btn btn-secondary ml-2" onclick="clearFilters()">Clear</button>
@@ -100,7 +111,7 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
- 
+
 
     <!-- Summary Card -->
     <div class="card mb-3">
@@ -302,7 +313,7 @@
                                 <td>{{ $item->cognome }}</td>
                                 <td>{{ $item->nome }}</td>
                                 <td>{{ $item->data_status ? \Carbon\Carbon::parse($item->data_status)->format('d/m/Y') : 'N/A' }}</td>
-                         
+
                                    <td>
                                     @if($item->istituto_finanziario)
                                         <a href="{{ route('clientis.index', ['name' => $item->istituto_finanziario]) }}">
@@ -607,6 +618,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearFilters() {
         try {
             console.log('clearFilters function called');
+            // Reset coordinamento checkbox
+            document.getElementById('coordinamento').checked = false;
 
             // Clear all form fields with error handling
             const fields = [
