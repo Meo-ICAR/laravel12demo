@@ -77,7 +77,7 @@ class ProvvigioneController extends Controller
 
         // Filter by sended_at if provided
         if ($request->has('sended_at') && $request->sended_at !== '') {
-            $query->whereDate('provvigioni.sended_at', $request->sended_at);
+            $query->whereDate('provvigioni.sended_at', '=', $request->sended_at);
         }
 
         // Filter by data_status date range if provided
