@@ -82,11 +82,11 @@ class ProvvigioneController extends Controller
 
         // Filter by data_status date range if provided
         if ($request->has('data_status_from') && $request->data_status_from !== '') {
-            $query->whereDate('provvigioni.data_status', '>=', $request->data_status_from);
+            $query->where('provvigioni.data_status', '>=', $request->data_status_from);
         }
 
         if ($request->has('data_status_to') && $request->data_status_to !== '') {
-            $query->whereDate('provvigioni.data_status', '<=', $request->data_status_to);
+            $query->where('provvigioni.data_status', '<=', $request->data_status_to);
         }
 
         // Filter by entrata_uscita if provided
