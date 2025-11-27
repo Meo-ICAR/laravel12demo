@@ -20,6 +20,14 @@ class ProvvigioneController extends Controller
         $query->leftJoin('fornitoris', 'provvigioni.denominazione_riferimento', '=', 'fornitoris.coge')
               ->select('provvigioni.*', 'fornitoris.name as fornitore_name');
 
+        // Filter out null or empty parameters from the request
+        $filteredParams = array_filter($request->all(), function($value) {
+            return $value !== null && $value !== '' && $value !== [];
+        });
+
+        // Replace the request parameters with the filtered ones
+        $request->replace($filteredParams);
+
         // Filter by stato_include if provided
         if ($request->has('stato_include') && $request->stato_include !== '') {
             $stati = array_map('trim', explode(',', $request->stato_include));
@@ -93,6 +101,7 @@ class ProvvigioneController extends Controller
         if ($request->has('entrata_uscita') && in_array($request->entrata_uscita, ['Entrata', 'Uscita'])) {
             $query->where('provvigioni.entrata_uscita', $request->entrata_uscita);
         }
+
 
         // Filter by status_pratica if provided and not empty
         if ($request->filled('status_pratica')) {
