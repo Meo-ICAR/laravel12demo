@@ -10,6 +10,7 @@ use App\Models\Clienti;
 use App\Models\Proforma;
 use App\Models\ProvvigioniStato;
 use App\Models\PraticheStato;
+use App\Models\Coges;
 
 class Provvigione extends Model
 {
@@ -239,5 +240,15 @@ class Provvigione extends Model
     public function cliente()
     {
         return $this->belongsTo(Clienti::class, 'clienti_id');
+    }
+
+    /**
+     * The coges that belong to the provvigione.
+     */
+    public function coges()
+    {
+        return $this->belongsToMany(Coges::class, 'provvigioni_coges')
+            ->withPivot('data_invio', 'data_storno')
+            ->withTimestamps();
     }
 }

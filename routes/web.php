@@ -11,6 +11,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\FornitoriController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\InvoiceinImportController;
+use App\Http\Controllers\CogesController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
@@ -45,7 +46,8 @@ Route::middleware('guest')->group(function () {
 
 // All other routes require authentication
 Route::middleware(['auth', 'verified'])->group(function () {
-
+    // Coges Resource
+    Route::resource('coges', CogesController::class);
 
     // Profile routes
     Route::prefix('profile')->group(function () {
