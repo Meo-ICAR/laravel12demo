@@ -14,6 +14,7 @@ class Coges extends Model
      */
     protected $fillable = [
         'fonte',
+          'entrata_uscita',
         'conto_dare',
         'descrizione_dare',
         'conto_avere',

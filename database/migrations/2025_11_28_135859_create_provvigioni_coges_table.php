@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->date('data_invio')->nullable();
             $table->date('data_storno')->nullable();
-            $table->foreignId('provvigioni_id')->constrained()->onDelete('cascade');
+            $table->foreignId('provvigioni_id')->constrained('provvigioni')->onDelete('cascade');
             $table->foreignId('coge_id')->constrained()->onDelete('cascade');
             $table->timestamps();
             
