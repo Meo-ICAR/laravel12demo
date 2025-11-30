@@ -26,7 +26,7 @@ class ProformaController extends Controller
             $allowedSortFields = ['id', 'stato', 'emailsubject', 'sended_at', 'paid_at', 'created_at', 'updated_at', 'data_status', 'fornitore', 'compenso'];
             if (in_array($sortField, $allowedSortFields)) {
                 $sortOrder = strtolower($sortOrder) === 'asc' ? 'asc' : 'desc';
-                
+
                 // Handle special sorting cases
                 if ($sortField === 'fornitore') {
                     $proformas->leftJoin('fornitoris', 'proformas.fornitori_id', '=', 'fornitoris.id')
@@ -389,7 +389,7 @@ $bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company
               //   'stato' => 'Spedito'
             ]);
             // Update the related provvigioni models directly
-            if (!$preview) {
+            if (true || !$preview) {
                 $proforma->provvigioni()->update([
                     'sended_at' => now(),
                     'stato' => 'Proforma'
