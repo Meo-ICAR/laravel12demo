@@ -360,6 +360,7 @@ $bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company
 
             try {
             // Send the email using Laravel's Mail facade
+            /*
             $mailer = \Mail::html($body, function($message) use ($from, $to, $subject, $bcc) {
                 $message->from($from, config('mail.from.name'))
                         ->to($to);
@@ -371,6 +372,7 @@ $bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company
                 }
                 $message->subject($subject);
             });
+            */
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -386,7 +388,7 @@ $bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company
             // Update sended_at timestamp and set status to 'inviato' (even in debug mode to simulate success)
             $proforma->update([
                 'sended_at' => now(),
-              //   'stato' => 'Spedito'
+
             ]);
             // Update the related provvigioni models directly
             if (true || !$preview) {
