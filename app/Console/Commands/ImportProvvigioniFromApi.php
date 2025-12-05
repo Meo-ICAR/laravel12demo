@@ -280,6 +280,7 @@ class ImportProvvigioniFromApi extends Command
                 }
             }
             // Update customer names from pratiche if we have imported any records
+
             if ($updated > 0) {
 
 
@@ -305,6 +306,10 @@ class ImportProvvigioniFromApi extends Command
 
                 $this->info("Updated {$updatedCount} records with customer names from pratiche.");
             }
+                $updatedCount = \DB::update(
+                    "update provvigioni set status_pratica = 'PERFEZIONATA'  WHERE status_pratica <'A' and status_compenso  = 'Pratica perfezionata'"
+                );
+                $this->info("Updated {$updatedCount} records with status_pratica PERFEZIONATA");
                $updatedCount = \DB::update(
                     "UPDATE provvigioni p
 
@@ -312,6 +317,13 @@ class ImportProvvigioniFromApi extends Command
                     WHERE p.stato IS  NULL and (p.status_pratica = 'PERFEZIONATA' or p.status_pratica = 'IN AMMORTAMENTO')"
                 );
                 $this->info("Updated {$updatedCount} records with stato from pratiche.");
+                $updatedCount = \DB::update(
+                    "UPDATE provvigioni p
+                    INNER JOIN vwprovvcoordinamento  v on v.id_pratica = p.id_pratica and p.importo = v.minimo
+                    set p.stato = 'Coordinamento'
+                    where p.stato = 'Inserito'"
+                );
+                $this->info("Updated {$updatedCount} records with provv. stato = coordinamento");
 
             $insertedFornitoriCount = \DB::insert(
                     "insert into fornitoris (id,name,nome, piva, cf ) select uuid(),denominazione_riferimento,denominazione_riferimento, piva, cf from vwfornitorinew"
