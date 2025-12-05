@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('content')
 <div class="container">
@@ -12,9 +12,9 @@
                 <div class="card-body">
                     <form method="POST" action="{{ route('coges.store') }}">
                         @csrf
-                        
+
                         @include('coges._form')
-                        
+
                     </form>
                 </div>
             </div>

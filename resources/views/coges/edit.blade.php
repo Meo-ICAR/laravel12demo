@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('content')
 <div class="container">
@@ -13,9 +13,9 @@
                     <form method="POST" action="{{ route('coges.update', $coge->id) }}">
                         @csrf
                         @method('PUT')
-                        
+
                         @include('coges._form')
-                        
+
                     </form>
                 </div>
             </div>

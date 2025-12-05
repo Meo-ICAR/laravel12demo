@@ -520,6 +520,11 @@ return [
                     'url' => 'invoiceins',
                     'icon' => 'fas fa-file-invoice',
                 ],
+                  [
+                    'text' => 'Contabilita',
+                    'url' => 'coges',
+                    'icon' => 'fas fa-money',
+                ],
             ],
         ],
            [

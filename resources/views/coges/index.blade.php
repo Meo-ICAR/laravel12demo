@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('content')
 <div class="container">
@@ -21,7 +21,6 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Fonte</th>
                                     <th>Conto Dare</th>
                                     <th>Descrizione Dare</th>
@@ -41,7 +40,6 @@
                                         <td>{{ $coge->descrizione_avere }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="{{ route('coges.show', $coge->id) }}" class="btn btn-info btn-sm">Vedi</a>
                                                 <a href="{{ route('coges.edit', $coge->id) }}" class="btn btn-warning btn-sm">Modifica</a>
                                                 <form action="{{ route('coges.destroy', $coge->id) }}" method="POST" onsubmit="return confirm('Sei sicuro di voler eliminare questo record?');">
                                                     @csrf
@@ -58,7 +56,7 @@
                                 @endforelse
                             </tbody>
                         </table>
-                        
+
                         {{ $coges->links() }}
                     </div>
                 </div>

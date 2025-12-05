@@ -55,6 +55,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('coges.index') }}" class="nav-link {{ request()->routeIs('coges.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-exchange-alt"></i>
+                        <p>COGE</p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-file-invoice-dollar"></i>
                         <p>Invoices</p>
