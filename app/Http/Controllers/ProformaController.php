@@ -445,6 +445,7 @@ $bcc = $preview2 ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $compan
                 }
 
                 // Check if email was already sent
+                /*
                 if ($proforma->sended_at) {
                     $results[] = [
                         'proforma_id' => $proformaId,
@@ -454,6 +455,7 @@ $bcc = $preview2 ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $compan
                     $errorCount++;
                     continue;
                 }
+                */
                  $this->updateEmailBody($proforma);
 
                 // Validate required fields
