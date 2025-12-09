@@ -339,13 +339,7 @@ class ProformaController extends Controller
             $subject = $preview ? '[PREVIEW] ' . $proforma->emailsubject : $proforma->emailsubject;
             $body = $proforma->emailbody;
 
-            // Add preview info to the email body if in preview mode
-            if ($preview) {
-                $body .= "\n\n---\nPREVIEW MODE - This is a test email\n";
-                $body .= "Original recipient: " . $proforma->emailto . "\n";
-                $body .= "Proforma ID: " . $proforma->id . "\n";
-                $body .= "---\n";
-            }
+
 
             // DEBUG MODE: Log email details instead of sending
 
@@ -353,10 +347,13 @@ class ProformaController extends Controller
             /*
 
             */
+            $preview2 = $preview;
+            $preview2 = true; // debug
+
             $company = $proforma->company; // Assuming you have this relationship
-            $to = $preview  ? ['hassistosrl@gmail.com'] : $proforma->emailto;
-$cc = $preview  ? ['rino.muscetti@races.it'] : array_filter(explode(',', $company->email_cc ?? ''));
-$bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company->email_bcc ?? 'piergiuseppe.meo@gmail.com'));
+            $to = $preview2  ? ['hassistosrl@gmail.com'] : $proforma->emailto;
+$cc = $preview2  ? ['rino.muscetti@races.it'] : array_filter(explode(',', $company->email_cc ?? ''));
+$bcc = $preview2 ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company->email_bcc ?? 'piergiuseppe.meo@gmail.com'));
 
             try {
             // Send the email using Laravel's Mail facade
