@@ -468,7 +468,7 @@ return [
 
                 [
                     'text' => 'Proforma',
-                    'url' => 'proformas',
+                    'url' => 'proformas?stato=Inserito',
                     'icon' => 'fas fa-file-alt',
                 ],
             ],

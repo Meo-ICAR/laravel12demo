@@ -360,7 +360,7 @@ $bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company
 
             try {
             // Send the email using Laravel's Mail facade
-            /*
+
             $mailer = \Mail::html($body, function($message) use ($from, $to, $subject, $bcc) {
                 $message->from($from, config('mail.from.name'))
                         ->to($to);
@@ -372,7 +372,7 @@ $bcc = $preview ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company
                 }
                 $message->subject($subject);
             });
-            */
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
