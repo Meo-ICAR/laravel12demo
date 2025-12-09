@@ -351,14 +351,14 @@ class ProformaController extends Controller
             $preview2 = true; // debug
 
             $company = $proforma->company; // Assuming you have this relationship
-            $to = $preview2  ? ['hassistosrl@gmail.com'] : $proforma->emailto;
+            $to = $preview2  ? ['piergiuseppe.meo@gmail.com'] : $proforma->emailto;
 $cc = $preview2  ? ['rino.muscetti@races.it'] : array_filter(explode(',', $company->email_cc ?? ''));
 $bcc = $preview2 ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $company->email_bcc ?? 'piergiuseppe.meo@gmail.com'));
 
             try {
             // Send the email using Laravel's Mail facade
 
-            $mailer = \Mail::html($body, function($message) use ($from, $to, $subject, $bcc) {
+            $mailer = \Mail::html($body, function($message) use ($from, $to, $cc, $bcc, $subject) {
                 $message->from($from, config('mail.from.name'))
                         ->to($to);
                  if (!empty($cc)) {
@@ -628,7 +628,7 @@ $bcc = $preview2 ? ['hassistosrl@gmail.com'] : array_filter(explode(',', $compan
                 <div class='header'>
                     <h2>Proforma N.:</strong> #{$proforma->id}</h2>
                     <p><strong>Data:</strong> " . now()->format('d/m/Y H:i') . "</p>
-                     <p><strong>Agente:</strong> " . $fornitoreName . "</p>
+                    <p><strong>Agente:</strong> " . $fornitoreName . " -  " . $proforma->emailto . "</p>
                 </div>
                 ";
 
