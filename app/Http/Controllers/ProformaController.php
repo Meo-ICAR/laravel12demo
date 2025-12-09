@@ -348,7 +348,7 @@ class ProformaController extends Controller
 
             */
             $preview2 = $preview;
-            $preview2 = true; // debug
+          //  $preview2 = true; // debug
 
             $company = $proforma->company; // Assuming you have this relationship
             $to = $preview2  ? ['piergiuseppe.meo@gmail.com'] : $proforma->emailto;
