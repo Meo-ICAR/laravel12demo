@@ -21,7 +21,7 @@ class ImportPraticheFromApi extends Command
         $endDate = $this->option('end-date') ? Carbon::parse($this->option('end-date')) : now();
         $startDate = $this->option('start-date')
             ? Carbon::parse($this->option('start-date'))
-            : $endDate->copy()->subDays(7);
+            : $endDate->copy()->subDays(60);
 
         $this->info("Importing pratiche from {$startDate->format('Y-m-d')} to {$endDate->format('Y-m-d')}");
 

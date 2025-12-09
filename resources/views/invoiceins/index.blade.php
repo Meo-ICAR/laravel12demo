@@ -1,5 +1,28 @@
 @extends('layouts.admin')
 
+@push('styles')
+<style>
+    .sort-arrow {
+        margin-left: 5px;
+        color: #6c757d;
+    }
+    .sort-arrow.asc:after {
+        content: '↑';
+    }
+    .sort-arrow.desc:after {
+        content: '↓';
+    }
+    .sortable {
+        cursor: pointer;
+        position: relative;
+        padding-right: 20px !important;
+    }
+    .sortable:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+@endpush
+
 @section('content')
 
 <div class="container-fluid">
@@ -15,8 +38,11 @@
                 </div>
                 <div id="filterCollapse" class="collapse">
                     <div class="card-body">
-                        <form method="GET" action="{{ route('invoiceins.index') }}" class="row">
-                            <div class="col-md-4">
+                        <form method="GET" action="{{ route('invoiceins.index') }}" class="row" id="filterForm">
+                            <input type="hidden" name="sort" value="{{ request('sort', 'id') }}">
+                            <input type="hidden" name="direction" value="{{ request('direction', 'asc') }}">
+
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="nome_fornitore">Search Fornitore</label>
                                     <input type="text" name="nome_fornitore" id="nome_fornitore" class="form-control"
@@ -24,14 +50,32 @@
                                            placeholder="Search by nome fornitore...">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="partita_iva">Partita IVA</label>
+                                    <input type="text" name="partita_iva" id="partita_iva" class="form-control"
+                                           value="{{ request('partita_iva') }}"
+                                           placeholder="Filter by P.IVA...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="tipo_di_documento">Tipo Documento</label>
                                     <select name="tipo_di_documento" id="tipo_di_documento" class="form-control">
                                         <option value="">All Types</option>
                                         <option value="Fattura" {{ request('tipo_di_documento') == 'Fattura' ? 'selected' : '' }}>Fattura</option>
-                                        <option value="Nota credito" {{ request('tipo_di_documento') ==  'Nota credito' ? 'selected' : '' }}>Nota Credito</option>
-                                        <option value="Nota debito" {{ request('tipo_di_documento') == 'Nota debito' ? 'selected' : '' }}>Nota Debito</option>
+                                        <option value="Nota credito" {{ request('tipo_di_documento') == 'Nota credito' ? 'selected' : '' }}">Nota Credito</option>
+                                        <option value="Nota debito" {{ request('tipo_di_documento') == 'Nota debito' ? 'selected' : '' }}">Nota Debito</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="is_imported">Stato Importazione</label>
+                                    <select name="is_imported" id="is_imported" class="form-control">
+                                        <option value="">Tutti</option>
+                                        <option value="1" {{ request('is_imported') === '1' ? 'selected' : '' }}>Importati</option>
+                                        <option value="0" {{ request('is_imported') === '0' ? 'selected' : '' }}>Non Importati</option>
                                     </select>
                                 </div>
                             </div>
@@ -91,14 +135,14 @@
                         <table class="table table-bordered table-striped table-hover mb-0">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Nome Fornitore</th>
-                                    <th>Partita IVA</th>
-                                    <th>Tipo Documento</th>
-                                    <th>Nr Documento</th>
-                                    <th>Data Ricezione</th>
-                                    <th class="text-right">Importo</th>
-                                    <th class="text-center">Stato Importazione</th>
+                                    <th>@sortablelink('id', 'ID')</th>
+                                    <th>@sortablelink('nome_fornitore', 'Nome Fornitore')</th>
+                                    <th>@sortablelink('partita_iva', 'Partita IVA')</th>
+                                    <th>@sortablelink('tipo_di_documento', 'Tipo Documento')</th>
+                                    <th>@sortablelink('nr_documento', 'Nr Documento')</th>
+                                    <th>@sortablelink('data_ora_invio_ricezione', 'Data Ricezione')</th>
+                                    <th class="text-right">@sortablelink('importo', 'Importo')</th>
+                                    <th class="text-center">@sortablelink('is_imported', 'Stato Importazione')</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
