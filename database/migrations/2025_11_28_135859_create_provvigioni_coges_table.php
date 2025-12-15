@@ -9,10 +9,11 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up(): void  
     {
         Schema::create('provvigioni_coges', function (Blueprint $table) {
             $table->id();
+            
             $table->date('data_invio')->nullable();
             $table->date('data_storno')->nullable();
             $table->foreignId('provvigioni_id')->constrained('provvigioni')->onDelete('cascade');
