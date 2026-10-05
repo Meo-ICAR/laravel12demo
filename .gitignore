@@ -24,3 +24,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 storage/FATTURE PASSIVE DAL 1-7-2025 AL 17-10-2025.xlsx
+.env.bak*
+.env.save*
+graphify-out/cache/ast/
+graphify-out/20*/
